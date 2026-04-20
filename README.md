@@ -73,8 +73,8 @@ hornvin-smart-business/
 - **Base URL**: `http://<host>:<port>` (default port **8000**).
 - **REST prefix**: all JSON APIs are under **`/api`** (the mobile client sets `baseURL` to `{API_URL}/api`).
 - **Auth**: JWT in header `Authorization: Bearer <token>` (except explicitly public routes such as health, auth register/login, product catalog **GET**, nearby dealers).
-- **Interactive docs (Swagger UI)**: **`http://localhost:4000/api-docs`** after starting the server.
-- **Machine-readable spec**: **`http://localhost:4000/openapi.json`** (same content as `server/docs/openapi.yaml`).
+- **Interactive docs (Swagger UI)**: **`http://localhost:8000/api-docs`** after starting the server.
+- **Machine-readable spec**: **`http://localhost:8000/openapi.json`** (same content as `server/docs/openapi.yaml`).
 
 Main route groups (see `server/src/createApp.js`):
 
@@ -127,8 +127,8 @@ npm install
 npm run dev
 ```
 
-- Health: `GET http://localhost:4000/health`
-- Swagger UI: `http://localhost:4000/api-docs`
+- Health: `GET http://localhost:8000/health`
+- Swagger UI: `http://localhost:8000/api-docs`
 
 **Seed Super Admin in the database** (no hardcoded users — uses `.env` only):
 
@@ -150,7 +150,7 @@ npx expo start
 
 Configure the API host (device or simulator must reach your machine):
 
-- **`EXPO_PUBLIC_API_URL`** — e.g. `http://127.0.0.1:4000` (iOS simulator) or your LAN IP for a physical device.
+- **`EXPO_PUBLIC_API_URL`** — e.g. `http://127.0.0.1:8000` (iOS simulator) or your LAN IP for a physical device.
 
 See `mobile/.env.example` if present for other Expo public variables.
 
@@ -169,7 +169,7 @@ Uses `mongodb-memory-server` (no local Mongo required for tests).
 
 | Variable | Purpose |
 |----------|---------|
-| `PORT` | HTTP port (default `4000`) |
+| `PORT` | HTTP port (default `8000`) |
 | `MONGODB_URI` | Mongo connection string |
 | `JWT_SECRET` | Signing key for JWT (required in production) |
 | `JWT_EXPIRES_IN` | Optional token TTL (default `7d`) |
