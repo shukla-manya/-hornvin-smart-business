@@ -196,8 +196,10 @@ authRouter.post(
     /**
      * Email + password: second factor via email OTP (never SMS / phone OTP).
      * Platform Super Admin (`isPlatformOwner`) uses password only so a DB-seeded owner can sign in without mail OTP.
+     * Accounts created by Super Admin / distributor (`mustChangePassword`) skip this step so first sign-in goes
+     * straight to the client "set new password" gate after the temporary password from onboarding email.
      */
-    if (email && user.email && !user.isPlatformOwner) {
+    if (email && user.email && !user.isPlatformOwner && !user.mustChangePassword) {
       if (!otpCode) {
         if (!allowOtpRequest(`login-pw:${email}`)) {
           return res.status(429).json({ error: "Please wait before requesting another code" });

@@ -386,6 +386,44 @@ test("retail created by distributor must change password then can use API", asyn
   assert.equal(ok.status, 200);
 });
 
+test("retail created by distributor with email skips login mail OTP until password changed", async () => {
+  const companyPhone = `+1692${String(Date.now()).slice(-8)}`;
+  const company = await User.create({
+    phone: companyPhone,
+    passwordHash: await bcrypt.hash("secret12", 10),
+    role: "company",
+    status: "approved",
+  });
+  const distPhone = `+1693${String(Date.now()).slice(-8)}`;
+  await User.create({
+    phone: distPhone,
+    passwordHash: await bcrypt.hash("secret12", 10),
+    role: "distributor",
+    status: "approved",
+    companyId: company._id,
+  });
+  const dLogin = await request(app).post("/api/auth/login").send({ phone: distPhone, password: "secret12" });
+  const dToken = dLogin.body.token;
+
+  const em = `retail-prov-${Date.now()}@example.com`;
+  const create = await request(app)
+    .post("/api/users/retail")
+    .set("Authorization", `Bearer ${dToken}`)
+    .send({ email: em, password: "temp1234", name: "Shop", businessName: "Garage" });
+  assert.equal(create.status, 201, JSON.stringify(create.body));
+  assert.equal(create.body.user.mustChangePassword, true);
+
+  const login = await request(app).post("/api/auth/login").send({ email: em, password: "temp1234" });
+  assert.equal(login.status, 200, JSON.stringify(login.body));
+  assert.ok(login.body.token);
+  assert.ok(!login.body.needsOtp);
+  assert.equal(login.body.user.mustChangePassword, true);
+
+  const blocked = await request(app).get("/api/orders").set("Authorization", `Bearer ${login.body.token}`);
+  assert.equal(blocked.status, 403);
+  assert.equal(blocked.body.code, "MUST_CHANGE_PASSWORD");
+});
+
 test("Super Admin creates distributor with mustChangePassword until password change", async () => {
   const ownerPhone = `+1595${String(Date.now()).slice(-8)}`;
   await User.create({
