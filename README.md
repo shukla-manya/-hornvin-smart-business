@@ -195,3 +195,4 @@ The canonical description lives in **`server/docs/openapi.yaml`**. Swagger UI re
 ## Licence / product name
 
 App display name and slugs are configured in `mobile/app.json` (e.g. **Vello**, slug `vello-trade`). Package names in `package.json` files may still read `vello-*`; align naming in your release pipeline as needed.
+ by - MANYA SHUKLA 2026
