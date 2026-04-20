@@ -43,6 +43,30 @@ export function createApp() {
 
   app.get("/health", (_req, res) => res.json({ ok: true }));
 
+  app.get("/", (_req, res) => {
+    res.type("html").send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vello API</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; min-height: 100vh; display: grid; place-items: center; background: #0f1419; color: #e8eef4; }
+    main { text-align: center; padding: 2rem; max-width: 28rem; }
+    a { color: #7ec8ff; }
+    .muted { color: #9aa7b4; font-size: 0.95rem; margin-top: 1.5rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Vello Trade API</h1>
+    <p><a href="/api-docs">Open API documentation (Swagger UI)</a></p>
+    <p class="muted">Made with love by Manya Shukla</p>
+  </main>
+</body>
+</html>`);
+  });
+
   try {
     const openApiDocument = loadOpenApiSpec();
     app.get("/openapi.json", (_req, res) => res.json(openApiDocument));
