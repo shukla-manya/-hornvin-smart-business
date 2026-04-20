@@ -2,7 +2,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 /** Base URL without `/api` — same host as Socket.IO unless EXPO_PUBLIC_SOCKET_URL is set. */
-const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:4000";
+const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
 
 export const api = axios.create({
   baseURL: `${API_URL}/api`,

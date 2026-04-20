@@ -70,7 +70,7 @@ hornvin-smart-business/
 
 ## API overview
 
-- **Base URL**: `http://<host>:<port>` (default port **4000**).
+- **Base URL**: `http://<host>:<port>` (default port **8000**).
 - **REST prefix**: all JSON APIs are under **`/api`** (the mobile client sets `baseURL` to `{API_URL}/api`).
 - **Auth**: JWT in header `Authorization: Bearer <token>` (except explicitly public routes such as health, auth register/login, product catalog **GET**, nearby dealers).
 - **Interactive docs (Swagger UI)**: **`http://localhost:4000/api-docs`** after starting the server.
