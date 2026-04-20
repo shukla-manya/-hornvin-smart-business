@@ -1,0 +1,144 @@
+import express from "express";
+import cors from "cors";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
+import swaggerUi from "swagger-ui-express";
+import YAML from "yaml";
+import { authRouter } from "./routes/auth.js";
+import { productsRouter } from "./routes/products.js";
+import { ordersRouter } from "./routes/orders.js";
+import { chatRouter } from "./routes/chat.js";
+import { invoicesRouter } from "./routes/invoices.js";
+import { dealersRouter } from "./routes/dealers.js";
+import { usersRouter } from "./routes/users.js";
+import { paymentsRouter } from "./routes/payments.js";
+import { locationsRouter } from "./routes/locations.js";
+import { dealerLocatorRouter } from "./routes/dealerLocator.js";
+import { notificationsRouter } from "./routes/notifications.js";
+import { wishlistRouter } from "./routes/wishlist.js";
+import { adminRouter } from "./routes/admin.js";
+import { ChatRoom } from "./models/ChatRoom.js";
+import { Product } from "./models/Product.js";
+import { User, getAccountAccessDenial } from "./models/User.js";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+function loadOpenApiSpec() {
+  const path = join(__dirname, "../docs/openapi.yaml");
+  return YAML.parse(readFileSync(path, "utf8"));
+}
+
+/**
+ * Builds Express + Socket.IO (no DB connect, no listen). Used by `index.js` and API tests.
+ */
+export function createApp() {
+  const app = express();
+  app.use(cors());
+  app.use(express.json({ limit: "2mb" }));
+
+  app.get("/health", (_req, res) => res.json({ ok: true }));
+
+  try {
+    const openApiDocument = loadOpenApiSpec();
+    app.get("/openapi.json", (_req, res) => res.json(openApiDocument));
+    app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiDocument, { explorer: true }));
+  } catch (e) {
+    console.warn("OpenAPI / Swagger UI not mounted:", e.message);
+  }
+
+  app.use("/api/auth", authRouter);
+  app.use("/api/products", productsRouter);
+  app.use("/api/orders", ordersRouter);
+  app.use("/api/chat", chatRouter);
+  app.use("/api/invoices", invoicesRouter);
+  app.use("/api/dealers", dealersRouter);
+  app.use("/api/users", usersRouter);
+  app.use("/api/payments", paymentsRouter);
+  app.use("/api/locations", locationsRouter);
+  app.use("/api/dealer-locator", dealerLocatorRouter);
+  app.use("/api/notifications", notificationsRouter);
+  app.use("/api/wishlist", wishlistRouter);
+  app.use("/api/admin", adminRouter);
+
+  app.use((err, _req, res, _next) => {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  });
+
+  const httpServer = createServer(app);
+
+  const io = new Server(httpServer, {
+    cors: { origin: "*" },
+  });
+
+  io.use(async (socket, next) => {
+    try {
+      const token = socket.handshake.auth?.token;
+      if (!token) return next(new Error("Unauthorized"));
+      const payload = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(payload.sub).select("status mustChangePassword");
+      if (!user || getAccountAccessDenial(user) || user.mustChangePassword) return next(new Error("Unauthorized"));
+      socket.userId = payload.sub;
+      next();
+    } catch {
+      next(new Error("Unauthorized"));
+    }
+  });
+
+  io.on("connection", (socket) => {
+    socket.join(`user:${socket.userId}`);
+
+    socket.on("room:join", async (roomId) => {
+      if (!roomId || !mongoose.isValidObjectId(roomId)) return;
+      const room = await ChatRoom.findById(roomId);
+      if (!room) return;
+      if (!room.participants.some((p) => p.equals(socket.userId))) return;
+      socket.join(String(roomId));
+    });
+
+    socket.on("chat:typing", async (payload) => {
+      const roomId = payload?.roomId;
+      const typing = Boolean(payload?.typing);
+      if (!roomId || !mongoose.isValidObjectId(roomId)) return;
+      const room = await ChatRoom.findById(roomId);
+      if (!room) return;
+      if (!room.participants.some((p) => p.equals(socket.userId))) return;
+      socket.to(String(roomId)).emit("chat:typing", {
+        userId: String(socket.userId),
+        typing,
+      });
+    });
+
+    socket.on("disconnect", () => {});
+  });
+
+  app.set("io", io);
+
+  return { app, httpServer, io };
+}
+
+export async function runStartupMigrations() {
+  try {
+    const users = await User.updateMany(
+      { $or: [{ status: { $exists: false } }, { status: null }] },
+      { $set: { status: "approved" } }
+    );
+    if (users.modifiedCount) console.log("Users migrated: default status → approved", users.modifiedCount);
+  } catch (e) {
+    console.warn("User status migration skipped:", e.message);
+  }
+  try {
+    const r = await Product.updateMany(
+      { $or: [{ sellerId: { $exists: false } }, { sellerId: null }] },
+      [{ $set: { sellerId: "$companyId" } }]
+    );
+    if (r.modifiedCount) console.log("Products migrated: sellerId from companyId", r.modifiedCount);
+  } catch (e) {
+    console.warn("Product sellerId migration skipped:", e.message);
+  }
+}

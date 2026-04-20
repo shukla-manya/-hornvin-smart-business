@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "Vello",
+    "slug": "vello-trade",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#1E3A8A",
+      "resizeMode": "cover"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.vello.trade",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Vello uses your location to find nearby dealers and listings.",
+        "NSUserNotificationsUsageDescription": "Vello can notify you about orders and messages when push is enabled."
+      }
+    },
+    "android": {
+      "package": "com.vello.trade",
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Vello to use your location for dealer search."
+        }
+      ],
+      "expo-notifications"
+    ]
+  }
+}

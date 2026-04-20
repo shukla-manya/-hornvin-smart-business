@@ -1,0 +1,88 @@
+/**
+ * Role-based UI map for Hornvin Smart Business (single app, multiple personas).
+ * Server roles: company | distributor | retail | end_user. Super Admin = `user.isPlatformOwner`.
+ */
+
+export const MAIN_TAB_KEYS = {
+  HOME: "HomeTab",
+  EXPLORE: "ExploreTab",
+  CHAT: "ChatTab",
+  ORDERS: "OrdersTab",
+  PROFILE: "ProfileTab",
+};
+
+const BUSINESS_TABS = [
+  MAIN_TAB_KEYS.HOME,
+  MAIN_TAB_KEYS.EXPLORE,
+  MAIN_TAB_KEYS.CHAT,
+  MAIN_TAB_KEYS.ORDERS,
+  MAIN_TAB_KEYS.PROFILE,
+];
+
+/** End users: consumer shell — no business “Home” hub tab; Explore is the primary surface. */
+const END_USER_TABS = [MAIN_TAB_KEYS.EXPLORE, MAIN_TAB_KEYS.ORDERS, MAIN_TAB_KEYS.CHAT, MAIN_TAB_KEYS.PROFILE];
+
+export function getVisibleMainTabKeys(role) {
+  if (role === "end_user") return END_USER_TABS;
+  return BUSINESS_TABS;
+}
+
+/** Which tab is shown first after login (must be included in `getVisibleMainTabKeys`). */
+export function getInitialMainTabKey(role) {
+  const visible = getVisibleMainTabKeys(role);
+  switch (role) {
+    case "company":
+    case "distributor":
+      return MAIN_TAB_KEYS.HOME;
+    case "retail":
+      return visible.includes(MAIN_TAB_KEYS.ORDERS) ? MAIN_TAB_KEYS.ORDERS : MAIN_TAB_KEYS.HOME;
+    case "end_user":
+      return MAIN_TAB_KEYS.EXPLORE;
+    default:
+      return visible[0] || MAIN_TAB_KEYS.HOME;
+  }
+}
+
+const SUPER_ADMIN_STACK_ROUTES = new Set([
+  "AdminHome",
+  "AdminUsers",
+  "AdminOrders",
+  "AdminPayments",
+  "AdminCatalog",
+  "AdminCategories",
+]);
+
+/** Stack routes that are not for every role (everything else is allowed when authenticated). */
+export function userCanAccessStackRoute(user, routeName) {
+  if (!user) return false;
+  if (SUPER_ADMIN_STACK_ROUTES.has(routeName)) {
+    return !!user.isPlatformOwner;
+  }
+  if (routeName === "DistributorWorkspace") {
+    return user.role === "distributor";
+  }
+  if (routeName === "PostProduct") {
+    return user.role === "company" || user.role === "distributor";
+  }
+  if (routeName === "Invoices") {
+    return user.role === "company" || user.role === "distributor" || user.role === "retail";
+  }
+  return true;
+}
+
+/** Profile → deep links into the root stack. */
+export function profileQuickLinkRoutes(user) {
+  const links = [];
+  if (user?.isPlatformOwner) {
+    links.push({ route: "AdminHome", label: "Super Admin panel" });
+  }
+  links.push({ route: "Wishlist", label: "Wishlist" });
+  if (user?.role === "end_user") {
+    links.push({ route: "DealerMap", label: "Dealer locator" });
+  } else {
+    links.push({ route: "Payments", label: "Payments" });
+  }
+  links.push({ route: "Locations", label: "Saved locations" });
+  links.push({ route: "Notifications", label: "Notifications" });
+  return links;
+}

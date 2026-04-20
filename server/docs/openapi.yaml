@@ -1,0 +1,1022 @@
+openapi: 3.0.3
+info:
+  title: Vello Trade API
+  description: |
+    REST API for the Vello Trade B2B marketplace mobile app (Expo). JSON routes are mounted under **`/api`** (the mobile client uses `baseURL: {host}/api`).
+
+    **Socket.IO** runs on the same HTTP server. After login, connect with JWT in handshake `auth: { token: "<jwt>" }`.
+    Events include `room:join`, `chat:typing`, `message:new`, `chat:room:updated`. See the repository README for details.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:4000
+    description: Local development
+
+tags:
+  - name: Health
+  - name: Auth
+  - name: Products
+  - name: Orders
+  - name: Chat
+  - name: Invoices
+  - name: Dealers
+  - name: Users
+  - name: Payments
+  - name: Locations
+  - name: Dealer locator
+  - name: Notifications
+  - name: Wishlist
+  - name: Admin
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+security:
+  - bearerAuth: []
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Liveness check
+      security: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+
+  /api/auth/roles:
+    get:
+      tags: [Auth]
+      summary: Roles and self-registration policy from environment
+      security: []
+      responses:
+        "200":
+          description: OK
+
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password, role]
+              properties:
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                password:
+                  type: string
+                  minLength: 6
+                role:
+                  type: string
+                  enum: [company, distributor, retail, end_user]
+                name:
+                  type: string
+                businessName:
+                  type: string
+                address:
+                  type: string
+                companyId:
+                  type: string
+                distributorId:
+                  type: string
+      responses:
+        "201":
+          description: Created
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login (email or phone + password; email may require OTP follow-up)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                email:
+                  type: string
+                phone:
+                  type: string
+                password:
+                  type: string
+                otpCode:
+                  type: string
+      responses:
+        "200":
+          description: Token or OTP challenge
+
+  /api/auth/login-otp/request:
+    post:
+      tags: [Auth]
+      summary: Request passwordless login OTP email
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+
+  /api/auth/login-otp/verify:
+    post:
+      tags: [Auth]
+      summary: Verify OTP and receive JWT
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, code]
+              properties:
+                email:
+                  type: string
+                code:
+                  type: string
+
+  /api/auth/register/verify-email:
+    post:
+      tags: [Auth]
+      summary: Verify end_user email after registration
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, otpCode]
+              properties:
+                email:
+                  type: string
+                otpCode:
+                  type: string
+
+  /api/auth/register/resend-email-code:
+    post:
+      tags: [Auth]
+      summary: Resend registration verification code
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+
+  /api/auth/forgot/request:
+    post:
+      tags: [Auth]
+      summary: Request password reset email
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+
+  /api/auth/forgot/reset:
+    post:
+      tags: [Auth]
+      summary: Reset password with code
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, code, newPassword]
+              properties:
+                email:
+                  type: string
+                code:
+                  type: string
+                newPassword:
+                  type: string
+                  minLength: 6
+
+  /api/auth/password:
+    patch:
+      tags: [Auth]
+      summary: Change password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword:
+                  type: string
+                newPassword:
+                  type: string
+
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Current user
+
+  /api/auth/profile:
+    get:
+      tags: [Auth]
+      summary: Current user (alias)
+    patch:
+      tags: [Auth]
+      summary: Update display name only
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+
+  /api/auth/me/location:
+    patch:
+      tags: [Auth]
+      summary: Set GeoJSON point on user for maps
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lat, lng]
+              properties:
+                lat:
+                  type: number
+                lng:
+                  type: number
+
+  /api/products:
+    get:
+      tags: [Products]
+      summary: List products (global catalog + listings; optional filters)
+      security: []
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+        - in: query
+          name: category
+          schema:
+            type: string
+        - in: query
+          name: companyId
+          schema:
+            type: string
+        - in: query
+          name: sellerId
+          schema:
+            type: string
+    post:
+      tags: [Products]
+      summary: Create listing (company / distributor)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, category, price, quantity]
+              properties:
+                name:
+                  type: string
+                category:
+                  type: string
+                price:
+                  type: number
+                quantity:
+                  type: integer
+                description:
+                  type: string
+                images:
+                  type: array
+                  items:
+                    type: string
+
+  /api/products/{id}:
+    get:
+      tags: [Products]
+      summary: Product detail
+      security: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+    patch:
+      tags: [Products]
+      summary: Update own product
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+    delete:
+      tags: [Products]
+      summary: Delete own product
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+
+  /api/orders:
+    get:
+      tags: [Orders]
+      summary: Orders where I am buyer or seller
+    post:
+      tags: [Orders]
+      summary: Place order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sellerId, items]
+              properties:
+                sellerId:
+                  type: string
+                orderChannel:
+                  type: string
+                  enum: [marketplace, stock]
+                notes:
+                  type: string
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [productId, quantity]
+                    properties:
+                      productId:
+                        type: string
+                      quantity:
+                        type: integer
+
+  /api/orders/history:
+    get:
+      tags: [Orders]
+      summary: Same as GET /api/orders
+
+  /api/orders/{id}:
+    get:
+      tags: [Orders]
+      summary: Order by id (participant only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+
+  /api/orders/{id}/status:
+    patch:
+      tags: [Orders]
+      summary: Update status (buyer/seller rules)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [pending, confirmed, shipped, completed, cancelled]
+
+  /api/chat/rooms:
+    get:
+      tags: [Chat]
+      summary: My rooms
+    post:
+      tags: [Chat]
+      summary: Open or create 1:1 room
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [withUserId]
+              properties:
+                withUserId:
+                  type: string
+
+  /api/chat/rooms/open:
+    post:
+      tags: [Chat]
+      summary: Alias of POST /api/chat/rooms
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [withUserId]
+              properties:
+                withUserId:
+                  type: string
+
+  /api/chat/rooms/{roomId}/messages:
+    get:
+      tags: [Chat]
+      summary: Messages in room
+      parameters:
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            type: string
+    post:
+      tags: [Chat]
+      summary: Send message
+      parameters:
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body:
+                  type: string
+                productId:
+                  type: string
+                orderId:
+                  type: string
+
+  /api/invoices:
+    get:
+      tags: [Invoices]
+      summary: My invoices (issuer or customer)
+
+  /api/invoices/from-order:
+    post:
+      tags: [Invoices]
+      summary: Generate invoice from order (seller)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [orderId]
+              properties:
+                orderId:
+                  type: string
+
+  /api/invoices/{id}/status:
+    patch:
+      tags: [Invoices]
+      summary: Update invoice / mark paid
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [draft, sent, paid, overdue]
+                method:
+                  type: string
+                  enum: [cash, upi, bank, card, unknown]
+                notes:
+                  type: string
+
+  /api/dealers/nearby:
+    get:
+      tags: [Dealers]
+      summary: Nearby users with location (geo)
+      security: []
+      parameters:
+        - in: query
+          name: lat
+          required: true
+          schema:
+            type: number
+        - in: query
+          name: lng
+          required: true
+          schema:
+            type: number
+        - in: query
+          name: role
+          schema:
+            type: string
+            enum: [distributor, retail, company]
+
+  /api/users/workspace-summary:
+    get:
+      tags: [Users]
+      summary: Distributor workspace summary
+
+  /api/users/my-retail:
+    get:
+      tags: [Users]
+      summary: Linked retail accounts
+
+  /api/users/retail:
+    post:
+      tags: [Users]
+      summary: Distributor creates retail user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                email:
+                  type: string
+                phone:
+                  type: string
+                password:
+                  type: string
+                name:
+                  type: string
+                businessName:
+                  type: string
+
+  /api/users/team:
+    get:
+      tags: [Users]
+      summary: Company distributors and retail
+
+  /api/users/link-distributor:
+    patch:
+      tags: [Users]
+      summary: Attach distributor to company
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [companyId]
+              properties:
+                companyId:
+                  type: string
+
+  /api/users/link-retail:
+    patch:
+      tags: [Users]
+      summary: Attach retail to distributor
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [distributorId]
+              properties:
+                distributorId:
+                  type: string
+
+  /api/payments:
+    get:
+      tags: [Payments]
+      summary: My payments
+    post:
+      tags: [Payments]
+      summary: Create payment record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [payeeId, amount]
+              properties:
+                payeeId:
+                  type: string
+                amount:
+                  type: number
+                method:
+                  type: string
+                currency:
+                  type: string
+                orderId:
+                  type: string
+                invoiceId:
+                  type: string
+                notes:
+                  type: string
+
+  /api/payments/{id}/status:
+    patch:
+      tags: [Payments]
+      summary: Update payment status
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [pending, completed, failed, refunded]
+
+  /api/locations:
+    get:
+      tags: [Locations]
+      summary: My saved pins
+    post:
+      tags: [Locations]
+      summary: Add location
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [label, lat, lng]
+              properties:
+                label:
+                  type: string
+                lat:
+                  type: number
+                lng:
+                  type: number
+                address:
+                  type: string
+                roleContext:
+                  type: string
+                isPrimary:
+                  type: boolean
+
+  /api/locations/{id}:
+    patch:
+      tags: [Locations]
+      summary: Update location
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+    delete:
+      tags: [Locations]
+      summary: Delete location
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+
+  /api/locations/{id}/primary:
+    patch:
+      tags: [Locations]
+      summary: Set primary pin
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+
+  /api/dealer-locator/locations:
+    get:
+      tags: [Dealer locator]
+      summary: Same as GET /api/locations
+    post:
+      tags: [Dealer locator]
+      summary: Same as POST /api/locations
+
+  /api/dealer-locator/locations/{id}:
+    patch:
+      tags: [Locations]
+      summary: Same as PATCH /api/locations/{id}
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+    delete:
+      tags: [Locations]
+      summary: Same as DELETE /api/locations/{id}
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+
+  /api/dealer-locator/locations/{id}/primary:
+    patch:
+      tags: [Dealer locator]
+      summary: Same as PATCH /api/locations/{id}/primary
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+
+  /api/dealer-locator/nearby:
+    get:
+      tags: [Dealer locator]
+      summary: Same as GET /api/dealers/nearby
+      security: []
+      parameters:
+        - in: query
+          name: lat
+          required: true
+          schema:
+            type: number
+        - in: query
+          name: lng
+          required: true
+          schema:
+            type: number
+        - in: query
+          name: role
+          schema:
+            type: string
+
+  /api/notifications/push-status:
+    get:
+      tags: [Notifications]
+      summary: Push configuration
+
+  /api/notifications/device-token:
+    post:
+      tags: [Notifications]
+      summary: Register device token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+                platform:
+                  type: string
+                  enum: [ios, android, expo, web, unknown]
+
+  /api/notifications/device-token/remove:
+    post:
+      tags: [Notifications]
+      summary: Unregister token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+
+  /api/notifications/devices:
+    get:
+      tags: [Notifications]
+      summary: Device metadata list
+
+  /api/notifications:
+    get:
+      tags: [Notifications]
+      summary: In-app feed
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+
+  /api/notifications/{id}/read:
+    patch:
+      tags: [Notifications]
+      summary: Mark read
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+
+  /api/notifications/read-all:
+    post:
+      tags: [Notifications]
+      summary: Mark all read
+
+  /api/wishlist:
+    get:
+      tags: [Wishlist]
+      summary: Wishlist items
+    post:
+      tags: [Wishlist]
+      summary: Add to wishlist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [productId]
+              properties:
+                productId:
+                  type: string
+
+  /api/wishlist/status/{productId}:
+    get:
+      tags: [Wishlist]
+      summary: In-wishlist flag
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: string
+
+  /api/wishlist/{productId}:
+    delete:
+      tags: [Wishlist]
+      summary: Remove from wishlist
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: string
+
+  /api/admin/users:
+    get:
+      tags: [Admin]
+      summary: Paginated users (Super Admin)
+
+  /api/admin/users/distributor:
+    post:
+      tags: [Admin]
+      summary: Create distributor
+
+  /api/admin/users/retail:
+    post:
+      tags: [Admin]
+      summary: Create retail for company + distributor
+
+  /api/admin/users/{id}:
+    patch:
+      tags: [Admin]
+      summary: Status / permissions
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+
+  /api/admin/catalog/products:
+    get:
+      tags: [Admin]
+      summary: Global catalog
+    post:
+      tags: [Admin]
+      summary: Add global SKU
+
+  /api/admin/catalog/products/{id}:
+    patch:
+      tags: [Admin]
+      summary: Update global SKU
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+    delete:
+      tags: [Admin]
+      summary: Delete global SKU
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+
+  /api/admin/categories:
+    get:
+      tags: [Admin]
+      summary: Categories
+    post:
+      tags: [Admin]
+      summary: Create category
+
+  /api/admin/categories/{id}:
+    patch:
+      tags: [Admin]
+      summary: Update category
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+    delete:
+      tags: [Admin]
+      summary: Delete category
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+
+  /api/admin/orders:
+    get:
+      tags: [Admin]
+      summary: All orders
+
+  /api/admin/payments:
+    get:
+      tags: [Admin]
+      summary: All payments
+
+  /api/admin/analytics/summary:
+    get:
+      tags: [Admin]
+      summary: Dashboard aggregates
