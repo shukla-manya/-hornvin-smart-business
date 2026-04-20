@@ -1,13 +1,4 @@
-/**
- * Idempotent Super Admin seed — credentials only from env (nothing hardcoded).
- *
- * Requires: MONGODB_URI, BOOTSTRAP_PLATFORM_OWNER_EMAIL, BOOTSTRAP_PLATFORM_OWNER_PASSWORD
- *
- * - If any user already has isPlatformOwner: true → exits 0 (no-op).
- * - Else if no user with that email → creates company user, approved, isPlatformOwner.
- * - Else if that user is company and not yet owner → promotes to owner; updates password if env password set.
- * - Else → error (email in use by another role or ambiguous case).
- */
+
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
