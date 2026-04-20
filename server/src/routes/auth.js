@@ -155,6 +155,7 @@ authRouter.post(
       if (e.code === 11000) {
         return res.status(409).json({ error: "Email or phone already registered" });
       }
+      if (process.env.NODE_ENV === "test") console.error("register:error", e);
       return res.status(500).json({ error: "Registration failed" });
     }
   }
