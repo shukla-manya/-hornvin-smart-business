@@ -17,6 +17,7 @@ export function ProfileScreen({ navigation }) {
   const [savingName, setSavingName] = useState(false);
 
   const companyProfile = user?.role === "company";
+  const showBusinessForm = companyProfile || user?.role === "retail" || user?.role === "distributor";
 
   useEffect(() => {
     setNameDraft(user?.name || "");
