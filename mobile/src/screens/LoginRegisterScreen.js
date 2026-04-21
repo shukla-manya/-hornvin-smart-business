@@ -102,7 +102,7 @@ export function LoginRegisterScreen() {
         Alert.alert("Contact", "Enter email or phone.");
         return;
       }
-      if (!businessName.trim()) {
+      if (role !== "end_user" && !businessName.trim()) {
         Alert.alert("Business", "Enter your business or shop name.");
         return;
       }
@@ -284,14 +284,18 @@ export function LoginRegisterScreen() {
             ) : null}
             <Text style={styles.label}>Your name</Text>
             <TextInput value={name} onChangeText={setName} placeholder="Full name" placeholderTextColor={colors.textSecondary} style={styles.input} />
-            <Text style={styles.label}>Business name</Text>
-            <TextInput
-              value={businessName}
-              onChangeText={setBusinessName}
-              placeholder="Shop or company name"
-              placeholderTextColor={colors.textSecondary}
-              style={styles.input}
-            />
+            {role !== "end_user" && (
+              <>
+                <Text style={styles.label}>Business name</Text>
+                <TextInput
+                  value={businessName}
+                  onChangeText={setBusinessName}
+                  placeholder="Shop or company name"
+                  placeholderTextColor={colors.textSecondary}
+                  style={styles.input}
+                />
+              </>
+            )}
           </>
         )}
 
