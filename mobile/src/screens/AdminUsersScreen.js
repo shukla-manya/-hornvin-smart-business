@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   createdBy: { marginTop: 4, fontSize: 12, color: colors.header, fontWeight: "600" },
   perm: { marginTop: 6, fontSize: 12, color: colors.header },
   row: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 },
-  btn: { flexGrow: 1, minWidth: "28%", padding: 10, borderRadius: 10, borderWidth: 1, borderColor: colors.secondaryBlue, alignItems: "center" },
+  btn: { flexGrow: 1, flexBasis: "30%", padding: 10, borderRadius: 10, borderWidth: 1, borderColor: colors.secondaryBlue, alignItems: "center" },
   btnPrimary: { backgroundColor: colors.secondaryBlue, borderColor: colors.secondaryBlue },
   btnTxt: { color: colors.secondaryBlue, fontWeight: "700" },
   btnTxtPrimary: { color: colors.white, fontWeight: "800" },
