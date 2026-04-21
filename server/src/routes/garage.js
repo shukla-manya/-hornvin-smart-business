@@ -144,6 +144,8 @@ garageRouter.post(
   "/service-records",
   [
     body("summary").isString().trim().notEmpty(),
+    body("garageCustomerId").optional().isMongoId(),
+    body("garageVehicleId").optional().isMongoId(),
     body("customerName").optional().isString().trim(),
     body("customerPhone").optional().isString().trim(),
     body("vehiclePlate").optional().isString().trim(),
@@ -156,13 +158,38 @@ garageRouter.post(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    let customerName = req.body.customerName || "";
+    let customerPhone = req.body.customerPhone || "";
+    let vehiclePlate = req.body.vehiclePlate || "";
+    let vehicleModel = req.body.vehicleModel || "";
+    let garageCustomerId = req.body.garageCustomerId || undefined;
+    let garageVehicleId = req.body.garageVehicleId || undefined;
+
+    if (garageCustomerId) {
+      const gc = await GarageCustomer.findOne({ _id: garageCustomerId, garageUserId: req.user._id });
+      if (!gc) return res.status(400).json({ error: "Customer not found" });
+      if (!customerName) customerName = gc.name || "";
+      if (!customerPhone) customerPhone = gc.phone || "";
+      if (!vehiclePlate) vehiclePlate = gc.vehiclePlate || "";
+      if (!vehicleModel) vehicleModel = gc.vehicleModel || "";
+    }
+    if (garageVehicleId) {
+      const gv = await GarageVehicle.findOne({ _id: garageVehicleId, garageUserId: req.user._id });
+      if (!gv) return res.status(400).json({ error: "Vehicle not found" });
+      vehiclePlate = vehiclePlate || gv.plateNumber || "";
+      vehicleModel = vehicleModel || gv.model || "";
+      if (!garageCustomerId) garageCustomerId = String(gv.garageCustomerId);
+    }
+
     const doc = await GarageServiceRecord.create({
       garageUserId: req.user._id,
+      garageCustomerId: garageCustomerId || undefined,
+      garageVehicleId: garageVehicleId || undefined,
       summary: req.body.summary,
-      customerName: req.body.customerName || "",
-      customerPhone: req.body.customerPhone || "",
-      vehiclePlate: req.body.vehiclePlate || "",
-      vehicleModel: req.body.vehicleModel || "",
+      customerName,
+      customerPhone,
+      vehiclePlate,
+      vehicleModel,
       odometerKm: req.body.odometerKm,
       laborHours: req.body.laborHours ?? 0,
       partsUsed: req.body.partsUsed || "",
