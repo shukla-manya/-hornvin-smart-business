@@ -132,7 +132,7 @@ export function GarageInventoryScreen({ navigation }) {
         },
         {
           text: "Marketplace",
-          onPress: () => navigation.navigate("ExploreTab"),
+          onPress: () => navigation.navigate("Main", { screen: "ExploreTab" }),
         },
       ]);
     } catch (e) {
@@ -147,7 +147,14 @@ export function GarageInventoryScreen({ navigation }) {
         keyExtractor={(it) => it._id}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={load} tintColor={colors.header} />}
         ListHeaderComponent={
-          <Text style={styles.lead}>Track parts on your shelf. When quantity hits the reorder level, restock from Explore or your company catalog.</Text>
+          <View>
+            <Text style={styles.lead}>
+              Stock tracking with low-stock highlights. Message your distributor from low-stock lines, then buy on Marketplace when needed.
+            </Text>
+            <Pressable style={styles.reorderBtn} onPress={orderFromDistributor}>
+              <Text style={styles.reorderBtnTxt}>Order from distributor (message)</Text>
+            </Pressable>
+          </View>
         }
         ListEmptyComponent={
           loading ? (
@@ -220,7 +227,16 @@ export function GarageInventoryScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
-  lead: { color: colors.textSecondary, fontSize: 14, lineHeight: 20, marginBottom: 12 },
+  lead: { color: colors.textSecondary, fontSize: 14, lineHeight: 20, marginBottom: 10 },
+  reorderBtn: {
+    alignSelf: "flex-start",
+    backgroundColor: colors.header,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    marginBottom: 14,
+  },
+  reorderBtnTxt: { color: colors.white, fontWeight: "800", fontSize: 13 },
   empty: { textAlign: "center", color: colors.textSecondary, marginTop: 24 },
   card: {
     backgroundColor: colors.card,
