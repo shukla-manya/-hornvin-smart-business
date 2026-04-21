@@ -23,6 +23,7 @@ import { notificationsRouter } from "./routes/notifications.js";
 import { wishlistRouter } from "./routes/wishlist.js";
 import { adminRouter } from "./routes/admin.js";
 import { garageRouter } from "./routes/garage.js";
+import { rewardsRouter } from "./routes/rewards.js";
 import { partFinderRouter } from "./routes/partFinder.js";
 import { ChatRoom } from "./models/ChatRoom.js";
 import { Product } from "./models/Product.js";
@@ -104,6 +105,7 @@ export function createApp() {
   app.use("/api/wishlist", wishlistRouter);
   app.use("/api/admin", adminRouter);
   app.use("/api/garage", garageRouter);
+  app.use("/api/rewards", rewardsRouter);
 
   app.use((err, _req, res, _next) => {
     console.error(err);

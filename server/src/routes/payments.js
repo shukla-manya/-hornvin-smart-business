@@ -13,8 +13,8 @@ paymentsRouter.get("/", async (req, res) => {
     $or: [{ payerId: req.user._id }, { payeeId: req.user._id }],
   })
     .sort({ createdAt: -1 })
-    .populate("payerId", "name businessName phone email role")
-    .populate("payeeId", "name businessName phone email role")
+    .populate("payerId", "name businessName phone email role upiVpa upiMerchantName")
+    .populate("payeeId", "name businessName phone email role upiVpa upiMerchantName")
     .populate("orderId")
     .populate("invoiceId");
   return res.json({ payments: list });

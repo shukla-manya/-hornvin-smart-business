@@ -503,6 +503,8 @@ authRouter.patch(
     body("name").optional().isString().trim().isLength({ min: 0, max: 120 }),
     body("businessName").optional().isString().trim().isLength({ min: 0, max: 200 }),
     body("address").optional().isString().trim().isLength({ min: 0, max: 500 }),
+    body("upiVpa").optional().isString().trim().isLength({ max: 80 }),
+    body("upiMerchantName").optional().isString().trim().isLength({ max: 80 }),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -535,6 +537,14 @@ authRouter.patch(
         const a = typeof req.body.address === "string" ? req.body.address.trim() : "";
         req.user.address = a || undefined;
       }
+    }
+    if (req.body.upiVpa !== undefined) {
+      const v = typeof req.body.upiVpa === "string" ? req.body.upiVpa.trim() : "";
+      req.user.upiVpa = v.slice(0, 80);
+    }
+    if (req.body.upiMerchantName !== undefined) {
+      const v = typeof req.body.upiMerchantName === "string" ? req.body.upiMerchantName.trim() : "";
+      req.user.upiMerchantName = v.slice(0, 80);
     }
     await req.user.save();
     return res.json({ user: req.user.toSafeJSON() });

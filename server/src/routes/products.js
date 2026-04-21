@@ -92,6 +92,7 @@ productsRouter.post(
     body("quantity").isInt({ min: 0 }),
     body("description").optional().isString(),
     body("images").optional().isArray(),
+    body("listingType").optional().isIn(["spare_part", "vehicle", "other"]),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -127,6 +128,7 @@ productsRouter.post(
       price: req.body.price,
       quantity: req.body.quantity,
       images: req.body.images || [],
+      listingType: req.body.listingType || "other",
       isGlobalCatalog: false,
     });
     const populated = await Product.findById(product._id)
@@ -145,7 +147,7 @@ productsRouter.patch("/:id", allowRoles("company", "distributor", "retail"), asy
   if (!canManageProduct(req.user, product)) {
     return res.status(403).json({ error: "Not your product" });
   }
-  const { name, description, category, price, quantity, images } = req.body;
+  const { name, description, category, price, quantity, images, listingType } = req.body;
   const prevQty = product.quantity;
   if (name !== undefined) product.name = name;
   if (description !== undefined) product.description = description;
@@ -153,6 +155,9 @@ productsRouter.patch("/:id", allowRoles("company", "distributor", "retail"), asy
   if (price !== undefined) product.price = price;
   if (quantity !== undefined) product.quantity = quantity;
   if (images !== undefined) product.images = images;
+  if (listingType !== undefined && ["spare_part", "vehicle", "other"].includes(listingType)) {
+    product.listingType = listingType;
+  }
   await product.save();
   if (quantity !== undefined) {
     void maybeNotifyStockLowAfterDecrease(product, prevQty).catch(() => {});
