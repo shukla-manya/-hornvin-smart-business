@@ -228,6 +228,10 @@ export function LoginRegisterScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        <Pressable onPress={() => navigation.navigate("RoleSelection")} style={styles.backLink}>
+          <Text style={styles.backLinkText}>← Choose account type</Text>
+        </Pressable>
+
         {/* Mode toggle pill */}
         <View style={styles.togglePill}>
           <Pressable
@@ -583,6 +587,10 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingBottom: 48,
   },
+
+  // ── Back link ───────────────────────────────────────────
+  backLink: { marginBottom: 18, alignSelf: "flex-start" },
+  backLinkText: { color: colors.secondaryBlue, fontWeight: "600", fontSize: 13 },
 
   // ── Toggle pill ─────────────────────────────────────────
   togglePill: {
