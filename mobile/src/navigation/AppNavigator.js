@@ -1,11 +1,11 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Text, StyleSheet } from "react-native";
+import { Text, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../theme";
-import { navigationRef } from "./navigationRoot";
+import { navigationRef, resetToLoginRegister } from "./navigationRoot";
 import { SplashScreen } from "../screens/SplashScreen";
 import { RoleSelectionScreen } from "../screens/RoleSelectionScreen";
 import { LoginRegisterScreen } from "../screens/LoginRegisterScreen";
@@ -123,7 +123,19 @@ const TAB_REGISTRY = {
 };
 
 function MainTabs() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const wasAuthenticated = useRef(false);
+  useEffect(() => {
+    if (wasAuthenticated.current && !isAuthenticated) {
+      resetToLoginRegister();
+    }
+    wasAuthenticated.current = isAuthenticated;
+  }, [isAuthenticated]);
+
+  if (!isAuthenticated) {
+    return <View style={{ flex: 1, backgroundColor: colors.background }} />;
+  }
+
   const insets = useSafeAreaInsets();
   const tabKeys = useMemo(() => getVisibleMainTabKeys(user?.role), [user?.role]);
   const initialRouteName = useMemo(() => {
