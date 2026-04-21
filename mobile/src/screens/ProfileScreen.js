@@ -295,7 +295,7 @@ export function ProfileScreen({ navigation }) {
         {!showBusinessForm ? <Row label="Address" value={user?.address || "—"} isLast /> : null}
       </View>
       <Pressable
-        onPress={() => navigation.getParent()?.getParent()?.navigate("ChangePassword")}
+        onPress={() => open("ChangePassword")}
         style={styles.changePw}
       >
         <Text style={styles.changePwText}>Change password</Text>
