@@ -315,9 +315,6 @@ components:
           type: number
         notes:
           type: string
-        orderChannel:
-          type: string
-          enum: [marketplace, stock]
         createdAt:
           type: string
           format: date-time
@@ -1015,6 +1012,18 @@ paths:
     get:
       tags: [Chat]
       summary: My rooms
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rooms:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ChatRoom"
     post:
       tags: [Chat]
       summary: Open or create 1:1 room
@@ -1054,6 +1063,18 @@ paths:
           required: true
           schema:
             type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ChatMessage"
     post:
       tags: [Chat]
       summary: Send message
@@ -1080,6 +1101,18 @@ paths:
     get:
       tags: [Invoices]
       summary: My invoices (issuer or customer)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  invoices:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Invoice"
 
   /api/invoices/from-order:
     post:
@@ -1149,6 +1182,13 @@ paths:
     get:
       tags: [Users]
       summary: Distributor workspace summary
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceSummary"
 
   /api/users/my-retail:
     get:
@@ -1454,6 +1494,18 @@ paths:
     get:
       tags: [Wishlist]
       summary: Wishlist items
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/WishlistItem"
     post:
       tags: [Wishlist]
       summary: Add to wishlist
@@ -1494,16 +1546,117 @@ paths:
     get:
       tags: [Admin]
       summary: Paginated users (Super Admin)
+      parameters:
+        - in: query
+          name: role
+          schema:
+            type: string
+            enum: [company, distributor, retail, end_user]
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [pending, approved, rejected, suspended, blocked]
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+        - in: query
+          name: skip
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedUsers"
+        "400":
+          description: Invalid query
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrors"
 
   /api/admin/users/distributor:
     post:
       tags: [Admin]
       summary: Create distributor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password:
+                  type: string
+                  minLength: 6
+                name:
+                  type: string
+                businessName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/UserPublic"
 
   /api/admin/users/retail:
     post:
       tags: [Admin]
       summary: Create retail for company + distributor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password, companyId, distributorId]
+              properties:
+                password:
+                  type: string
+                  minLength: 6
+                companyId:
+                  $ref: "#/components/schemas/ObjectId"
+                distributorId:
+                  $ref: "#/components/schemas/ObjectId"
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                name:
+                  type: string
+                businessName:
+                  type: string
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/UserPublic"
 
   /api/admin/users/{id}:
     patch:
@@ -1515,14 +1668,69 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [pending, approved, rejected, suspended, blocked]
+                permissions:
+                  $ref: "#/components/schemas/UserPermissions"
+                name:
+                  type: string
+                businessName:
+                  type: string
+                address:
+                  type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/UserPublic"
 
   /api/admin/catalog/products:
     get:
       tags: [Admin]
       summary: Global catalog
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Product"
     post:
       tags: [Admin]
       summary: Add global SKU
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductCreateRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  product:
+                    $ref: "#/components/schemas/Product"
 
   /api/admin/catalog/products/{id}:
     patch:
@@ -1534,6 +1742,36 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                category:
+                  type: string
+                price:
+                  type: number
+                quantity:
+                  type: number
+                images:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  product:
+                    $ref: "#/components/schemas/Product"
     delete:
       tags: [Admin]
       summary: Delete global SKU
@@ -1543,14 +1781,58 @@ paths:
           required: true
           schema:
             type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
 
   /api/admin/categories:
     get:
       tags: [Admin]
       summary: Categories
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  categories:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Category"
     post:
       tags: [Admin]
       summary: Create category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                sortOrder:
+                  type: integer
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  category:
+                    $ref: "#/components/schemas/Category"
 
   /api/admin/categories/{id}:
     patch:
@@ -1562,6 +1844,28 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                sortOrder:
+                  type: integer
+                active:
+                  type: boolean
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  category:
+                    $ref: "#/components/schemas/Category"
     delete:
       tags: [Admin]
       summary: Delete category
@@ -1571,18 +1875,89 @@ paths:
           required: true
           schema:
             type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
 
   /api/admin/orders:
     get:
       tags: [Admin]
       summary: All orders
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+        - in: query
+          name: skip
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedOrders"
+        "400":
+          description: Invalid query
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrors"
 
   /api/admin/payments:
     get:
       tags: [Admin]
       summary: All payments
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+        - in: query
+          name: skip
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedPayments"
+        "400":
+          description: Invalid query
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrors"
 
   /api/admin/analytics/summary:
     get:
       tags: [Admin]
       summary: Dashboard aggregates
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsSummary"
