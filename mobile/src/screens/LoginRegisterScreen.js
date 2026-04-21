@@ -461,9 +461,9 @@ export function LoginRegisterScreen() {
                         setBusy(false);
                       }
                     }}
-                    style={styles.cta}
+                    style={styles.modalCta}
                   >
-                    <Text style={styles.ctaText}>Send code</Text>
+                    <Text style={styles.modalCtaText}>Send code</Text>
                   </Pressable>
                 </View>
               </>
@@ -520,9 +520,9 @@ export function LoginRegisterScreen() {
                         setBusy(false);
                       }
                     }}
-                    style={styles.cta}
+                    style={styles.modalCta}
                   >
-                    <Text style={styles.ctaText}>Save</Text>
+                    <Text style={styles.modalCtaText}>Save</Text>
                   </Pressable>
                 </View>
               </>
@@ -707,13 +707,30 @@ const styles = StyleSheet.create({
   },
   modalTitle: { fontSize: 20, fontWeight: "700", color: colors.text, marginBottom: 8, letterSpacing: 0.2 },
   modalHint: { color: colors.textSecondary, marginBottom: 16, fontSize: 13, lineHeight: 19 },
-  modalActions: { flexDirection: "row", justifyContent: "flex-end", gap: 10, marginTop: 18 },
+  modalActions: { flexDirection: "row", gap: 10, marginTop: 20 },
   modalSecondary: {
-    paddingHorizontal: 16,
-    paddingVertical: 11,
-    borderRadius: 10,
-    borderWidth: 1,
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: radii.button,
+    borderWidth: 1.5,
     borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.background,
   },
-  modalSecondaryText: { color: colors.text, fontWeight: "600" },
+  modalSecondaryText: { color: colors.header, fontWeight: "700", fontSize: 15 },
+  modalCta: {
+    flex: 1,
+    backgroundColor: colors.cta,
+    paddingVertical: 14,
+    borderRadius: radii.button,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: colors.cta,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  modalCtaText: { color: "#FFFFFF", fontWeight: "700", fontSize: 15 },
 });
