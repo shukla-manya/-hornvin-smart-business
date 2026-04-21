@@ -222,6 +222,7 @@ export function LoginRegisterScreen() {
       </View>
 
       {/* Floating form sheet */}
+      <View style={styles.sheetWrapper}>
       <ScrollView
         style={styles.sheet}
         contentContainerStyle={styles.sheetContent}
@@ -428,8 +429,9 @@ export function LoginRegisterScreen() {
           </Pressable>
         ) : null}
 
-        <FooterCredit compact />
       </ScrollView>
+      <FooterCredit compact />
+      </View>
 
       {/* Forgot password modal */}
       <Modal visible={forgotOpen} transparent animationType="slide">

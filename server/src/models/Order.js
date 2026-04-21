@@ -22,6 +22,8 @@ const orderSchema = new mongoose.Schema(
     },
     total: { type: Number, required: true, min: 0 },
     notes: { type: String, default: "" },
+    /** marketplace = B2B/B2C listings; stock = company catalog channel. */
+    orderChannel: { type: String, enum: ["marketplace", "stock"], default: "marketplace" },
   },
   { timestamps: true }
 );

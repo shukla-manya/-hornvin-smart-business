@@ -127,6 +127,7 @@ ordersRouter.post(
         total,
         notes: notes || "",
         status: "pending",
+        orderChannel,
       });
 
       for (const sc of stockChecks) {

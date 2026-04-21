@@ -21,6 +21,8 @@ const userSchema = new mongoose.Schema(
     rewardPoints: { type: Number, default: 0, min: 0 },
     /** Retail garages: selected service lines (onboarding + discovery). */
     garageServices: [{ type: String, trim: true }],
+    /** Distributor territory / region label (Super Admin assigns). */
+    distributorRegion: { type: String, trim: true, default: "" },
     location: {
       type: { type: String, enum: ["Point"] },
       coordinates: { type: [Number] },
@@ -115,6 +117,7 @@ userSchema.methods.toSafeJSON = function toSafeJSON() {
     upiVpa: this.upiVpa || "",
     upiMerchantName: this.upiMerchantName || "",
     rewardPoints: this.rewardPoints ?? 0,
+    distributorRegion: this.distributorRegion || "",
   };
 };
 

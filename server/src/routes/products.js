@@ -29,7 +29,7 @@ export function buildProductListFilter(query) {
     return parts.length === 1 ? parts[0] : { $and: parts };
   }
 
-  const globalParts = [{ isGlobalCatalog: true }];
+  const globalParts = [{ isGlobalCatalog: true }, { catalogHidden: { $ne: true } }];
   if (category) globalParts.push({ category });
   if (listingType) globalParts.push({ listingType });
   if (q) globalParts.push({ $text: { $search: String(q) } });

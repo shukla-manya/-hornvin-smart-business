@@ -16,6 +16,8 @@ const productSchema = new mongoose.Schema(
     listingType: { type: String, enum: ["spare_part", "vehicle", "other"], default: "other" },
     /** Platform-wide catalog rows (Super Admin); listed in marketplace for all buyers. */
     isGlobalCatalog: { type: Boolean, default: false },
+    /** Super Admin: hide global SKU from public marketplace feed (still usable in stock flows if needed). */
+    catalogHidden: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
