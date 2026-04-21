@@ -181,6 +181,8 @@ Uses `mongodb-memory-server` (no local Mongo required for tests).
 | `SMTP_*` | Nodemailer for OTP and onboarding mail (`config/mail.js`, `otpEmail.js`) |
 | `EXPO_ACCESS_TOKEN`, `PUSH_SEND_ENABLED` | Expo push delivery (`pushNotify.js`) |
 | `PUSH_PROVIDER`, `STOCK_LOW_THRESHOLD` | Push behaviour / low-stock threshold |
+| `OPENAI_API_KEY` | Optional — **Part Finder** photo match (`POST /api/part-finder/identify`); without it, users can still search with the text hint |
+| `OPENAI_VISION_MODEL` | Optional vision model id (default `gpt-4o-mini`) |
 
 Never commit real `.env` files. Keep secrets in local env or a secret manager.
 
