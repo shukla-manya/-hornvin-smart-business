@@ -3,6 +3,13 @@ import { View, Text, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../theme";
 
+/** Vertical space to reserve above the sticky footer (single source for App.js padding). */
+export function stickyFooterReserve(insets) {
+  const bottom = Math.max(insets?.bottom ?? 0, 8);
+  // ~10 top pad + ~16 line + bottom safe area + hairline
+  return Math.ceil(36 + bottom);
+}
+
 /**
  * App-level footer: sits at the bottom of the window (used once in App.js).
  * Optional `compact` for tighter padding on dense layouts.
@@ -29,7 +36,7 @@ const styles = StyleSheet.create({
   bar: {
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.border,
-    backgroundColor: colors.background,
+    backgroundColor: colors.card,
     paddingHorizontal: 16,
     alignItems: "center",
     justifyContent: "center",
