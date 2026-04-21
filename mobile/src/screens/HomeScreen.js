@@ -411,7 +411,7 @@ export function HomeScreen({ navigation }) {
         </View>
         <Text style={styles.hint}>
           {role === "end_user"
-            ? "End customer accounts stay light: service history in orders, payments, and reminders. Your garage or marketplace seller may invite you to chat from a product page when needed."
+            ? "Light customer role: Service tab for orders, Chat tab to message your garage or seller, Invoices for bills you receive, Reminders for push and alerts, Profile for payments and optional browsing."
             : "Chain: Hornvin company (Super Admin) → distributor → garage (retail) → end customer. Distributors are created only by the Super Admin; distributors create garage accounts. Pending self-signups are approved only in the Super Admin panel."}
         </Text>
       </View>
