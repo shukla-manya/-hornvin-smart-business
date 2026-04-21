@@ -179,8 +179,8 @@ export function GarageRemindersScreen({ navigation }) {
         refreshControl={<RefreshControl refreshing={loading} onRefresh={load} tintColor={colors.header} />}
         ListHeaderComponent={
           <Text style={styles.lead}>
-            Customer follow-ups: set a next contact or service date. Hornvin lists what is due soon on the Garage home tiles —
-            plug in SMS/WhatsApp or push in a later release.
+            Customer management: save phone, link vehicles from the row action, set service and payment reminders, and draft automated
+            WhatsApp messages (tokens: {"{{name}}"}, {"{{plate}}"}, {"{{paymentDue}}"}).
           </Text>
         }
         ListEmptyComponent={
