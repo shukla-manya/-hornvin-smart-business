@@ -29,6 +29,11 @@ export const productsApi = {
   delete: (productId) => api.delete(`/products/${productId}`),
 };
 
+/** AI Part Finder: image + optional text hint → catalog matches + nearby sellers (needs server OPENAI_API_KEY for vision). */
+export const partFinderApi = {
+  identify: (body) => api.post("/part-finder/identify", body),
+};
+
 export const paymentsApi = {
   list: () => api.get("/payments"),
 };
