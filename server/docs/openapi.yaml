@@ -7,7 +7,7 @@ info:
     **Socket.IO** runs on the same HTTP server. After login, connect with JWT in handshake `auth: { token: "<jwt>" }`.
     Events include `room:join`, `chat:typing`, `message:new`, `chat:room:updated`. See the repository README for details.
 
-    **Schemas:** reusable request/response models are under **Schemas** at the bottom of this page. Operations use `$ref` to those models where applicable.
+    **Schemas:** expand the **Schemas** section at the bottom of this page for reusable request/response models (`UserPublic`, `Product`, `Order`, etc.). Individual operations still show inline request bodies where noted.
   version: 1.0.0
 
 servers:
@@ -16,7 +16,6 @@ servers:
 
 tags:
   - name: Health
-  - name: Documentation
   - name: Auth
   - name: Products
   - name: Orders
@@ -44,14 +43,9 @@ components:
       properties:
         error:
           type: string
-
-    ErrorCode:
-      type: object
-      properties:
-        error:
-          type: string
         code:
           type: string
+          description: Machine-readable error code when present
 
     ValidationErrors:
       type: object
@@ -62,20 +56,89 @@ components:
             type: object
             additionalProperties: true
 
-    HealthOk:
+    ObjectId:
+      type: string
+      pattern: "^[a-fA-F0-9]{24}$"
+      description: MongoDB ObjectId as 24 hex characters
+
+    GeoJsonPoint:
       type: object
-      required: [ok]
+      description: GeoJSON Point on a user (2dsphere index)
       properties:
-        ok:
-          type: boolean
-          example: true
+        type:
+          type: string
+          enum: [Point]
+        coordinates:
+          type: array
+          minItems: 2
+          maxItems: 2
+          items:
+            type: number
+          description: "[lng, lat] (GeoJSON order)"
 
-    OpenApiRoot:
+    UserPermissions:
       type: object
-      additionalProperties: true
-      description: Full OpenAPI 3 document (info, paths, components, etc.)
+      properties:
+        canAddProducts:
+          type: boolean
+        canPlaceOrders:
+          type: boolean
+        canSell:
+          type: boolean
 
-    RoleEntry:
+    UserPublic:
+      type: object
+      description: Safe user fields returned by the API (no password hash)
+      properties:
+        _id:
+          $ref: "#/components/schemas/ObjectId"
+        id:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        role:
+          type: string
+          enum: [company, distributor, retail, end_user]
+        name:
+          type: string
+        businessName:
+          type: string
+        address:
+          type: string
+        location:
+          $ref: "#/components/schemas/GeoJsonPoint"
+        companyId:
+          $ref: "#/components/schemas/ObjectId"
+        distributorId:
+          $ref: "#/components/schemas/ObjectId"
+        isPlatformOwner:
+          type: boolean
+        status:
+          type: string
+          enum: [pending, approved, rejected, suspended, blocked]
+        lifecycleStatus:
+          type: string
+          description: Derived UX label (e.g. active vs pending)
+        permissions:
+          $ref: "#/components/schemas/UserPermissions"
+        mustChangePassword:
+          type: boolean
+        emailVerified:
+          type: boolean
+        createdBy:
+          $ref: "#/components/schemas/ObjectId"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      additionalProperties: true
+
+    RoleDescriptor:
       type: object
       properties:
         id:
@@ -89,11 +152,11 @@ components:
         roles:
           type: array
           items:
-            $ref: "#/components/schemas/RoleEntry"
+            $ref: "#/components/schemas/RoleDescriptor"
         registerableRoles:
           type: array
           items:
-            $ref: "#/components/schemas/RoleEntry"
+            $ref: "#/components/schemas/RoleDescriptor"
         policy:
           type: object
           properties:
@@ -124,9 +187,9 @@ components:
         address:
           type: string
         companyId:
-          type: string
+          $ref: "#/components/schemas/ObjectId"
         distributorId:
-          type: string
+          $ref: "#/components/schemas/ObjectId"
 
     LoginRequest:
       type: object
@@ -141,136 +204,60 @@ components:
         otpCode:
           type: string
 
-    EmailOnlyBody:
+    AuthTokenResponse:
       type: object
-      required: [email]
-      properties:
-        email:
-          type: string
-          format: email
-
-    EmailOtpBody:
-      type: object
-      required: [email, code]
-      properties:
-        email:
-          type: string
-        code:
-          type: string
-
-    RegisterVerifyEmailBody:
-      type: object
-      required: [email, otpCode]
-      properties:
-        email:
-          type: string
-        otpCode:
-          type: string
-
-    ForgotResetBody:
-      type: object
-      required: [email, code, newPassword]
-      properties:
-        email:
-          type: string
-        code:
-          type: string
-        newPassword:
-          type: string
-          minLength: 6
-
-    ChangePasswordBody:
-      type: object
-      required: [currentPassword, newPassword]
-      properties:
-        currentPassword:
-          type: string
-        newPassword:
-          type: string
-
-    ProfilePatchBody:
-      type: object
-      properties:
-        name:
-          type: string
-
-    GeoLatLng:
-      type: object
-      required: [lat, lng]
-      properties:
-        lat:
-          type: number
-        lng:
-          type: number
-
-    UserPublic:
-      type: object
-      description: User without secrets (API safe shape)
-      properties:
-        id:
-          type: string
-        email:
-          type: string
-          nullable: true
-        phone:
-          type: string
-          nullable: true
-        role:
-          type: string
-          enum: [company, distributor, retail, end_user]
-        name:
-          type: string
-        businessName:
-          type: string
-        address:
-          type: string
-        location:
-          type: object
-          nullable: true
-          properties:
-            type:
-              type: string
-              enum: [Point]
-            coordinates:
-              type: array
-              items:
-                type: number
-              minItems: 2
-              maxItems: 2
-        companyId: {}
-        distributorId: {}
-        isPlatformOwner:
-          type: boolean
-        status:
-          type: string
-        lifecycleStatus:
-          type: string
-        permissions:
-          type: object
-          properties:
-            canAddProducts:
-              type: boolean
-            canPlaceOrders:
-              type: boolean
-            canSell:
-              type: boolean
-        mustChangePassword:
-          type: boolean
-        emailVerified:
-          type: boolean
-        createdBy:
-          type: string
-        createdAt:
-          type: string
-          format: date-time
-
-    TokenResponse:
-      type: object
+      description: Successful login — JWT and user profile
       properties:
         token:
           type: string
         user:
           $ref: "#/components/schemas/UserPublic"
+
+    LoginOtpChallenge:
+      type: object
+      description: Email login may require a second mail OTP step
+      properties:
+        pendingOtp:
+          type: boolean
+        email:
+          type: string
+
+    Product:
+      type: object
+      properties:
+        _id:
+          $ref: "#/components/schemas/ObjectId"
+        companyId:
+          oneOf:
+            - $ref: "#/components/schemas/ObjectId"
+            - $ref: "#/components/schemas/UserPublic"
+        sellerId:
+          oneOf:
+            - $ref: "#/components/schemas/ObjectId"
+            - $ref: "#/components/schemas/UserPublic"
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        price:
+          type: number
+        quantity:
+          type: number
+        images:
+          type: array
+          items:
+            type: string
+        isGlobalCatalog:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      additionalProperties: true
 
     ProductCreateRequest:
       type: object
@@ -291,67 +278,60 @@ components:
           items:
             type: string
 
-    ProductPatchRequest:
+    OrderItem:
       type: object
-      description: Partial update (all fields optional)
-      properties:
-        name:
-          type: string
-        category:
-          type: string
-        price:
-          type: number
-        quantity:
-          type: integer
-        description:
-          type: string
-        images:
-          type: array
-          items:
-            type: string
-
-    ProductDocument:
-      type: object
-      description: Product document (fields may vary; refs may be populated)
-      additionalProperties: true
-      properties:
-        _id:
-          type: string
-        name:
-          type: string
-        category:
-          type: string
-        price:
-          type: number
-        quantity:
-          type: number
-        description:
-          type: string
-        images:
-          type: array
-          items:
-            type: string
-        isGlobalCatalog:
-          type: boolean
-        companyId: {}
-        sellerId: {}
-
-    OrderItemInput:
-      type: object
-      required: [productId, quantity]
+      required: [productId, quantity, unitPrice]
       properties:
         productId:
-          type: string
+          $ref: "#/components/schemas/ObjectId"
         quantity:
-          type: integer
-          minimum: 1
+          type: number
+        unitPrice:
+          type: number
+        title:
+          type: string
+
+    Order:
+      type: object
+      properties:
+        _id:
+          $ref: "#/components/schemas/ObjectId"
+        buyerId:
+          oneOf:
+            - $ref: "#/components/schemas/ObjectId"
+            - $ref: "#/components/schemas/UserPublic"
+        sellerId:
+          oneOf:
+            - $ref: "#/components/schemas/ObjectId"
+            - $ref: "#/components/schemas/UserPublic"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+        status:
+          type: string
+          enum: [pending, confirmed, shipped, completed, cancelled]
+        total:
+          type: number
+        notes:
+          type: string
+        orderChannel:
+          type: string
+          enum: [marketplace, stock]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      additionalProperties: true
 
     OrderCreateRequest:
       type: object
       required: [sellerId, items]
       properties:
         sellerId:
-          type: string
+          $ref: "#/components/schemas/ObjectId"
         orderChannel:
           type: string
           enum: [marketplace, stock]
@@ -360,178 +340,100 @@ components:
         items:
           type: array
           items:
-            $ref: "#/components/schemas/OrderItemInput"
+            type: object
+            required: [productId, quantity]
+            properties:
+              productId:
+                $ref: "#/components/schemas/ObjectId"
+              quantity:
+                type: integer
 
-    OrderDocument:
+    ChatRoom:
       type: object
-      additionalProperties: true
       properties:
         _id:
-          type: string
-        buyerId: {}
-        sellerId: {}
-        items:
+          $ref: "#/components/schemas/ObjectId"
+        participants:
           type: array
           items:
-            type: object
-            additionalProperties: true
-        status:
+            $ref: "#/components/schemas/ObjectId"
+        lastMessageAt:
           type: string
-        total:
-          type: number
-        notes:
-          type: string
+          format: date-time
+      additionalProperties: true
 
-    OrderStatusBody:
-      type: object
-      required: [status]
-      properties:
-        status:
-          type: string
-          enum: [pending, confirmed, shipped, completed, cancelled]
-
-    ChatOpenRoomRequest:
-      type: object
-      required: [withUserId]
-      properties:
-        withUserId:
-          type: string
-
-    ChatMessageBody:
+    ChatMessage:
       type: object
       properties:
+        _id:
+          $ref: "#/components/schemas/ObjectId"
+        roomId:
+          $ref: "#/components/schemas/ObjectId"
+        senderId:
+          $ref: "#/components/schemas/ObjectId"
         body:
           type: string
         productId:
-          type: string
+          $ref: "#/components/schemas/ObjectId"
         orderId:
+          $ref: "#/components/schemas/ObjectId"
+        createdAt:
           type: string
-
-    InvoiceFromOrderBody:
-      type: object
-      required: [orderId]
-      properties:
-        orderId:
-          type: string
-
-    InvoiceDocument:
-      type: object
+          format: date-time
       additionalProperties: true
+
+    Invoice:
+      type: object
       properties:
         _id:
-          type: string
-        issuerId: {}
-        customerId: {}
-        orderId: {}
-        number:
-          type: string
+          $ref: "#/components/schemas/ObjectId"
+        orderId:
+          $ref: "#/components/schemas/ObjectId"
+        issuerId:
+          $ref: "#/components/schemas/ObjectId"
+        customerId:
+          $ref: "#/components/schemas/ObjectId"
         status:
           type: string
           enum: [draft, sent, paid, overdue]
-        subtotal:
-          type: number
-        tax:
-          type: number
         total:
           type: number
-        lines:
-          type: array
-          items:
-            type: object
-            additionalProperties: true
-
-    InvoiceStatusBody:
-      type: object
-      required: [status]
-      properties:
-        status:
-          type: string
-          enum: [draft, sent, paid, overdue]
-        method:
-          type: string
-          enum: [cash, upi, bank, card, unknown]
-        notes:
-          type: string
-
-    RetailCreateRequest:
-      type: object
-      required: [password]
-      properties:
-        email:
-          type: string
-        phone:
-          type: string
-        password:
-          type: string
-        name:
-          type: string
-        businessName:
-          type: string
-
-    LinkDistributorBody:
-      type: object
-      required: [companyId]
-      properties:
-        companyId:
-          type: string
-
-    LinkRetailBody:
-      type: object
-      required: [distributorId]
-      properties:
-        distributorId:
-          type: string
-
-    PaymentCreateRequest:
-      type: object
-      required: [payeeId, amount]
-      properties:
-        payeeId:
-          type: string
-        amount:
-          type: number
-        method:
-          type: string
-        currency:
-          type: string
-        orderId:
-          type: string
-        invoiceId:
-          type: string
-        notes:
-          type: string
-
-    PaymentDocument:
-      type: object
       additionalProperties: true
+
+    Payment:
+      type: object
       properties:
         _id:
-          type: string
-        payerId: {}
-        payeeId: {}
+          $ref: "#/components/schemas/ObjectId"
+        payerId:
+          $ref: "#/components/schemas/ObjectId"
+        payeeId:
+          $ref: "#/components/schemas/ObjectId"
         amount:
           type: number
         currency:
           type: string
         method:
           type: string
-        status:
-          type: string
-        orderId: {}
-        invoiceId: {}
-
-    PaymentStatusBody:
-      type: object
-      required: [status]
-      properties:
         status:
           type: string
           enum: [pending, completed, failed, refunded]
+        orderId:
+          $ref: "#/components/schemas/ObjectId"
+        invoiceId:
+          $ref: "#/components/schemas/ObjectId"
+        notes:
+          type: string
+      additionalProperties: true
 
-    LocationCreateRequest:
+    SavedLocation:
       type: object
-      required: [label, lat, lng]
+      description: Saved map pin / dealer locator location
       properties:
+        _id:
+          $ref: "#/components/schemas/ObjectId"
+        userId:
+          $ref: "#/components/schemas/ObjectId"
         label:
           type: string
         lat:
@@ -544,145 +446,56 @@ components:
           type: string
         isPrimary:
           type: boolean
-
-    LocationPatchRequest:
-      type: object
-      description: Partial update; if both lat and lng are sent, geo is replaced
-      properties:
-        label:
-          type: string
-        address:
-          type: string
-        lat:
-          type: number
-        lng:
-          type: number
-        roleContext:
-          type: string
-
-    LocationDocument:
-      type: object
       additionalProperties: true
 
-    DeviceTokenBody:
-      type: object
-      required: [token]
-      properties:
-        token:
-          type: string
-        platform:
-          type: string
-          enum: [ios, android, expo, web, unknown]
-
-    DeviceTokenRemoveBody:
-      type: object
-      required: [token]
-      properties:
-        token:
-          type: string
-
-    WishlistAddRequest:
-      type: object
-      required: [productId]
-      properties:
-        productId:
-          type: string
-
-    AdminCreateDistributorBody:
-      type: object
-      required: [password]
-      properties:
-        password:
-          type: string
-          minLength: 6
-        name:
-          type: string
-        businessName:
-          type: string
-        email:
-          type: string
-          format: email
-        phone:
-          type: string
-
-    AdminCreateRetailBody:
-      type: object
-      required: [password, companyId, distributorId]
-      properties:
-        password:
-          type: string
-          minLength: 6
-        companyId:
-          type: string
-        distributorId:
-          type: string
-        email:
-          type: string
-        phone:
-          type: string
-        name:
-          type: string
-        businessName:
-          type: string
-
-    AdminPatchUserBody:
+    AppNotification:
       type: object
       properties:
-        status:
+        _id:
+          $ref: "#/components/schemas/ObjectId"
+        userId:
+          $ref: "#/components/schemas/ObjectId"
+        type:
           type: string
-        permissions:
+        title:
+          type: string
+        body:
+          type: string
+        read:
+          type: boolean
+        data:
           type: object
-          properties:
-            canAddProducts:
-              type: boolean
-            canPlaceOrders:
-              type: boolean
-            canSell:
-              type: boolean
-        name:
+          additionalProperties: true
+        createdAt:
           type: string
-        businessName:
-          type: string
-        address:
-          type: string
+          format: date-time
+      additionalProperties: true
 
-    AdminCatalogProductBody:
-      type: object
-      required: [name, category, price, quantity]
-      properties:
-        name:
-          type: string
-        category:
-          type: string
-        price:
-          type: number
-        quantity:
-          type: integer
-        description:
-          type: string
-        images:
-          type: array
-          items:
-            type: string
-
-    AdminCategoryCreateBody:
-      type: object
-      required: [name]
-      properties:
-        name:
-          type: string
-        sortOrder:
-          type: integer
-
-    AdminCategoryPatchBody:
+    WishlistItem:
       type: object
       properties:
+        _id:
+          $ref: "#/components/schemas/ObjectId"
+        userId:
+          $ref: "#/components/schemas/ObjectId"
+        productId:
+          oneOf:
+            - $ref: "#/components/schemas/ObjectId"
+            - $ref: "#/components/schemas/Product"
+      additionalProperties: true
+
+    Category:
+      type: object
+      properties:
+        _id:
+          $ref: "#/components/schemas/ObjectId"
         name:
           type: string
         sortOrder:
           type: integer
         active:
           type: boolean
+      additionalProperties: true
 
     PaginatedUsers:
       type: object
@@ -704,7 +517,7 @@ components:
         orders:
           type: array
           items:
-            $ref: "#/components/schemas/OrderDocument"
+            $ref: "#/components/schemas/Order"
         total:
           type: integer
         limit:
@@ -718,7 +531,7 @@ components:
         payments:
           type: array
           items:
-            $ref: "#/components/schemas/PaymentDocument"
+            $ref: "#/components/schemas/Payment"
         total:
           type: integer
         limit:
@@ -726,38 +539,8 @@ components:
         skip:
           type: integer
 
-    ProductsListResponse:
-      type: object
-      properties:
-        products:
-          type: array
-          items:
-            $ref: "#/components/schemas/ProductDocument"
-
-    CategoryDocument:
-      type: object
-      additionalProperties: true
-      properties:
-        _id:
-          type: string
-        name:
-          type: string
-        sortOrder:
-          type: integer
-        active:
-          type: boolean
-
-    CategoriesListResponse:
-      type: object
-      properties:
-        categories:
-          type: array
-          items:
-            $ref: "#/components/schemas/CategoryDocument"
-
     AnalyticsSummary:
       type: object
-      additionalProperties: true
       properties:
         totalRevenue:
           type: number
@@ -769,22 +552,17 @@ components:
           type: object
           additionalProperties:
             type: integer
-        productCount:
-          type: integer
         activeUsers:
           type: integer
+        productCount:
+          type: integer
 
-    JsonArray:
-      type: array
-      items:
-        type: object
-        additionalProperties: true
-
-    JsonObject:
+    WorkspaceSummary:
       type: object
+      description: Distributor workspace dashboard counts (shape varies by implementation)
       additionalProperties: true
 
-    OkResponse:
+    HealthOk:
       type: object
       properties:
         ok:
@@ -807,19 +585,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthOk"
-
-  /openapi.json:
-    get:
-      tags: [Documentation]
-      summary: Raw OpenAPI 3 document (same as served to Swagger UI)
-      security: []
-      responses:
-        "200":
-          description: OpenAPI JSON
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/OpenApiRoot"
 
   /api/auth/roles:
     get:
@@ -851,22 +616,20 @@ paths:
           content:
             application/json:
               schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: "#/components/schemas/UserPublic"
+        "400":
+          description: Validation or policy error
+          content:
+            application/json:
+              schema:
                 oneOf:
-                  - $ref: "#/components/schemas/TokenResponse"
-                  - type: object
-                    properties:
-                      needsEmailVerification:
-                        type: boolean
-                      user:
-                        $ref: "#/components/schemas/UserPublic"
-                      message:
-                        type: string
-                  - type: object
-                    properties:
-                      user:
-                        $ref: "#/components/schemas/UserPublic"
-                      pendingApproval:
-                        type: boolean
+                  - $ref: "#/components/schemas/Error"
+                  - $ref: "#/components/schemas/ValidationErrors"
 
   /api/auth/login:
     post:
@@ -886,9 +649,8 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: "#/components/schemas/TokenResponse"
-                  - type: object
-                    additionalProperties: true
+                  - $ref: "#/components/schemas/AuthTokenResponse"
+                  - $ref: "#/components/schemas/LoginOtpChallenge"
 
   /api/auth/login-otp/request:
     post:
@@ -900,7 +662,12 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EmailOnlyBody"
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
 
   /api/auth/login-otp/verify:
     post:
@@ -912,7 +679,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EmailOtpBody"
+              type: object
+              required: [email, code]
+              properties:
+                email:
+                  type: string
+                code:
+                  type: string
 
   /api/auth/register/verify-email:
     post:
@@ -924,7 +697,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RegisterVerifyEmailBody"
+              type: object
+              required: [email, otpCode]
+              properties:
+                email:
+                  type: string
+                otpCode:
+                  type: string
 
   /api/auth/register/resend-email-code:
     post:
@@ -936,7 +715,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EmailOnlyBody"
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
 
   /api/auth/forgot/request:
     post:
@@ -948,7 +731,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EmailOnlyBody"
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
 
   /api/auth/forgot/reset:
     post:
@@ -960,7 +747,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ForgotResetBody"
+              type: object
+              required: [email, code, newPassword]
+              properties:
+                email:
+                  type: string
+                code:
+                  type: string
+                newPassword:
+                  type: string
+                  minLength: 6
 
   /api/auth/password:
     patch:
@@ -971,7 +767,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ChangePasswordBody"
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword:
+                  type: string
+                newPassword:
+                  type: string
 
   /api/auth/me:
     get:
@@ -1009,17 +811,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ProfilePatchBody"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  user:
-                    $ref: "#/components/schemas/UserPublic"
+              type: object
+              properties:
+                name:
+                  type: string
 
   /api/auth/me/location:
     patch:
@@ -1030,7 +825,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/GeoLatLng"
+              type: object
+              required: [lat, lng]
+              properties:
+                lat:
+                  type: number
+                lng:
+                  type: number
+
+  /api/products:
+    get:
+      tags: [Products]
+      summary: List products (global catalog + listings; optional filters)
+      security: []
       responses:
         "200":
           description: OK
@@ -1039,14 +846,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  user:
-                    $ref: "#/components/schemas/UserPublic"
-
-  /api/products:
-    get:
-      tags: [Products]
-      summary: List products (global catalog + listings; optional filters)
-      security: []
+                  products:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Product"
       parameters:
         - in: query
           name: q
@@ -1064,13 +867,6 @@ paths:
           name: sellerId
           schema:
             type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ProductsListResponse"
     post:
       tags: [Products]
       summary: Create listing (company / distributor)
@@ -1082,14 +878,14 @@ paths:
               $ref: "#/components/schemas/ProductCreateRequest"
       responses:
         "201":
-          description: Created
+          description: Created listing
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   product:
-                    $ref: "#/components/schemas/ProductDocument"
+                    $ref: "#/components/schemas/Product"
 
   /api/products/{id}:
     get:
@@ -1111,7 +907,7 @@ paths:
                 type: object
                 properties:
                   product:
-                    $ref: "#/components/schemas/ProductDocument"
+                    $ref: "#/components/schemas/Product"
     patch:
       tags: [Products]
       summary: Update own product
@@ -1121,21 +917,6 @@ paths:
           required: true
           schema:
             type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ProductPatchRequest"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  product:
-                    $ref: "#/components/schemas/ProductDocument"
     delete:
       tags: [Products]
       summary: Delete own product
@@ -1145,13 +926,6 @@ paths:
           required: true
           schema:
             type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/OkResponse"
 
   /api/orders:
     get:
@@ -1168,7 +942,7 @@ paths:
                   orders:
                     type: array
                     items:
-                      $ref: "#/components/schemas/OrderDocument"
+                      $ref: "#/components/schemas/Order"
     post:
       tags: [Orders]
       summary: Place order
@@ -1180,31 +954,19 @@ paths:
               $ref: "#/components/schemas/OrderCreateRequest"
       responses:
         "201":
-          description: Created
+          description: Order created
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   order:
-                    $ref: "#/components/schemas/OrderDocument"
+                    $ref: "#/components/schemas/Order"
 
   /api/orders/history:
     get:
       tags: [Orders]
       summary: Same as GET /api/orders
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  orders:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/OrderDocument"
 
   /api/orders/{id}:
     get:
@@ -1225,7 +987,7 @@ paths:
                 type: object
                 properties:
                   order:
-                    $ref: "#/components/schemas/OrderDocument"
+                    $ref: "#/components/schemas/Order"
 
   /api/orders/{id}/status:
     patch:
@@ -1242,34 +1004,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/OrderStatusBody"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  order:
-                    $ref: "#/components/schemas/OrderDocument"
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [pending, confirmed, shipped, completed, cancelled]
 
   /api/chat/rooms:
     get:
       tags: [Chat]
       summary: My rooms
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  rooms:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/JsonObject"
     post:
       tags: [Chat]
       summary: Open or create 1:1 room
@@ -1278,14 +1023,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ChatOpenRoomRequest"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JsonObject"
+              type: object
+              required: [withUserId]
+              properties:
+                withUserId:
+                  type: string
 
   /api/chat/rooms/open:
     post:
@@ -1296,14 +1038,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ChatOpenRoomRequest"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JsonObject"
+              type: object
+              required: [withUserId]
+              properties:
+                withUserId:
+                  type: string
 
   /api/chat/rooms/{roomId}/messages:
     get:
@@ -1315,18 +1054,6 @@ paths:
           required: true
           schema:
             type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  messages:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/JsonObject"
     post:
       tags: [Chat]
       summary: Send message
@@ -1340,31 +1067,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ChatMessageBody"
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JsonObject"
+              type: object
+              properties:
+                body:
+                  type: string
+                productId:
+                  type: string
+                orderId:
+                  type: string
 
   /api/invoices:
     get:
       tags: [Invoices]
       summary: My invoices (issuer or customer)
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  invoices:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/InvoiceDocument"
 
   /api/invoices/from-order:
     post:
@@ -1375,17 +1090,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/InvoiceFromOrderBody"
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  invoice:
-                    $ref: "#/components/schemas/InvoiceDocument"
+              type: object
+              required: [orderId]
+              properties:
+                orderId:
+                  type: string
 
   /api/invoices/{id}/status:
     patch:
@@ -1402,17 +1111,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/InvoiceStatusBody"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  invoice:
-                    $ref: "#/components/schemas/InvoiceDocument"
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [draft, sent, paid, overdue]
+                method:
+                  type: string
+                  enum: [cash, upi, bank, card, unknown]
+                notes:
+                  type: string
 
   /api/dealers/nearby:
     get:
@@ -1435,37 +1144,16 @@ paths:
           schema:
             type: string
             enum: [distributor, retail, company]
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JsonObject"
 
   /api/users/workspace-summary:
     get:
       tags: [Users]
       summary: Distributor workspace summary
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JsonObject"
 
   /api/users/my-retail:
     get:
       tags: [Users]
       summary: Linked retail accounts
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JsonObject"
 
   /api/users/retail:
     post:
@@ -1475,26 +1163,24 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RetailCreateRequest"
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JsonObject"
+              type: object
+              required: [password]
+              properties:
+                email:
+                  type: string
+                phone:
+                  type: string
+                password:
+                  type: string
+                name:
+                  type: string
+                businessName:
+                  type: string
 
   /api/users/team:
     get:
       tags: [Users]
       summary: Company distributors and retail
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JsonObject"
 
   /api/users/link-distributor:
     patch:
@@ -1504,14 +1190,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/LinkDistributorBody"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JsonObject"
+              type: object
+              required: [companyId]
+              properties:
+                companyId:
+                  type: string
 
   /api/users/link-retail:
     patch:
@@ -1521,31 +1204,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/LinkRetailBody"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JsonObject"
+              type: object
+              required: [distributorId]
+              properties:
+                distributorId:
+                  type: string
 
   /api/payments:
     get:
       tags: [Payments]
       summary: My payments
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  payments:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/PaymentDocument"
     post:
       tags: [Payments]
       summary: Create payment record
@@ -1554,17 +1222,23 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PaymentCreateRequest"
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  payment:
-                    $ref: "#/components/schemas/PaymentDocument"
+              type: object
+              required: [payeeId, amount]
+              properties:
+                payeeId:
+                  type: string
+                amount:
+                  type: number
+                method:
+                  type: string
+                currency:
+                  type: string
+                orderId:
+                  type: string
+                invoiceId:
+                  type: string
+                notes:
+                  type: string
 
   /api/payments/{id}/status:
     patch:
@@ -1581,34 +1255,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PaymentStatusBody"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  payment:
-                    $ref: "#/components/schemas/PaymentDocument"
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [pending, completed, failed, refunded]
 
   /api/locations:
     get:
       tags: [Locations]
       summary: My saved pins
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  locations:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/LocationDocument"
     post:
       tags: [Locations]
       summary: Add location
@@ -1617,17 +1274,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/LocationCreateRequest"
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  location:
-                    $ref: "#/components/schemas/LocationDocument"
+              type: object
+              required: [label, lat, lng]
+              properties:
+                label:
+                  type: string
+                lat:
+                  type: number
+                lng:
+                  type: number
+                address:
+                  type: string
+                roleContext:
+                  type: string
+                isPrimary:
+                  type: boolean
 
   /api/locations/{id}:
     patch:
@@ -1639,21 +1300,6 @@ paths:
           required: true
           schema:
             type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LocationPatchRequest"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  location:
-                    $ref: "#/components/schemas/LocationDocument"
     delete:
       tags: [Locations]
       summary: Delete location
@@ -1663,13 +1309,6 @@ paths:
           required: true
           schema:
             type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/OkResponse"
 
   /api/locations/{id}/primary:
     patch:
@@ -1681,52 +1320,14 @@ paths:
           required: true
           schema:
             type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  location:
-                    $ref: "#/components/schemas/LocationDocument"
 
   /api/dealer-locator/locations:
     get:
       tags: [Dealer locator]
       summary: Same as GET /api/locations
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  locations:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/LocationDocument"
     post:
       tags: [Dealer locator]
       summary: Same as POST /api/locations
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LocationCreateRequest"
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  location:
-                    $ref: "#/components/schemas/LocationDocument"
 
   /api/dealer-locator/locations/{id}:
     patch:
@@ -1738,21 +1339,6 @@ paths:
           required: true
           schema:
             type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LocationPatchRequest"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  location:
-                    $ref: "#/components/schemas/LocationDocument"
     delete:
       tags: [Locations]
       summary: Same as DELETE /api/locations/{id}
@@ -1762,13 +1348,6 @@ paths:
           required: true
           schema:
             type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/OkResponse"
 
   /api/dealer-locator/locations/{id}/primary:
     patch:
@@ -1780,16 +1359,6 @@ paths:
           required: true
           schema:
             type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  location:
-                    $ref: "#/components/schemas/LocationDocument"
 
   /api/dealer-locator/nearby:
     get:
@@ -1811,25 +1380,11 @@ paths:
           name: role
           schema:
             type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JsonObject"
 
   /api/notifications/push-status:
     get:
       tags: [Notifications]
       summary: Push configuration
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JsonObject"
 
   /api/notifications/device-token:
     post:
@@ -1840,14 +1395,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DeviceTokenBody"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JsonObject"
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+                platform:
+                  type: string
+                  enum: [ios, android, expo, web, unknown]
 
   /api/notifications/device-token/remove:
     post:
@@ -1858,26 +1413,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DeviceTokenRemoveBody"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JsonObject"
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
 
   /api/notifications/devices:
     get:
       tags: [Notifications]
       summary: Device metadata list
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JsonObject"
 
   /api/notifications:
     get:
@@ -1888,13 +1433,6 @@ paths:
           name: limit
           schema:
             type: integer
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JsonObject"
 
   /api/notifications/{id}/read:
     patch:
@@ -1906,37 +1444,16 @@ paths:
           required: true
           schema:
             type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JsonObject"
 
   /api/notifications/read-all:
     post:
       tags: [Notifications]
       summary: Mark all read
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JsonObject"
 
   /api/wishlist:
     get:
       tags: [Wishlist]
       summary: Wishlist items
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JsonObject"
     post:
       tags: [Wishlist]
       summary: Add to wishlist
@@ -1945,14 +1462,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/WishlistAddRequest"
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JsonObject"
+              type: object
+              required: [productId]
+              properties:
+                productId:
+                  type: string
 
   /api/wishlist/status/{productId}:
     get:
@@ -1964,13 +1478,6 @@ paths:
           required: true
           schema:
             type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JsonObject"
 
   /api/wishlist/{productId}:
     delete:
@@ -1982,84 +1489,21 @@ paths:
           required: true
           schema:
             type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/JsonObject"
 
   /api/admin/users:
     get:
       tags: [Admin]
       summary: Paginated users (Super Admin)
-      parameters:
-        - in: query
-          name: role
-          schema:
-            type: string
-        - in: query
-          name: status
-          schema:
-            type: string
-        - in: query
-          name: limit
-          schema:
-            type: integer
-        - in: query
-          name: skip
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PaginatedUsers"
 
   /api/admin/users/distributor:
     post:
       tags: [Admin]
       summary: Create distributor
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AdminCreateDistributorBody"
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  user:
-                    $ref: "#/components/schemas/UserPublic"
 
   /api/admin/users/retail:
     post:
       tags: [Admin]
       summary: Create retail for company + distributor
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AdminCreateRetailBody"
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  user:
-                    $ref: "#/components/schemas/UserPublic"
 
   /api/admin/users/{id}:
     patch:
@@ -2071,52 +1515,14 @@ paths:
           required: true
           schema:
             type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AdminPatchUserBody"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  user:
-                    $ref: "#/components/schemas/UserPublic"
 
   /api/admin/catalog/products:
     get:
       tags: [Admin]
       summary: Global catalog
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ProductsListResponse"
     post:
       tags: [Admin]
       summary: Add global SKU
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AdminCatalogProductBody"
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  product:
-                    $ref: "#/components/schemas/ProductDocument"
 
   /api/admin/catalog/products/{id}:
     patch:
@@ -2128,21 +1534,6 @@ paths:
           required: true
           schema:
             type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ProductPatchRequest"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  product:
-                    $ref: "#/components/schemas/ProductDocument"
     delete:
       tags: [Admin]
       summary: Delete global SKU
@@ -2152,44 +1543,14 @@ paths:
           required: true
           schema:
             type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/OkResponse"
 
   /api/admin/categories:
     get:
       tags: [Admin]
       summary: Categories
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CategoriesListResponse"
     post:
       tags: [Admin]
       summary: Create category
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AdminCategoryCreateBody"
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  category:
-                    $ref: "#/components/schemas/CategoryDocument"
 
   /api/admin/categories/{id}:
     patch:
@@ -2201,21 +1562,6 @@ paths:
           required: true
           schema:
             type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AdminCategoryPatchBody"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  category:
-                    $ref: "#/components/schemas/CategoryDocument"
     delete:
       tags: [Admin]
       summary: Delete category
@@ -2225,64 +1571,18 @@ paths:
           required: true
           schema:
             type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/OkResponse"
 
   /api/admin/orders:
     get:
       tags: [Admin]
       summary: All orders
-      parameters:
-        - in: query
-          name: limit
-          schema:
-            type: integer
-        - in: query
-          name: skip
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PaginatedOrders"
 
   /api/admin/payments:
     get:
       tags: [Admin]
       summary: All payments
-      parameters:
-        - in: query
-          name: limit
-          schema:
-            type: integer
-        - in: query
-          name: skip
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PaginatedPayments"
 
   /api/admin/analytics/summary:
     get:
       tags: [Admin]
       summary: Dashboard aggregates
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AnalyticsSummary"

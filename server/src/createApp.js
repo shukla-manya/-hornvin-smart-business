@@ -75,15 +75,12 @@ export function createApp() {
       swaggerUi.serve,
       swaggerUi.setup(openApiDocument, {
         explorer: true,
-        swaggerOptions: {
-          persistAuthorization: true,
-          docExpansion: "list",
-          filter: true,
-          displayRequestDuration: true,
-          defaultModelsExpandDepth: 4,
-          defaultModelExpandDepth: 4,
-          showCommonExtensions: true,
-        },
+        docExpansion: "list",
+        defaultModelsExpandDepth: 4,
+        defaultModelExpandDepth: 4,
+        displayRequestDuration: true,
+        filter: true,
+        tryItOutEnabled: true,
       })
     );
   } catch (e) {
