@@ -60,14 +60,16 @@ export function HomeScreen({ navigation }) {
 
       {role === "retail" ? (
         <View style={[styles.card, shadows.card, { marginBottom: 12 }]}>
-          <Text style={styles.cardTitle}>Retail / garage panel</Text>
+          <Text style={styles.cardTitle}>Hornvin Garage (operations)</Text>
           <View style={styles.panelBody}>
             <Text style={styles.panelLine}>
-              Order from your upstream company: Company catalog (Dashboard) uses Buy stock; use Explore for the full marketplace.
+              Garage tab — inventory, service history, customer reminders, AI call scripts, and work estimates (Side 1 of the app).
             </Text>
-            <Text style={styles.panelLine}>Orders tab — track purchases and sales with distributors and buyers</Text>
-            <Text style={styles.panelLine}>Invoices — create from orders, mark paid (Dashboard)</Text>
-            <Text style={styles.panelLine}>Chat — message your distributor, company, or customers</Text>
+            <Text style={styles.panelLine}>
+              Explore tab — B2B marketplace: buy stock, list parts, message sellers (Side 2).
+            </Text>
+            <Text style={styles.panelLine}>Orders & invoices — tie out to marketplace and upstream catalog</Text>
+            <Text style={styles.panelLine}>Chat — distributor, company, or buyers</Text>
           </View>
         </View>
       ) : null}
@@ -100,6 +102,13 @@ export function HomeScreen({ navigation }) {
             onPress={() => openStack("DistributorWorkspace")}
           />
         )}
+        {role === "retail" ? (
+          <Action
+            title="Garage operations"
+            subtitle="Inventory · service log · reminders · AI calls · estimates"
+            onPress={() => navigation.navigate("GarageTab")}
+          />
+        ) : null}
         {role === "retail" && user?.companyId ? (
           <Action
             title="Company catalog"

@@ -21,7 +21,9 @@ export function ProfileScreen({ navigation }) {
     setAddressDraft(user?.address || "");
   }, [user?.name, user?.businessName, user?.address]);
 
-  const open = (name) => navigation.getParent()?.getParent()?.navigate(name);
+  const rootNav = navigation.getParent()?.getParent();
+  const open = (name) => rootNav?.navigate(name);
+  const openGarageTab = () => rootNav?.navigate("Main", { screen: "GarageTab" });
 
   const onSaveName = useCallback(async () => {
     setSavingName(true);
@@ -63,7 +65,11 @@ export function ProfileScreen({ navigation }) {
       <Text style={styles.h1}>Profile</Text>
       <View style={[styles.card, shadows.card]}>
         {profileQuickLinkRoutes(user).map((link) => (
-          <Pressable key={link.route} onPress={() => open(link.route)} style={styles.linkRow}>
+          <Pressable
+            key={link.route || link.nestedTab || link.label}
+            onPress={() => (link.nestedTab ? openGarageTab() : open(link.route))}
+            style={styles.linkRow}
+          >
             <Text style={styles.linkText}>{link.label}</Text>
             <Text style={styles.chev}>›</Text>
           </Pressable>

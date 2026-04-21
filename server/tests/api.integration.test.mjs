@@ -6,6 +6,7 @@ import request from "supertest";
 import { connectDb, disconnectDb } from "../src/config/db.js";
 import { createApp, runStartupMigrations } from "../src/createApp.js";
 import { User } from "../src/models/User.js";
+import { GarageInventoryItem } from "../src/models/GarageInventoryItem.js";
 import { Product } from "../src/models/Product.js";
 
 process.env.JWT_SECRET = "integration-test-jwt-secret-do-not-use-elsewhere";
@@ -884,6 +885,69 @@ test("cannot self-register a second Hornvin company when platform root already e
     if (prev !== undefined) process.env.BOOTSTRAP_PLATFORM_OWNER_EMAIL = prev;
     else delete process.env.BOOTSTRAP_PLATFORM_OWNER_EMAIL;
   }
+});
+
+test("retail garage API: inventory summary and work estimate", async () => {
+  const company = await User.create({
+    phone: `+1900${String(Date.now()).slice(-8)}`,
+    passwordHash: await bcrypt.hash("secret12", 10),
+    role: "company",
+    status: "approved",
+    isPlatformOwner: true,
+    location: { type: "Point", coordinates: [0, 0] },
+  });
+  const retailPhone = `+1901${String(Date.now()).slice(-8)}`;
+  await User.create({
+    phone: retailPhone,
+    passwordHash: await bcrypt.hash("secret12", 10),
+    role: "retail",
+    status: "approved",
+    companyId: company._id,
+    location: { type: "Point", coordinates: [0, 0] },
+  });
+  const login = await request(app).post("/api/auth/login").send({ phone: retailPhone, password: "secret12" });
+  assert.equal(login.status, 200, JSON.stringify(login.body));
+  const token = login.body.token;
+
+  const inv = await request(app)
+    .post("/api/garage/inventory")
+    .set("Authorization", `Bearer ${token}`)
+    .send({ name: "Brake pads front", quantity: 4, reorderAt: 2, unit: "set" });
+  assert.equal(inv.status, 201, JSON.stringify(inv.body));
+
+  const sum = await request(app).get("/api/garage/summary").set("Authorization", `Bearer ${token}`);
+  assert.equal(sum.status, 200);
+  assert.equal(sum.body.inventoryCount, 1);
+  assert.equal(sum.body.lowStockCount, 0);
+
+  const list = await request(app).get("/api/garage/inventory").set("Authorization", `Bearer ${token}`);
+  assert.equal(list.status, 200);
+  assert.equal(list.body.items.length, 1);
+
+  const est = await request(app)
+    .post("/api/garage/work-estimate")
+    .set("Authorization", `Bearer ${token}`)
+    .send({ laborHours: 2, laborRate: 500, partsCost: 2000, taxPercent: 18 });
+  assert.equal(est.status, 200);
+  assert.equal(est.body.total, 3540);
+
+  const u = await User.findOne({ phone: retailPhone });
+  await GarageInventoryItem.deleteMany({ garageUserId: u._id });
+});
+
+test("garage API forbidden for non-retail roles", async () => {
+  const phone = `+1902${String(Date.now()).slice(-8)}`;
+  await User.create({
+    phone,
+    passwordHash: await bcrypt.hash("secret12", 10),
+    role: "distributor",
+    status: "approved",
+    location: { type: "Point", coordinates: [0, 0] },
+  });
+  const login = await request(app).post("/api/auth/login").send({ phone, password: "secret12" });
+  assert.equal(login.status, 200);
+  const res = await request(app).get("/api/garage/summary").set("Authorization", `Bearer ${login.body.token}`);
+  assert.equal(res.status, 403);
 });
 
 test("PATCH /api/auth/profile updates display name only", async () => {

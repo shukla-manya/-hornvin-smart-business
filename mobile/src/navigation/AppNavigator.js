@@ -30,6 +30,12 @@ import { AdminCatalogScreen } from "../screens/AdminCatalogScreen";
 import { AdminCategoriesScreen } from "../screens/AdminCategoriesScreen";
 import { DistributorWorkspaceScreen } from "../screens/DistributorWorkspaceScreen";
 import { CompanyCatalogScreen } from "../screens/CompanyCatalogScreen";
+import { GarageHubScreen } from "../screens/GarageHubScreen";
+import { GarageInventoryScreen } from "../screens/GarageInventoryScreen";
+import { GarageServiceHistoryScreen } from "../screens/GarageServiceHistoryScreen";
+import { GarageRemindersScreen } from "../screens/GarageRemindersScreen";
+import { GarageAiCallingScreen } from "../screens/GarageAiCallingScreen";
+import { GarageWorkEstimateScreen } from "../screens/GarageWorkEstimateScreen";
 import { ForcePasswordChangeScreen } from "../screens/ForcePasswordChangeScreen";
 import { ChangePasswordScreen } from "../screens/ChangePasswordScreen";
 import { useAuth } from "../context/AuthContext";
@@ -48,6 +54,11 @@ const GuardedAdminCategories = withStackRouteGuard(AdminCategoriesScreen, "Admin
 const GuardedDistributorWorkspace = withStackRouteGuard(DistributorWorkspaceScreen, "DistributorWorkspace");
 const GuardedPostProduct = withStackRouteGuard(PostProductScreen, "PostProduct");
 const GuardedInvoices = withStackRouteGuard(InvoicesScreen, "Invoices");
+const GuardedGarageInventory = withStackRouteGuard(GarageInventoryScreen, "GarageInventory");
+const GuardedGarageServiceHistory = withStackRouteGuard(GarageServiceHistoryScreen, "GarageServiceHistory");
+const GuardedGarageReminders = withStackRouteGuard(GarageRemindersScreen, "GarageReminders");
+const GuardedGarageAiCalling = withStackRouteGuard(GarageAiCallingScreen, "GarageAiCalling");
+const GuardedGarageWorkEstimate = withStackRouteGuard(GarageWorkEstimateScreen, "GarageWorkEstimate");
 
 const navTheme = {
   ...DefaultTheme,
@@ -78,6 +89,10 @@ const TAB_REGISTRY = {
   HomeTab: {
     component: HomeScreen,
     options: { title: "Home", tabBarIcon: () => <Text style={{ color: colors.header, fontSize: 18 }}>⌂</Text> },
+  },
+  GarageTab: {
+    component: GarageHubScreen,
+    options: { title: "Garage", tabBarIcon: () => <Text style={{ color: colors.header, fontSize: 15, fontWeight: "800" }}>G</Text> },
   },
   ExploreTab: {
     component: MarketplaceScreen,
@@ -151,6 +166,11 @@ export function AppNavigator() {
         <Stack.Screen name="ChatRoom" component={ChatRoomScreen} options={{ title: "Chat" }} />
         <Stack.Screen name="DealerMap" component={DealerMapScreen} options={{ title: "Dealer locator" }} />
         <Stack.Screen name="Invoices" component={GuardedInvoices} options={{ title: "Invoices" }} />
+        <Stack.Screen name="GarageInventory" component={GuardedGarageInventory} options={{ title: "Inventory" }} />
+        <Stack.Screen name="GarageServiceHistory" component={GuardedGarageServiceHistory} options={{ title: "Service history" }} />
+        <Stack.Screen name="GarageReminders" component={GuardedGarageReminders} options={{ title: "Customers & reminders" }} />
+        <Stack.Screen name="GarageAiCalling" component={GuardedGarageAiCalling} options={{ title: "AI call assistant" }} />
+        <Stack.Screen name="GarageWorkEstimate" component={GuardedGarageWorkEstimate} options={{ title: "Work estimate" }} />
         <Stack.Screen name="Payments" component={PaymentsScreen} options={{ title: "Payments" }} />
         <Stack.Screen name="Locations" component={LocationsScreen} options={{ title: "Saved locations" }} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: "Notifications" }} />

@@ -93,3 +93,21 @@ export const notificationsFeedApi = {
   markRead: (id) => api.patch(`/notifications/${id}/read`),
   markAllRead: () => api.post("/notifications/read-all"),
 };
+
+/** Retail (garage) only — Hornvin Garage operations side. */
+export const garageApi = {
+  summary: () => api.get("/garage/summary"),
+  inventoryList: () => api.get("/garage/inventory"),
+  inventoryCreate: (body) => api.post("/garage/inventory", body),
+  inventoryPatch: (id, body) => api.patch(`/garage/inventory/${id}`, body),
+  inventoryDelete: (id) => api.delete(`/garage/inventory/${id}`),
+  serviceList: () => api.get("/garage/service-records"),
+  serviceCreate: (body) => api.post("/garage/service-records", body),
+  serviceDelete: (id) => api.delete(`/garage/service-records/${id}`),
+  customersList: () => api.get("/garage/customers"),
+  customerCreate: (body) => api.post("/garage/customers", body),
+  customerPatch: (id, body) => api.patch(`/garage/customers/${id}`, body),
+  customerDelete: (id) => api.delete(`/garage/customers/${id}`),
+  aiCallScript: (body) => api.post("/garage/ai-call-script", body),
+  workEstimate: (body) => api.post("/garage/work-estimate", body),
+};

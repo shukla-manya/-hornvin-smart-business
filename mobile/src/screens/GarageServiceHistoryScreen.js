@@ -142,6 +142,7 @@ export function GarageServiceHistoryScreen() {
             </Pressable>
           </View>
         )}
+        ListFooterComponent={<View style={{ height: 24 }}><FooterCredit /></View>}
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
       />
       <Pressable style={styles.fab} onPress={() => setModal(true)}>
@@ -185,7 +186,6 @@ export function GarageServiceHistoryScreen() {
           </ScrollView>
         </View>
       </Modal>
-      <FooterCredit />
     </View>
   );
 }

@@ -151,6 +151,7 @@ export function GarageInventoryScreen() {
             </View>
           </View>
         )}
+        ListFooterComponent={<View style={{ height: 24 }}><FooterCredit /></View>}
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
       />
       <Pressable style={styles.fab} onPress={openAdd}>
@@ -183,7 +184,6 @@ export function GarageInventoryScreen() {
           </View>
         </View>
       </Modal>
-      <FooterCredit />
     </View>
   );
 }

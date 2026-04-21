@@ -5,6 +5,7 @@
 
 export const MAIN_TAB_KEYS = {
   HOME: "HomeTab",
+  GARAGE: "GarageTab",
   EXPLORE: "ExploreTab",
   CHAT: "ChatTab",
   ORDERS: "OrdersTab",
@@ -19,11 +20,22 @@ const BUSINESS_TABS = [
   MAIN_TAB_KEYS.PROFILE,
 ];
 
+/** Retail: Garage operations tab + marketplace (Side 1 + Side 2 in one app). */
+const RETAIL_TABS = [
+  MAIN_TAB_KEYS.HOME,
+  MAIN_TAB_KEYS.GARAGE,
+  MAIN_TAB_KEYS.EXPLORE,
+  MAIN_TAB_KEYS.CHAT,
+  MAIN_TAB_KEYS.ORDERS,
+  MAIN_TAB_KEYS.PROFILE,
+];
+
 /** End users: consumer shell — no business “Home” hub tab; Explore is the primary surface. */
 const END_USER_TABS = [MAIN_TAB_KEYS.EXPLORE, MAIN_TAB_KEYS.ORDERS, MAIN_TAB_KEYS.CHAT, MAIN_TAB_KEYS.PROFILE];
 
 export function getVisibleMainTabKeys(role) {
   if (role === "end_user") return END_USER_TABS;
+  if (role === "retail") return RETAIL_TABS;
   return BUSINESS_TABS;
 }
 
@@ -35,7 +47,7 @@ export function getInitialMainTabKey(role) {
     case "distributor":
       return MAIN_TAB_KEYS.HOME;
     case "retail":
-      return visible.includes(MAIN_TAB_KEYS.ORDERS) ? MAIN_TAB_KEYS.ORDERS : MAIN_TAB_KEYS.HOME;
+      return visible.includes(MAIN_TAB_KEYS.GARAGE) ? MAIN_TAB_KEYS.GARAGE : MAIN_TAB_KEYS.HOME;
     case "end_user":
       return MAIN_TAB_KEYS.EXPLORE;
     default:
@@ -50,6 +62,14 @@ const SUPER_ADMIN_STACK_ROUTES = new Set([
   "AdminPayments",
   "AdminCatalog",
   "AdminCategories",
+]);
+
+const GARAGE_STACK_ROUTES = new Set([
+  "GarageInventory",
+  "GarageServiceHistory",
+  "GarageReminders",
+  "GarageAiCalling",
+  "GarageWorkEstimate",
 ]);
 
 /** Stack routes that are not for every role (everything else is allowed when authenticated). */
@@ -67,12 +87,18 @@ export function userCanAccessStackRoute(user, routeName) {
   if (routeName === "Invoices") {
     return user.role === "company" || user.role === "distributor" || user.role === "retail";
   }
+  if (GARAGE_STACK_ROUTES.has(routeName)) {
+    return user.role === "retail";
+  }
   return true;
 }
 
 /** Profile → deep links into the root stack. */
 export function profileQuickLinkRoutes(user) {
   const links = [];
+  if (user?.role === "retail") {
+    links.push({ nestedTab: "GarageTab", label: "Garage operations" });
+  }
   if (user?.role === "company" && user?.isPlatformOwner) {
     links.push({ route: "AdminHome", label: "Super Admin panel" });
   }
