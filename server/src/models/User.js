@@ -13,6 +13,12 @@ const userSchema = new mongoose.Schema(
     name: { type: String, trim: true },
     businessName: { type: String, trim: true },
     address: { type: String, trim: true },
+    /** UPI VPA for receiving payments (shown as QR in app). */
+    upiVpa: { type: String, trim: true, default: "" },
+    /** Shown in UPI intent / QR payee name. */
+    upiMerchantName: { type: String, trim: true, default: "" },
+    /** Hornvin rewards balance (coupons, promos). */
+    rewardPoints: { type: Number, default: 0, min: 0 },
     location: {
       type: { type: String, enum: ["Point"] },
       coordinates: { type: [Number] },
@@ -102,6 +108,9 @@ userSchema.methods.toSafeJSON = function toSafeJSON() {
     needsProfileSetup: computeNeedsProfileSetup(this),
     createdBy: this.createdBy ? String(this.createdBy) : undefined,
     createdAt: this.createdAt,
+    upiVpa: this.upiVpa || "",
+    upiMerchantName: this.upiMerchantName || "",
+    rewardPoints: this.rewardPoints ?? 0,
   };
 };
 

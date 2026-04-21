@@ -12,6 +12,8 @@ const productSchema = new mongoose.Schema(
     price: { type: Number, required: true, min: 0 },
     quantity: { type: Number, required: true, min: 0, default: 0 },
     images: [{ type: String }],
+    /** spare_part | vehicle | other — garage marketplace listing kind. */
+    listingType: { type: String, enum: ["spare_part", "vehicle", "other"], default: "other" },
     /** Platform-wide catalog rows (Super Admin); listed in marketplace for all buyers. */
     isGlobalCatalog: { type: Boolean, default: false },
   },
