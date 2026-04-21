@@ -11,7 +11,6 @@ import {
   Dimensions,
 } from "react-native";
 import { productsApi, chatApi, ordersApi, wishlistApi } from "../api/resources";
-import { FooterCredit } from "../components/FooterCredit";
 import { useAuth } from "../context/AuthContext";
 import { colors, shadows } from "../theme";
 
@@ -56,7 +55,6 @@ export function ProductDetailScreen({ route, navigation }) {
     return (
       <View style={styles.center}>
         <Text style={styles.muted}>Loading or not found…</Text>
-        <FooterCredit />
       </View>
     );
   }
@@ -183,7 +181,6 @@ export function ProductDetailScreen({ route, navigation }) {
           Chat keeps quotes and logistics with the same counterparty.
         </Text>
       ) : null}
-      <FooterCredit />
     </ScrollView>
   );
 }

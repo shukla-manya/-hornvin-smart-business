@@ -4,7 +4,6 @@ import { useFocusEffect } from "@react-navigation/native";
 import QRCode from "react-native-qrcode-svg";
 import { api } from "../services/api";
 import { useAuth } from "../context/AuthContext";
-import { FooterCredit } from "../components/FooterCredit";
 import { colors, shadows } from "../theme";
 import { buildUpiPayUri } from "../utils/upi";
 
@@ -191,7 +190,6 @@ export function PaymentsScreen() {
             </View>
           );
         }}
-        ListFooterComponent={<FooterCredit />}
       />
     </View>
   );

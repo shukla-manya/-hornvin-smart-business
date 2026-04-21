@@ -4,7 +4,6 @@ import { useFocusEffect } from "@react-navigation/native";
 import { rewardsApi } from "../api/resources";
 import { useAuth } from "../context/AuthContext";
 import { colors, shadows, radii } from "../theme";
-import { FooterCredit } from "../components/FooterCredit";
 
 export function RewardsScreen() {
   const { refreshMe } = useAuth();
@@ -94,8 +93,6 @@ export function RewardsScreen() {
           </View>
         ))
       )}
-
-      <FooterCredit />
     </ScrollView>
   );
 }

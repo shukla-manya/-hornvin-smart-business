@@ -3,31 +3,38 @@ import { View, Text, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../theme";
 
-export function FooterCredit({ compact, global: isGlobal }) {
+/**
+ * App-level footer: sits at the bottom of the window (used once in App.js).
+ * Optional `compact` for tighter padding on dense layouts.
+ */
+export function FooterCredit({ compact }) {
   const insets = useSafeAreaInsets();
+  const bottomPad = Math.max(insets.bottom, compact ? 4 : 8);
+
   return (
     <View
       style={[
-        styles.wrap,
-        compact && styles.wrapCompact,
-        isGlobal && { paddingBottom: Math.max(insets.bottom, 6) + 4, backgroundColor: colors.background },
+        styles.bar,
+        compact && styles.barCompact,
+        { paddingTop: compact ? 6 : 10, paddingBottom: bottomPad },
       ]}
       accessibilityRole="text"
     >
-      <Text style={styles.text}>Made with ♥  by MANYA SHUKLA · 2026</Text>
+      <Text style={[styles.text, compact && styles.textCompact]}>Made with ♥  by MANYA SHUKLA · 2026</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: {
-    paddingVertical: 10,
+  bar: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    backgroundColor: colors.background,
     paddingHorizontal: 16,
     alignItems: "center",
     justifyContent: "center",
   },
-  wrapCompact: {
-    paddingVertical: 6,
+  barCompact: {
     paddingHorizontal: 8,
   },
   text: {
@@ -37,5 +44,8 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     letterSpacing: 0.6,
     opacity: 0.9,
+  },
+  textCompact: {
+    fontSize: 10,
   },
 });

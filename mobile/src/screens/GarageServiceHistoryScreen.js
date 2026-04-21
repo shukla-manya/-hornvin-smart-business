@@ -16,7 +16,6 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, shadows, radii } from "../theme";
 import { garageApi } from "../api/resources";
-import { FooterCredit } from "../components/FooterCredit";
 
 function formatDate(iso) {
   if (!iso) return "—";
@@ -190,7 +189,6 @@ export function GarageServiceHistoryScreen() {
             </Pressable>
           </View>
         )}
-        ListFooterComponent={<View style={{ height: 24 }}><FooterCredit /></View>}
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
       />
       <Pressable style={[styles.fab, { bottom: 16 + insets.bottom }]} onPress={() => setModal(true)}>

@@ -4,7 +4,6 @@ import { useRoute } from "@react-navigation/native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import * as Location from "expo-location";
 import { dealerLocatorApi, authApi } from "../api/resources";
-import { FooterCredit } from "../components/FooterCredit";
 import { useAuth } from "../context/AuthContext";
 import { colors, shadows } from "../theme";
 import { formatDistanceMeters, openDrivingDirections } from "../utils/maps";
@@ -171,7 +170,6 @@ export function DealerMapScreen() {
           <Text style={styles.empty}>{loading ? "Loading…" : "No dealers with saved locations in this area."}</Text>
         }
         renderItem={renderDealer}
-        ListFooterComponent={<FooterCredit />}
       />
     </View>
   );

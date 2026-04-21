@@ -222,8 +222,9 @@ function MainTabs() {
 
 export function AppNavigator() {
   return (
-    <NavigationContainer ref={navigationRef} theme={navTheme}>
-      <Stack.Navigator
+    <View style={{ flex: 1 }}>
+      <NavigationContainer ref={navigationRef} theme={navTheme}>
+        <Stack.Navigator
         initialRouteName="Splash"
         screenOptions={{
           ...headerScreenOptions,
@@ -279,7 +280,8 @@ export function AppNavigator() {
         <Stack.Screen name="DistributorWorkspace" component={GuardedDistributorWorkspace} options={{ title: "Distributor panel" }} />
         <Stack.Screen name="DistributorInventory" component={GuardedDistributorInventory} options={{ title: "My inventory" }} />
         <Stack.Screen name="CompanyCatalog" component={CompanyCatalogScreen} options={{ title: "Company catalog" }} />
-      </Stack.Navigator>
-    </NavigationContainer>
+        </Stack.Navigator>
+      </NavigationContainer>
+    </View>
   );
 }

@@ -3,7 +3,6 @@ import { View, Text, FlatList, StyleSheet, Pressable, RefreshControl, TextInput,
 import { useFocusEffect } from "@react-navigation/native";
 import * as Location from "expo-location";
 import { api } from "../services/api";
-import { FooterCredit } from "../components/FooterCredit";
 import { colors, shadows } from "../theme";
 
 export function LocationsScreen() {
@@ -120,7 +119,6 @@ export function LocationsScreen() {
             </View>
           </View>
         )}
-        ListFooterComponent={<FooterCredit />}
       />
       <Modal visible={modal} transparent animationType="fade">
         <View style={styles.modalBackdrop}>

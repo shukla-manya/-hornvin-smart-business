@@ -2,7 +2,6 @@ import React, { useCallback, useState } from "react";
 import { View, Text, FlatList, TextInput, StyleSheet, Pressable, RefreshControl } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { productsApi } from "../api/resources";
-import { FooterCredit } from "../components/FooterCredit";
 import { useAuth } from "../context/AuthContext";
 import { colors, shadows, radii } from "../theme";
 
@@ -237,7 +236,6 @@ export function MarketplaceScreen({ navigation }) {
             ) : null}
           </Pressable>
         )}
-        ListFooterComponent={<FooterCredit />}
       />
     </View>
   );

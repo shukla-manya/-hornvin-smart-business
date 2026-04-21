@@ -18,7 +18,6 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, shadows, radii } from "../theme";
 import { garageApi } from "../api/resources";
-import { FooterCredit } from "../components/FooterCredit";
 
 function reminderLabel(c) {
   if (!c.nextReminderAt) return "No date set";
@@ -220,7 +219,6 @@ export function GarageRemindersScreen({ navigation }) {
             <Text style={styles.empty}>No customers yet — add your regulars and fleet managers.</Text>
           )
         }
-        ListFooterComponent={<View style={{ height: 100 }}><FooterCredit /></View>}
         renderItem={({ item }) => {
           const urgent = item.nextReminderAt && new Date(item.nextReminderAt) < new Date();
           const payUrgent = item.paymentReminderAt && new Date(item.paymentReminderAt) < new Date();

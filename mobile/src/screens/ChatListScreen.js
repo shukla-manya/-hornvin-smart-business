@@ -3,7 +3,6 @@ import { View, Text, FlatList, Pressable, StyleSheet, RefreshControl } from "rea
 import { useFocusEffect } from "@react-navigation/native";
 import { authApi, chatApi } from "../api/resources";
 import { getSocket } from "../services/socket";
-import { FooterCredit } from "../components/FooterCredit";
 import { colors, shadows, radii } from "../theme";
 import { useAuth } from "../context/AuthContext";
 
@@ -119,7 +118,6 @@ export function ChatListScreen({ navigation }) {
           </Pressable>
           );
         }}
-        ListFooterComponent={<FooterCredit />}
       />
     </View>
   );

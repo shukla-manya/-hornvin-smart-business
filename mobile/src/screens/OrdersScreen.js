@@ -2,7 +2,6 @@ import React, { useCallback, useState } from "react";
 import { View, Text, FlatList, StyleSheet, Pressable, RefreshControl, Alert } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { ordersApi } from "../api/resources";
-import { FooterCredit } from "../components/FooterCredit";
 import { useAuth } from "../context/AuthContext";
 import { colors, shadows, orderStatusStyle, orderStatusLabel, orderNextActionLabel } from "../theme";
 
@@ -137,7 +136,6 @@ export function OrdersScreen() {
             </View>
           );
         }}
-        ListFooterComponent={<FooterCredit />}
       />
     </View>
   );

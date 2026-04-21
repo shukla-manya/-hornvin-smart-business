@@ -1,7 +1,6 @@
 import React, { useLayoutEffect, useState } from "react";
 import { View, Text, TextInput, Pressable, StyleSheet, Alert, ScrollView } from "react-native";
 import { productsApi } from "../api/resources";
-import { FooterCredit } from "../components/FooterCredit";
 import { useAuth } from "../context/AuthContext";
 import { colors } from "../theme";
 
@@ -36,7 +35,6 @@ export function PostProductScreen({ navigation, route }) {
     return (
       <View style={styles.center}>
         <Text style={styles.muted}>Only Hornvin company, distributor, or garage (retail) accounts can list marketplace products.</Text>
-        <FooterCredit />
       </View>
     );
   }
@@ -45,7 +43,6 @@ export function PostProductScreen({ navigation, route }) {
     return (
       <View style={styles.center}>
         <Text style={styles.muted}>Link your garage to a Hornvin company before selling on the marketplace.</Text>
-        <FooterCredit />
       </View>
     );
   }
@@ -109,7 +106,6 @@ export function PostProductScreen({ navigation, route }) {
       <Pressable onPress={submit} disabled={busy} style={[styles.cta, busy && { opacity: 0.55 }]}>
         <Text style={styles.ctaText}>Publish product</Text>
       </Pressable>
-      <FooterCredit />
     </ScrollView>
   );
 }

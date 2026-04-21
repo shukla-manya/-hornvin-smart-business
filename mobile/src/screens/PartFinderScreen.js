@@ -14,7 +14,6 @@ import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { colors, shadows, radii } from "../theme";
 import { partFinderApi } from "../api/resources";
-import { FooterCredit } from "../components/FooterCredit";
 import { formatDistanceMeters } from "../utils/maps";
 
 export function PartFinderScreen({ navigation }) {
@@ -163,8 +162,6 @@ export function PartFinderScreen({ navigation }) {
           )}
         </View>
       ) : null}
-
-      <FooterCredit />
     </ScrollView>
   );
 }

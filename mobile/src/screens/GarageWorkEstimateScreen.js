@@ -15,7 +15,6 @@ import {
 import { useFocusEffect } from "@react-navigation/native";
 import { colors, shadows, radii } from "../theme";
 import { garageApi } from "../api/resources";
-import { FooterCredit } from "../components/FooterCredit";
 
 function newLineId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -398,8 +397,6 @@ export function GarageWorkEstimateScreen() {
       <Pressable onPress={newEstimate} style={styles.newEst}>
         <Text style={styles.newEstTxt}>+ New blank estimate</Text>
       </Pressable>
-
-      <FooterCredit />
 
       <Modal visible={pickCustomer} animationType="slide" transparent>
         <View style={styles.modalBackdrop}>

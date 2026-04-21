@@ -5,7 +5,6 @@ import { useAuth } from "../context/AuthContext";
 import { resetToLoginRegister } from "../navigation/navigationRoot";
 import { profileQuickLinkRoutes } from "../navigation/roleUi";
 import { RETAIL_BUSINESS_TYPE_OPTIONS } from "../constants/retailBusinessTypes";
-import { FooterCredit } from "../components/FooterCredit";
 import { colors, shadows } from "../theme";
 
 export function ProfileScreen({ navigation }) {
@@ -302,7 +301,6 @@ export function ProfileScreen({ navigation }) {
       <Pressable onPress={onLogout} style={styles.logout}>
         <Text style={styles.logoutText}>Logout</Text>
       </Pressable>
-      <FooterCredit />
     </ScrollView>
   );
 }

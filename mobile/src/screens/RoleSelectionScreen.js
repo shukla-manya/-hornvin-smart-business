@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator } from
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import { AppLogo } from "../components/AppLogo";
-import { FooterCredit } from "../components/FooterCredit";
 import { colors } from "../theme";
 import { useRegisterableRoles } from "../hooks/useRegisterableRoles";
 
@@ -76,7 +75,6 @@ export function RoleSelectionScreen() {
         <Pressable onPress={() => navigation.navigate("LoginRegister", {})} style={styles.secondary}>
           <Text style={styles.secondaryText}>I already have an account</Text>
         </Pressable>
-        <FooterCredit />
       </ScrollView>
     </View>
   );

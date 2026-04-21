@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, TextInput, Pressable, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { adminApi } from "../api/resources";
 import { colors, shadows, radii } from "../theme";
-import { FooterCredit } from "../components/FooterCredit";
 
 const ROLES = ["", "company", "distributor", "retail", "end_user"];
 
@@ -65,7 +64,6 @@ export function AdminPushScreen() {
       {result ? (
         <Text style={styles.result}>Audience: {result.audienceCount}</Text>
       ) : null}
-      <FooterCredit />
     </ScrollView>
   );
 }

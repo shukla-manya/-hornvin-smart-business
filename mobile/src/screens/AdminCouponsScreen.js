@@ -14,7 +14,6 @@ import {
 import { useFocusEffect } from "@react-navigation/native";
 import { adminApi } from "../api/resources";
 import { colors, shadows, radii } from "../theme";
-import { FooterCredit } from "../components/FooterCredit";
 
 export function AdminCouponsScreen() {
   const [coupons, setCoupons] = useState([]);
@@ -102,7 +101,6 @@ export function AdminCouponsScreen() {
           </View>
         )}
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
-        ListFooterComponent={<FooterCredit />}
       />
       <Pressable style={styles.fab} onPress={() => setModal(true)}>
         <Text style={styles.fabTxt}>+ New coupon</Text>

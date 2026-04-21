@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, FlatList, Pressable, RefreshControl, Share, Lin
 import { useFocusEffect } from "@react-navigation/native";
 import { colors, shadows, radii } from "../theme";
 import { garageApi } from "../api/resources";
-import { FooterCredit } from "../components/FooterCredit";
 
 export function GarageShopInvoicesScreen() {
   const [invoices, setInvoices] = useState([]);
@@ -87,7 +86,6 @@ export function GarageShopInvoicesScreen() {
           </View>
         )}
         contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
-        ListFooterComponent={<FooterCredit />}
       />
       <Modal visible={!!payModal} transparent animationType="fade">
         <View style={styles.backdrop}>

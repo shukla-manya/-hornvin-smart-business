@@ -2,7 +2,6 @@ import React, { useCallback, useState } from "react";
 import { View, Text, StyleSheet, FlatList, Pressable, RefreshControl } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { wishlistApi } from "../api/resources";
-import { FooterCredit } from "../components/FooterCredit";
 import { colors, shadows } from "../theme";
 
 export function WishlistScreen({ navigation }) {
@@ -40,7 +39,6 @@ export function WishlistScreen({ navigation }) {
         ListEmptyComponent={
           <Text style={styles.muted}>No saved products yet. Open a listing and tap Save to wishlist.</Text>
         }
-        ListFooterComponent={<FooterCredit />}
         contentContainerStyle={items.length === 0 ? { padding: 16, flexGrow: 1 } : { padding: 16, paddingBottom: 24 }}
         renderItem={({ item }) => {
           const p = item.productId;

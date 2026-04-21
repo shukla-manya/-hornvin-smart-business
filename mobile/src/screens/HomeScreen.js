@@ -2,7 +2,6 @@ import React, { useCallback, useState } from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
-import { FooterCredit } from "../components/FooterCredit";
 import { colors, shadows, radii } from "../theme";
 import { ordersApi, paymentsApi, productsApi, garageApi, dealerLocatorApi, usersApi } from "../api/resources";
 
@@ -415,7 +414,6 @@ export function HomeScreen({ navigation }) {
             : "Chain: Hornvin company (Super Admin) → distributor → garage (retail) → end customer. Distributors are created only by the Super Admin; distributors create garage accounts. Pending self-signups are approved only in the Super Admin panel."}
         </Text>
       </View>
-      <FooterCredit />
     </ScrollView>
   );
 }

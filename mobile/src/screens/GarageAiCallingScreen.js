@@ -13,7 +13,6 @@ import {
 import { useFocusEffect } from "@react-navigation/native";
 import { colors, shadows, radii } from "../theme";
 import { garageApi } from "../api/resources";
-import { FooterCredit } from "../components/FooterCredit";
 
 export function GarageAiCallingScreen() {
   const [customers, setCustomers] = useState([]);
@@ -192,8 +191,6 @@ export function GarageAiCallingScreen() {
           ))}
         </View>
       ) : null}
-
-      <FooterCredit />
     </ScrollView>
   );
 }

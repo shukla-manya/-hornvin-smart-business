@@ -6,7 +6,6 @@ import * as Notifications from "expo-notifications";
 import { api } from "../services/api";
 import { notificationsFeedApi, chatApi } from "../api/resources";
 import { useAuth } from "../context/AuthContext";
-import { FooterCredit } from "../components/FooterCredit";
 import { colors, shadows } from "../theme";
 
 export function NotificationsScreen() {
@@ -189,8 +188,6 @@ export function NotificationsScreen() {
           ))
         )}
       </View>
-
-      <FooterCredit />
     </ScrollView>
   );
 }

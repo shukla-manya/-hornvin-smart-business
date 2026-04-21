@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, FlatList, TextInput, Pressable, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
 import { chatApi } from "../api/resources";
-import { FooterCredit } from "../components/FooterCredit";
 import { useAuth } from "../context/AuthContext";
 import { getSocket, emitChatTyping } from "../services/socket";
 import { colors } from "../theme";
@@ -114,7 +113,6 @@ export function ChatRoomScreen({ route }) {
             </View>
           );
         }}
-        ListFooterComponent={<FooterCredit compact />}
       />
       {typingUserId ? (
         <View style={styles.typingBar}>

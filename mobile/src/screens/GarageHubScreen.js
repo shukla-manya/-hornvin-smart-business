@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, Pressable, ScrollView, RefreshControl, Activity
 import { useFocusEffect } from "@react-navigation/native";
 import { colors, shadows, radii } from "../theme";
 import { garageApi } from "../api/resources";
-import { FooterCredit } from "../components/FooterCredit";
 
 function Tile({ title, value, subtitle, onPress }) {
   return (
@@ -141,8 +140,6 @@ export function GarageHubScreen({ navigation }) {
           <Text style={styles.chev}>›</Text>
         </Pressable>
       </View>
-
-      <FooterCredit />
     </ScrollView>
   );
 }

@@ -2,7 +2,6 @@ import React, { useCallback, useState } from "react";
 import { View, Text, FlatList, StyleSheet, Pressable, RefreshControl, Alert, ScrollView, Share, Platform } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { ordersApi, invoicesApi } from "../api/resources";
-import { FooterCredit } from "../components/FooterCredit";
 import { useAuth } from "../context/AuthContext";
 import { colors, shadows, orderStatusStyle } from "../theme";
 
@@ -180,7 +179,6 @@ export function InvoicesScreen() {
             </View>
           );
         }}
-        ListFooterComponent={<FooterCredit />}
       />
     </View>
   );
