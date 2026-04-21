@@ -42,6 +42,8 @@ test("GET /api/auth/roles returns registerableRoles without distributor by defau
   assert.ok(ids.includes("end_user"));
   assert.ok(!ids.includes("distributor"));
   assert.equal(res.body.policy?.distributorSelfRegisterAllowed, false);
+  assert.equal(typeof res.body.policy?.companyRootExists, "boolean");
+  assert.equal(typeof res.body.policy?.hornvinRootSignupOpen, "boolean");
 });
 
 test("login flow: register + login + me (phone — no email OTP)", async () => {
@@ -72,15 +74,18 @@ test("orders + chat API responses (company seller, end_user buyer)", async () =>
   const sellerPhone = `+1556${String(Date.now()).slice(-8)}`;
   const buyerPhone = `+1557${String(Date.now()).slice(-8)}`;
 
-  const seller = await request(app).post("/api/auth/register").send({
+  await User.create({
     phone: sellerPhone,
-    password: "secret12",
+    passwordHash: await bcrypt.hash("secret12", 10),
     role: "company",
+    status: "approved",
+    isPlatformOwner: true,
     name: "Co Orders",
   });
-  assert.equal(seller.status, 201);
-  const tokenS = seller.body.token;
-  const sellerId = seller.body.user.id;
+  const sellerLogin = await request(app).post("/api/auth/login").send({ phone: sellerPhone, password: "secret12" });
+  assert.equal(sellerLogin.status, 200, JSON.stringify(sellerLogin.body));
+  const tokenS = sellerLogin.body.token;
+  const sellerId = sellerLogin.body.user.id;
 
   const buyer = await request(app).post("/api/auth/register").send({
     phone: buyerPhone,
@@ -127,7 +132,7 @@ test("orders + chat API responses (company seller, end_user buyer)", async () =>
   assert.equal(send.body.message.body, "Integration test message");
 });
 
-test("register without SKIP_USER_APPROVAL: company pending; end_user phone is approved", async () => {
+test("register without SKIP_USER_APPROVAL: company blocked without bootstrap; end_user phone is approved", async () => {
   const prev = process.env.SKIP_USER_APPROVAL;
   delete process.env.SKIP_USER_APPROVAL;
   try {
@@ -142,17 +147,16 @@ test("register without SKIP_USER_APPROVAL: company pending; end_user phone is ap
     assert.ok(regEnd.body.token);
     assert.equal(regEnd.body.user.status, "approved");
 
-    const phoneCo = `+1560${String(Date.now() + 2).slice(-8)}`;
-    const regCo = await request(app).post("/api/auth/register").send({
-      phone: phoneCo,
-      password: "secret12",
-      role: "company",
-      name: "Pending Co",
-    });
-    assert.equal(regCo.status, 201, JSON.stringify(regCo.body));
-    assert.ok(!regCo.body.token);
-    assert.equal(regCo.body.pendingApproval, true);
-    assert.equal(regCo.body.user.status, "pending");
+    const regCo = await request(app)
+      .post("/api/auth/register")
+      .send({
+        email: `blocked-co-${Date.now()}@example.com`,
+        password: "secret12",
+        role: "company",
+        name: "No bootstrap",
+      });
+    assert.equal(regCo.status, 403, JSON.stringify(regCo.body));
+    assert.equal(regCo.body.code, "COMPANY_REGISTER_BOOTSTRAP_EMAIL_ONLY");
   } finally {
     if (prev !== undefined) process.env.SKIP_USER_APPROVAL = prev;
     else process.env.SKIP_USER_APPROVAL = "1";
@@ -218,7 +222,7 @@ test("pending user cannot log in with phone + password", async () => {
 
 test("super admin analytics OK; non-owner gets 403 on /api/admin", async () => {
   const ownerPhone = `+1570${String(Date.now()).slice(-8)}`;
-  await User.create({
+  const owner = await User.create({
     phone: ownerPhone,
     passwordHash: await bcrypt.hash("secret12", 10),
     role: "company",
@@ -226,14 +230,16 @@ test("super admin analytics OK; non-owner gets 403 on /api/admin", async () => {
     isPlatformOwner: true,
   });
   const regularPhone = `+1571${String(Date.now()).slice(-8)}`;
-  const reg = await request(app).post("/api/auth/register").send({
+  await User.create({
     phone: regularPhone,
-    password: "secret12",
-    role: "company",
-    name: "Regular Co",
+    passwordHash: await bcrypt.hash("secret12", 10),
+    role: "distributor",
+    status: "approved",
+    companyId: owner._id,
   });
-  assert.equal(reg.status, 201, JSON.stringify(reg.body));
-  const regularToken = reg.body.token;
+  const regularLogin = await request(app).post("/api/auth/login").send({ phone: regularPhone, password: "secret12" });
+  assert.equal(regularLogin.status, 200, JSON.stringify(regularLogin.body));
+  const regularToken = regularLogin.body.token;
 
   const ownerLogin = await request(app).post("/api/auth/login").send({ phone: ownerPhone, password: "secret12" });
   assert.equal(ownerLogin.status, 200, JSON.stringify(ownerLogin.body));
@@ -590,34 +596,29 @@ test("Super Admin approves pending retail scoped by companyId (no distributor)",
 });
 
 test("RBAC: company cannot place marketplace orders", async () => {
-  const sellerCompany = await User.create({
+  const hornvin = await User.create({
     phone: `+1630${String(Date.now()).slice(-8)}`,
     passwordHash: await bcrypt.hash("secret12", 10),
     role: "company",
     status: "approved",
-  });
-  const buyerCompany = await User.create({
-    phone: `+1631${String(Date.now()).slice(-8)}`,
-    passwordHash: await bcrypt.hash("secret12", 10),
-    role: "company",
-    status: "approved",
+    isPlatformOwner: true,
   });
   const retail = await User.create({
     phone: `+1632${String(Date.now()).slice(-8)}`,
     passwordHash: await bcrypt.hash("secret12", 10),
     role: "retail",
     status: "approved",
-    companyId: sellerCompany._id,
+    companyId: hornvin._id,
   });
   const prod = await Product.create({
-    companyId: sellerCompany._id,
+    companyId: hornvin._id,
     sellerId: retail._id,
     name: "Wrench",
     category: "Tools",
     price: 5,
     quantity: 10,
   });
-  const buyerLogin = await request(app).post("/api/auth/login").send({ phone: buyerCompany.phone, password: "secret12" });
+  const buyerLogin = await request(app).post("/api/auth/login").send({ phone: hornvin.phone, password: "secret12" });
   assert.equal(buyerLogin.status, 200);
   const ord = await request(app)
     .post("/api/orders")
@@ -789,15 +790,18 @@ test("wishlist + in-app notifications feed (seller sees new order)", async () =>
   const sellerPhone = `+1788${String(Date.now()).slice(-8)}`;
   const buyerPhone = `+1789${String(Date.now()).slice(-8)}`;
 
-  const seller = await request(app).post("/api/auth/register").send({
+  await User.create({
     phone: sellerPhone,
-    password: "secret12",
+    passwordHash: await bcrypt.hash("secret12", 10),
     role: "company",
+    status: "approved",
+    isPlatformOwner: true,
     name: "Wish Co",
   });
-  assert.equal(seller.status, 201);
-  const tokenS = seller.body.token;
-  const sellerId = seller.body.user.id;
+  const sellerLogin = await request(app).post("/api/auth/login").send({ phone: sellerPhone, password: "secret12" });
+  assert.equal(sellerLogin.status, 200, JSON.stringify(sellerLogin.body));
+  const tokenS = sellerLogin.body.token;
+  const sellerId = sellerLogin.body.user.id;
 
   const buyer = await request(app).post("/api/auth/register").send({
     phone: buyerPhone,
@@ -848,6 +852,33 @@ test("wishlist + in-app notifications feed (seller sees new order)", async () =>
   const del = await request(app).delete(`/api/wishlist/${productId}`).set("Authorization", `Bearer ${tokenB}`);
   assert.equal(del.status, 200);
   assert.equal(del.body.removed, 1);
+});
+
+test("cannot self-register a second Hornvin company when platform root already exists", async () => {
+  const em = `hornvin-root-${Date.now()}@example.com`;
+  await User.create({
+    email: em,
+    passwordHash: await bcrypt.hash("secret12", 10),
+    role: "company",
+    status: "approved",
+    isPlatformOwner: true,
+    emailVerified: true,
+  });
+  const prev = process.env.BOOTSTRAP_PLATFORM_OWNER_EMAIL;
+  process.env.BOOTSTRAP_PLATFORM_OWNER_EMAIL = em;
+  try {
+    const res = await request(app).post("/api/auth/register").send({
+      email: em,
+      password: "anotherpw12",
+      role: "company",
+      name: "Second root",
+    });
+    assert.equal(res.status, 403, JSON.stringify(res.body));
+    assert.equal(res.body.code, "PLATFORM_ROOT_EXISTS");
+  } finally {
+    if (prev !== undefined) process.env.BOOTSTRAP_PLATFORM_OWNER_EMAIL = prev;
+    else delete process.env.BOOTSTRAP_PLATFORM_OWNER_EMAIL;
+  }
 });
 
 test("PATCH /api/auth/profile updates display name only", async () => {
