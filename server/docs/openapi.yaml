@@ -193,6 +193,8 @@ components:
           type: string
         businessName:
           type: string
+          minLength: 1
+          maxLength: 200
         address:
           type: string
         companyId:
