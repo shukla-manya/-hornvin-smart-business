@@ -67,6 +67,22 @@ export function OrdersScreen() {
     }
   };
 
+  const supplyHeader =
+    user?.role === "company" || user?.role === "distributor" || user?.role === "retail" ? (
+      <View style={styles.chainBanner}>
+        <Text style={styles.chainBannerTitle}>Supply chain orders</Text>
+        <Text style={styles.chainBannerText}>
+          Marketplace purchases and stock-channel replenishment (garage ↔ distributor ↔ company) show here. Use Chat from a
+          product for pre-sales threads.
+        </Text>
+      </View>
+    ) : user?.role === "end_user" ? (
+      <View style={styles.chainBanner}>
+        <Text style={styles.chainBannerTitle}>Your orders</Text>
+        <Text style={styles.chainBannerText}>Track marketplace purchases; message sellers from Chat or the product page.</Text>
+      </View>
+    ) : null;
+
   return (
     <View style={styles.root}>
       <FlatList
@@ -74,6 +90,7 @@ export function OrdersScreen() {
         keyExtractor={(o) => o._id}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={load} tintColor={colors.secondaryBlue} />}
         contentContainerStyle={{ padding: 12, paddingBottom: 40 }}
+        ListHeaderComponent={supplyHeader}
         ListEmptyComponent={<Text style={styles.empty}>{loading ? "Loading…" : "No orders yet."}</Text>}
         renderItem={({ item }) => {
           const buyer = item.buyerId;
@@ -137,4 +154,14 @@ const styles = StyleSheet.create({
   danger: { borderWidth: 1, borderColor: colors.error, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: "#FEF2F2" },
   dangerText: { color: colors.error, fontWeight: "800" },
   empty: { color: colors.textSecondary, textAlign: "center", marginTop: 24 },
+  chainBanner: {
+    backgroundColor: "#E9EEF4",
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#B9C5D4",
+  },
+  chainBannerTitle: { fontWeight: "800", color: colors.header, fontSize: 14, marginBottom: 6 },
+  chainBannerText: { color: colors.textSecondary, fontSize: 13, lineHeight: 19 },
 });

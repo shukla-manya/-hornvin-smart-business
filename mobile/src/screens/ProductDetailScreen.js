@@ -175,6 +175,14 @@ export function ProductDetailScreen({ route, navigation }) {
           distributors and garages.
         </Text>
       ) : null}
+      {user?.role === "retail" || user?.role === "distributor" || user?.role === "company" ? (
+        <Text style={styles.hint}>
+          {orderChannel === "stock"
+            ? "Stock-channel order: replenishment from your linked Hornvin company catalog (supply chain upstream)."
+            : "Marketplace order: buy from the listing seller; confirm delivery in Orders and invoice if needed."}{" "}
+          Chat keeps quotes and logistics with the same counterparty.
+        </Text>
+      ) : null}
       <FooterCredit />
     </ScrollView>
   );

@@ -4,7 +4,8 @@ import { useFocusEffect } from "@react-navigation/native";
 import { authApi, chatApi } from "../api/resources";
 import { getSocket } from "../services/socket";
 import { FooterCredit } from "../components/FooterCredit";
-import { colors, shadows } from "../theme";
+import { colors, shadows, radii } from "../theme";
+import { useAuth } from "../context/AuthContext";
 
 function peerName(room, myId) {
   const others = (room.participants || []).filter((p) => (p._id || p.id) !== myId);
@@ -12,7 +13,10 @@ function peerName(room, myId) {
   return p?.businessName || p?.name || "Chat";
 }
 
+const SUPPLY_ROLES = new Set(["company", "distributor", "retail"]);
+
 export function ChatListScreen({ navigation }) {
+  const { user } = useAuth();
   const [rooms, setRooms] = useState([]);
   const [me, setMe] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -71,6 +75,21 @@ export function ChatListScreen({ navigation }) {
         keyExtractor={(r) => r._id}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={load} tintColor={colors.secondaryBlue} />}
         contentContainerStyle={{ padding: 12, paddingBottom: 40 }}
+        ListHeaderComponent={
+          user?.role && SUPPLY_ROLES.has(user.role) ? (
+            <View style={styles.banner}>
+              <Text style={styles.bannerTitle}>Supply chain chat</Text>
+              <Text style={styles.bannerText}>
+                Threads with distributors, garages, and buyers — pair with Marketplace listings and Orders for fulfilment.
+              </Text>
+            </View>
+          ) : user?.role === "end_user" ? (
+            <View style={styles.banner}>
+              <Text style={styles.bannerTitle}>Seller messages</Text>
+              <Text style={styles.bannerText}>Reach shops and distributors before or after you order from the marketplace.</Text>
+            </View>
+          ) : null
+        }
         ListEmptyComponent={<Text style={styles.empty}>{loading ? "Loading…" : "No conversations yet."}</Text>}
         renderItem={({ item }) => (
           <Pressable
@@ -102,4 +121,14 @@ const styles = StyleSheet.create({
   title: { color: colors.header, fontWeight: "800", fontSize: 16 },
   preview: { color: colors.textSecondary, marginTop: 6 },
   empty: { color: colors.textSecondary, textAlign: "center", marginTop: 24 },
+  banner: {
+    backgroundColor: "#E9EEF4",
+    borderRadius: radii.card,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#B9C5D4",
+  },
+  bannerTitle: { fontWeight: "800", color: colors.header, fontSize: 14, marginBottom: 6 },
+  bannerText: { color: colors.textSecondary, fontSize: 13, lineHeight: 19 },
 });
