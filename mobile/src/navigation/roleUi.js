@@ -28,6 +28,7 @@ const RETAIL_TABS = [
   MAIN_TAB_KEYS.EXPLORE,
   MAIN_TAB_KEYS.CHAT,
   MAIN_TAB_KEYS.ORDERS,
+  MAIN_TAB_KEYS.NOTIFICATIONS,
   MAIN_TAB_KEYS.PROFILE,
 ];
 
@@ -122,10 +123,12 @@ export function profileQuickLinkRoutes(user) {
     return links;
   }
   if (user?.role === "retail") {
-    links.push({ nestedTab: "GarageTab", label: "Internal tools (garage)" });
+    links.push({ nestedTab: "GarageTab", label: "Garage panel (tools)" });
+    links.push({ nestedTab: "NotificationsTab", label: "Alerts & push" });
+    links.push({ route: "PartFinder", label: "Part finder (photo)" });
     links.push({ route: "PostProduct", label: "Sell on marketplace" });
     links.push({ route: "MarketplaceBrowse", label: "Marketplace (buy from distributors)" });
-    links.push({ route: "GarageServiceSelection", label: "Service focus (edit)", params: { edit: true } });
+    links.push({ route: "GarageServiceSelection", label: "Services offered (edit)", params: { edit: true } });
   }
   if (user?.role === "distributor") {
     links.push({ route: "DistributorWorkspace", label: "Distributor panel" });

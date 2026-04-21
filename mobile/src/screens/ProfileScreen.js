@@ -4,6 +4,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import { resetToLoginRegister } from "../navigation/navigationRoot";
 import { profileQuickLinkRoutes } from "../navigation/roleUi";
+import { RETAIL_BUSINESS_TYPE_OPTIONS } from "../constants/retailBusinessTypes";
 import { FooterCredit } from "../components/FooterCredit";
 import { colors, shadows } from "../theme";
 
@@ -14,6 +15,10 @@ export function ProfileScreen({ navigation }) {
   const [addressDraft, setAddressDraft] = useState(user?.address || "");
   const [upiVpaDraft, setUpiVpaDraft] = useState(user?.upiVpa || "");
   const [upiNameDraft, setUpiNameDraft] = useState(user?.upiMerchantName || "");
+  const [landmarkDraft, setLandmarkDraft] = useState(user?.addressLandmark || "");
+  const [stateRegionDraft, setStateRegionDraft] = useState(user?.stateRegion || "");
+  const [businessTypeDraft, setBusinessTypeDraft] = useState(user?.businessType || "");
+  const [gstDraft, setGstDraft] = useState(user?.gstNumber || "");
   const [savingName, setSavingName] = useState(false);
 
   const companyProfile = user?.role === "company";
@@ -25,7 +30,21 @@ export function ProfileScreen({ navigation }) {
     setAddressDraft(user?.address || "");
     setUpiVpaDraft(user?.upiVpa || "");
     setUpiNameDraft(user?.upiMerchantName || "");
-  }, [user?.name, user?.businessName, user?.address, user?.upiVpa, user?.upiMerchantName]);
+    setLandmarkDraft(user?.addressLandmark || "");
+    setStateRegionDraft(user?.stateRegion || "");
+    setBusinessTypeDraft(user?.businessType || "");
+    setGstDraft(user?.gstNumber || "");
+  }, [
+    user?.name,
+    user?.businessName,
+    user?.address,
+    user?.upiVpa,
+    user?.upiMerchantName,
+    user?.addressLandmark,
+    user?.stateRegion,
+    user?.businessType,
+    user?.gstNumber,
+  ]);
 
   useFocusEffect(
     useCallback(() => {
@@ -49,7 +68,24 @@ export function ProfileScreen({ navigation }) {
           upiMerchantName: upiNameDraft.trim(),
         });
         Alert.alert("Saved", "Your profile was updated.");
-      } else if (user?.role === "retail" || user?.role === "distributor") {
+      } else if (user?.role === "retail") {
+        if (!RETAIL_BUSINESS_TYPE_OPTIONS.some((o) => o.id === businessTypeDraft)) {
+          Alert.alert("Business type", "Choose one business type chip before saving.");
+          return;
+        }
+        await updateProfile({
+          name: nameDraft.trim(),
+          businessName: businessDraft.trim(),
+          address: addressDraft.trim(),
+          addressLandmark: landmarkDraft.trim(),
+          stateRegion: stateRegionDraft.trim(),
+          businessType: businessTypeDraft,
+          gstNumber: gstDraft.trim(),
+          upiVpa: upiVpaDraft.trim(),
+          upiMerchantName: upiNameDraft.trim(),
+        });
+        Alert.alert("Saved", "Your profile was updated.");
+      } else if (user?.role === "distributor") {
         await updateProfile({
           name: nameDraft.trim(),
           businessName: businessDraft.trim(),
@@ -71,7 +107,20 @@ export function ProfileScreen({ navigation }) {
     } finally {
       setSavingName(false);
     }
-  }, [companyProfile, user?.role, nameDraft, businessDraft, addressDraft, upiVpaDraft, upiNameDraft, updateProfile]);
+  }, [
+    companyProfile,
+    user?.role,
+    nameDraft,
+    businessDraft,
+    addressDraft,
+    landmarkDraft,
+    stateRegionDraft,
+    businessTypeDraft,
+    gstDraft,
+    upiVpaDraft,
+    upiNameDraft,
+    updateProfile,
+  ]);
 
   const onLogout = () => {
     Alert.alert("Logout", "End this session?", [
@@ -165,6 +214,54 @@ export function ProfileScreen({ navigation }) {
               multiline
               editable={!savingName}
             />
+            {user?.role === "retail" ? (
+              <>
+                <Text style={styles.sectionHint}>Landmark & state (shown on maps / invoices)</Text>
+                <TextInput
+                  value={landmarkDraft}
+                  onChangeText={setLandmarkDraft}
+                  placeholder="Nearby landmark"
+                  placeholderTextColor={colors.textSecondary}
+                  style={styles.nameInput}
+                  editable={!savingName}
+                />
+                <TextInput
+                  value={stateRegionDraft}
+                  onChangeText={setStateRegionDraft}
+                  placeholder="State / region"
+                  placeholderTextColor={colors.textSecondary}
+                  style={styles.nameInput}
+                  editable={!savingName}
+                />
+                <Text style={styles.sectionHint}>Business type</Text>
+                <View style={styles.typeRow}>
+                  {RETAIL_BUSINESS_TYPE_OPTIONS.map((o) => {
+                    const on = businessTypeDraft === o.id;
+                    return (
+                      <Pressable
+                        key={o.id}
+                        onPress={() => setBusinessTypeDraft(o.id)}
+                        disabled={savingName}
+                        style={[styles.typeChip, on && styles.typeChipOn]}
+                      >
+                        <Text style={[styles.typeChipTxt, on && styles.typeChipTxtOn]} numberOfLines={2}>
+                          {o.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+                <TextInput
+                  value={gstDraft}
+                  onChangeText={setGstDraft}
+                  placeholder="GSTIN (optional)"
+                  placeholderTextColor={colors.textSecondary}
+                  style={styles.nameInput}
+                  editable={!savingName}
+                  autoCapitalize="characters"
+                />
+              </>
+            ) : null}
           </>
         ) : null}
         <Text style={styles.sectionHint}>UPI (shown on your Payments screen QR)</Text>
@@ -288,4 +385,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveNameBtnText: { color: colors.white, fontWeight: "800" },
+  typeRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginHorizontal: 12, marginBottom: 10 },
+  typeChip: {
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+    maxWidth: "48%",
+  },
+  typeChipOn: { borderColor: colors.selectionBorder, backgroundColor: colors.selectionBg },
+  typeChipTxt: { color: colors.text, fontWeight: "600", fontSize: 11 },
+  typeChipTxtOn: { color: colors.secondaryBlue, fontWeight: "800" },
 });

@@ -155,6 +155,12 @@ export function AuthProvider({ children }) {
       if (patch.garageServices !== undefined) {
         body.garageServices = Array.isArray(patch.garageServices) ? [...patch.garageServices] : [];
       }
+      if (patch.addressLandmark !== undefined) body.addressLandmark = patch.addressLandmark;
+      if (patch.stateRegion !== undefined) body.stateRegion = patch.stateRegion;
+      if (patch.businessType !== undefined) body.businessType = patch.businessType;
+      if (patch.gstNumber !== undefined) body.gstNumber = patch.gstNumber;
+      if (patch.shopPhotoUrl !== undefined) body.shopPhotoUrl = patch.shopPhotoUrl;
+      if (patch.profilePhotoUrl !== undefined) body.profilePhotoUrl = patch.profilePhotoUrl;
       if (Object.keys(body).length === 0) return user;
       const { data } = await authApi.profile(body);
       await persist(token, data.user);

@@ -45,10 +45,10 @@ export function GarageHubScreen({ navigation }) {
       contentContainerStyle={styles.scroll}
       refreshControl={<RefreshControl refreshing={loading && !summary} onRefresh={load} tintColor={colors.header} />}
     >
-      <Text style={styles.h1}>Internal tools</Text>
+      <Text style={styles.h1}>Garage panel</Text>
       <Text style={styles.sub}>
-        Bay-side work: customers, vehicles, estimates, shop invoices, inventory with low-stock alerts, reminders, and call scripts. The
-        blue half of your day (buy / sell / suppliers) lives under Marketplace.
+        Main workspace: customers & vehicles, estimates, shop invoices, inventory (reorder from distributors), reminders, bulk
+        messages, and AI call scripts. Buy and sell on the Marketplace tab.
       </Text>
 
       {loading && !summary ? (
@@ -58,7 +58,7 @@ export function GarageHubScreen({ navigation }) {
           <Tile
             title="Customers"
             value={summary?.customerCount ?? "—"}
-            subtitle="Phone, reminders, auto messages"
+            subtitle="Add, search, contact, reminders"
             onPress={() => go("GarageReminders")}
           />
           <Tile
@@ -92,9 +92,38 @@ export function GarageHubScreen({ navigation }) {
             onPress={() => go("GarageServiceHistory")}
           />
           <Tile title="Due soon" value={summary?.remindersDueSoon ?? "—"} subtitle="Next 14 days" onPress={() => go("GarageReminders")} />
-          <Tile title="AI calling" value="AI" subtitle="Batch scripts" onPress={() => go("GarageAiCalling")} />
+          <Tile title="AI calling" value="AI" subtitle="Service & offers scripts" onPress={() => go("GarageAiCalling")} />
         </View>
       )}
+
+      <View style={[styles.card, shadows.card]}>
+        <Text style={styles.cardTitle}>Shortcuts</Text>
+        <Pressable style={styles.row} onPress={() => go("PartFinder")}>
+          <Text style={styles.rowTitle}>Part finder</Text>
+          <Text style={styles.rowSub}>Photo → detect product → nearby distributors</Text>
+          <Text style={styles.chev}>›</Text>
+        </Pressable>
+        <Pressable style={styles.row} onPress={() => go("Payments")}>
+          <Text style={styles.rowTitle}>Payments & UPI QR</Text>
+          <Text style={styles.rowSub}>Upload pay QR, track what you collected</Text>
+          <Text style={styles.chev}>›</Text>
+        </Pressable>
+        <Pressable style={styles.row} onPress={() => go("DealerMap")}>
+          <Text style={styles.rowTitle}>Dealer locator</Text>
+          <Text style={styles.rowSub}>Find distributors near you (default map)</Text>
+          <Text style={styles.chev}>›</Text>
+        </Pressable>
+        <Pressable style={styles.row} onPress={() => go("Rewards")}>
+          <Text style={styles.rowTitle}>Coupons & rewards</Text>
+          <Text style={styles.rowSub}>Points and redemptions</Text>
+          <Text style={styles.chev}>›</Text>
+        </Pressable>
+        <Pressable style={styles.row} onPress={() => go("Notifications")}>
+          <Text style={styles.rowTitle}>Alerts feed</Text>
+          <Text style={styles.rowSub}>Orders, payments, offers — in-app + push setup</Text>
+          <Text style={styles.chev}>›</Text>
+        </Pressable>
+      </View>
 
       <View style={[styles.card, shadows.card, styles.externalCard]}>
         <Text style={styles.cardTitle}>External marketplace</Text>

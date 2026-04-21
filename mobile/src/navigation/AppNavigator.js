@@ -208,7 +208,11 @@ function MainTabs() {
               : name === "OrdersTab" && user?.role && user.role !== "end_user"
                 ? { ...base, tabBarLabel: "Orders" }
                 : name === "NotificationsTab"
-                  ? { ...base, title: "Reminders", tabBarLabel: "Reminders" }
+                  ? {
+                      ...base,
+                      title: user?.role === "retail" ? "Alerts" : "Reminders",
+                      tabBarLabel: user?.role === "retail" ? "Alerts" : "Reminders",
+                    }
                   : base;
         return <Tabs.Screen key={name} name={name} component={TAB_REGISTRY[name].component} options={merged} />;
       })}

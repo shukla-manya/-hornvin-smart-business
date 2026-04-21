@@ -214,6 +214,22 @@ export function HomeScreen({ navigation }) {
             }
             onPress={() => openStack("DealerMap")}
           />
+          {role === "retail" ? (
+            <>
+              <DashboardRow
+                title="Part finder"
+                value="Image → SKU"
+                subtitle="Upload a part photo, match catalog, see nearby sellers"
+                onPress={() => openStack("PartFinder")}
+              />
+              <DashboardRow
+                title="Coupons & rewards"
+                value={user?.rewardPoints != null ? `${user.rewardPoints} pts` : "—"}
+                subtitle="Redeem Hornvin offers and track points"
+                onPress={() => openStack("Rewards")}
+              />
+            </>
+          ) : null}
         </View>
       ) : null}
 
