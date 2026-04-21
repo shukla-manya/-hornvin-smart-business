@@ -43,7 +43,8 @@ export function createApp() {
   const app = express();
   app.use(cors());
   app.use("/api/part-finder", express.json({ limit: "10mb" }), partFinderRouter);
-  app.use(express.json({ limit: "2mb" }));
+  /** Large enough for retail profile photos (data URLs) on PATCH /api/auth/profile. */
+  app.use(express.json({ limit: "8mb" }));
 
   app.get("/health", (_req, res) => res.json({ ok: true }));
 

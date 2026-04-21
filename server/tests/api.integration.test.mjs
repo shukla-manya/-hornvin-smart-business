@@ -1276,6 +1276,32 @@ test("garage API forbidden for non-retail roles", async () => {
   assert.equal(res.status, 403);
 });
 
+test("PATCH /api/auth/profile retail shop fields and GST", async () => {
+  const phone = `+1643${String(Date.now()).slice(-8)}`;
+  await User.create({
+    phone,
+    passwordHash: await bcrypt.hash("secret12", 10),
+    role: "retail",
+    status: "approved",
+    ...retailOnboardedProfile({ name: "Owner", businessName: "Bay" }),
+  });
+  const login = await request(app).post("/api/auth/login").send({ phone, password: "secret12" });
+  assert.equal(login.status, 200);
+  const token = login.body.token;
+  const bad = await request(app)
+    .patch("/api/auth/profile")
+    .set("Authorization", `Bearer ${token}`)
+    .send({ businessType: "not_a_type" });
+  assert.equal(bad.status, 400);
+  const ok = await request(app)
+    .patch("/api/auth/profile")
+    .set("Authorization", `Bearer ${token}`)
+    .send({ gstNumber: "22aaaaa0000a1z5", addressLandmark: "Opposite main gate" });
+  assert.equal(ok.status, 200);
+  assert.equal(ok.body.user.gstNumber, "22AAAAA0000A1Z5");
+  assert.equal(ok.body.user.addressLandmark, "Opposite main gate");
+});
+
 test("PATCH /api/auth/profile updates display name only", async () => {
   const phone = `+1642${String(Date.now()).slice(-8)}`;
   const reg = await request(app).post("/api/auth/register").send({
