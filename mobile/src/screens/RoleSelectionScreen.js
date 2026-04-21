@@ -23,8 +23,8 @@ export function RoleSelectionScreen() {
         <AppLogo size={52} />
         <Text style={styles.h1}>How will you use Hornvin?</Text>
         <Text style={styles.sub}>
-          Chain: Hornvin company (Super Admin) → distributor → garage (retail) → end customer. Pick a role for a new account,
-          or sign in if you already have one.
+          One sign-in screen for everyone. Optional: read how each role fits the Hornvin chain below, then create an account or
+          sign in.
         </Text>
       </LinearGradient>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
@@ -46,8 +46,8 @@ export function RoleSelectionScreen() {
         <View style={[styles.notice, { marginTop: 0, marginBottom: 14 }]}>
           <Text style={styles.noticeTitle}>End user (buyer)</Text>
           <Text style={styles.noticeBody}>
-            Register → verify email with a one-time code → you are active. Then browse, chat with sellers, and send inquiries.
-            Each email sign-in also uses a second code we send to your inbox.
+            Register with email and mobile → verify email → sign in with password plus two short codes (email + phone; phone
+            code is shown on the API server until SMS is enabled). Complete your profile on first sign-in.
           </Text>
         </View>
         <View style={[styles.notice, { marginTop: 0, marginBottom: 14 }]}>
@@ -71,10 +71,10 @@ export function RoleSelectionScreen() {
           </Pressable>
         ))}
         <Pressable onPress={() => navigation.navigate("LoginRegister", { role: selected })} style={styles.primary}>
-          <Text style={styles.primaryText}>Continue to sign up</Text>
+          <Text style={styles.primaryText}>Continue — create account</Text>
         </Pressable>
         <Pressable onPress={() => navigation.navigate("LoginRegister", {})} style={styles.secondary}>
-          <Text style={styles.secondaryText}>I already have an account — Sign in</Text>
+          <Text style={styles.secondaryText}>I already have an account</Text>
         </Pressable>
         <FooterCredit />
       </ScrollView>

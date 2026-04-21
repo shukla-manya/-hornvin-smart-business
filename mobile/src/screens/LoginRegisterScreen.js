@@ -529,11 +529,6 @@ const styles = StyleSheet.create({
   backLink: { marginBottom: 8, alignSelf: "flex-start" },
   backLinkText: { color: colors.secondaryBlue, fontWeight: "700", fontSize: 14 },
   toggleRow: { flexDirection: "row", gap: 10, marginBottom: 12 },
-  channelRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 },
-  chip: { paddingHorizontal: 10, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card },
-  chipOn: { borderColor: colors.selectionBorder, backgroundColor: colors.selectionBg },
-  chipTxt: { color: colors.textSecondary, fontSize: 12, fontWeight: "600" },
-  chipTxtOn: { color: colors.secondaryBlue },
   toggle: {
     flex: 1,
     paddingVertical: 12,
