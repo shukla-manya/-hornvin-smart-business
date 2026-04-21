@@ -38,7 +38,62 @@ adminRouter.get("/platform", (_req, res) => {
       { id: "analytics", label: "Platform analytics", paths: ["/admin/analytics/summary"] },
       { id: "coupons", label: "Coupons & rewards", paths: ["/admin/coupons"] },
       { id: "push", label: "Push broadcasts", paths: ["/admin/push/broadcast"] },
+      { id: "dashboard", label: "Super Admin dashboard", paths: ["/admin/dashboard"] },
+      { id: "user_detail", label: "User detail & activity", paths: ["/admin/users/:id"] },
+      { id: "order_detail", label: "Order detail", paths: ["/admin/orders/:id"] },
     ],
+  });
+});
+
+adminRouter.get("/dashboard", async (req, res) => {
+  const companyId = req.user._id;
+  const [
+    totalGarages,
+    totalDistributors,
+    totalOrders,
+    ordersByChannel,
+    revenueRow,
+    recentOrders,
+    retailPending,
+    activeUsers,
+  ] = await Promise.all([
+    User.countDocuments({ role: "retail", companyId }),
+    User.countDocuments({ role: "distributor", companyId }),
+    Order.countDocuments(),
+    Order.aggregate([{ $group: { _id: "$orderChannel", count: { $sum: 1 } } }]),
+    Order.aggregate([
+      { $match: { status: { $nin: ["cancelled"] } } },
+      { $group: { _id: null, total: { $sum: "$total" } } },
+    ]),
+    Order.find()
+      .sort({ createdAt: -1 })
+      .limit(15)
+      .populate("buyerId", "name businessName role")
+      .populate("sellerId", "name businessName role")
+      .lean(),
+    User.countDocuments({ role: "retail", companyId, status: "pending" }),
+    User.countDocuments({
+      $or: [{ status: "approved" }, { status: { $exists: false } }, { status: null }, { status: "" }],
+    }),
+  ]);
+  const totalRevenue = revenueRow[0]?.total ?? 0;
+  let ordersMarketplace = 0;
+  let ordersStock = 0;
+  for (const row of ordersByChannel) {
+    const ch = row._id === "stock" ? "stock" : "marketplace";
+    if (ch === "stock") ordersStock += row.count;
+    else ordersMarketplace += row.count;
+  }
+  return res.json({
+    totalGarages,
+    totalDistributors,
+    totalOrders,
+    ordersMarketplace,
+    ordersStock,
+    totalRevenue,
+    activeUsers,
+    retailPendingApproval: retailPending,
+    recentOrders,
   });
 });
 
@@ -211,6 +266,7 @@ adminRouter.patch(
     body("name").optional().isString().trim().isLength({ min: 0, max: 120 }),
     body("businessName").optional().isString().trim().isLength({ min: 0, max: 200 }),
     body("address").optional().isString().trim().isLength({ min: 0, max: 500 }),
+    body("distributorRegion").optional().isString().trim().isLength({ max: 120 }),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -244,8 +300,48 @@ adminRouter.patch(
       const a = typeof req.body.address === "string" ? req.body.address.trim() : "";
       user.address = a || undefined;
     }
+    if (req.body.distributorRegion !== undefined) {
+      if (user.role !== "distributor") {
+        return res.status(400).json({ error: "Region applies only to distributor accounts", code: "REGION_DISTRIBUTOR_ONLY" });
+      }
+      const r = typeof req.body.distributorRegion === "string" ? req.body.distributorRegion.trim().slice(0, 120) : "";
+      user.distributorRegion = r;
+    }
     await user.save();
     return res.json({ user: safeUserDoc(user) });
+  }
+);
+
+adminRouter.get(
+  "/users/:id",
+  [param("id").isMongoId()],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    const user = await User.findById(req.params.id)
+      .select("-passwordHash")
+      .populate("companyId", "name businessName role phone email")
+      .populate("distributorId", "name businessName role phone email distributorRegion")
+      .populate("createdBy", "name email phone role businessName")
+      .lean();
+    if (!user) return res.status(404).json({ error: "Not found" });
+    const uid = user._id;
+    const [ordersAsBuyer, ordersAsSeller, linkedGarages] = await Promise.all([
+      Order.countDocuments({ buyerId: uid }),
+      Order.countDocuments({ sellerId: uid }),
+      user.role === "distributor" ? User.countDocuments({ distributorId: uid, role: "retail" }) : 0,
+    ]);
+    const recentActivity = await Order.find({ $or: [{ buyerId: uid }, { sellerId: uid }] })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .populate("buyerId", "name businessName role")
+      .populate("sellerId", "name businessName role")
+      .lean();
+    return res.json({
+      user,
+      stats: { ordersAsBuyer, ordersAsSeller, linkedGarages },
+      recentActivity,
+    });
   }
 );
 
@@ -304,7 +400,7 @@ adminRouter.patch(
     if (!product.isGlobalCatalog || !product.sellerId.equals(req.user._id)) {
       return res.status(403).json({ error: "Only global catalog products you own can be edited here" });
     }
-    const { name, description, category, price, quantity, images } = req.body;
+    const { name, description, category, price, quantity, images, catalogHidden } = req.body;
     const prevQty = product.quantity;
     if (name !== undefined) product.name = name;
     if (description !== undefined) product.description = description;
@@ -312,6 +408,7 @@ adminRouter.patch(
     if (price !== undefined) product.price = price;
     if (quantity !== undefined) product.quantity = quantity;
     if (images !== undefined) product.images = images;
+    if (catalogHidden !== undefined) product.catalogHidden = Boolean(catalogHidden);
     await product.save();
     if (quantity !== undefined) void maybeNotifyStockLowAfterDecrease(product, prevQty).catch(() => {});
     const populated = await Product.findById(product._id)
@@ -392,25 +489,42 @@ adminRouter.delete("/categories/:id", [param("id").isMongoId()], async (req, res
 
 adminRouter.get(
   "/orders",
-  [query("limit").optional().isInt({ min: 1, max: 200 }), query("skip").optional().isInt({ min: 0 })],
+  [
+    query("limit").optional().isInt({ min: 1, max: 200 }),
+    query("skip").optional().isInt({ min: 0 }),
+    query("orderChannel").optional().isIn(["marketplace", "stock"]),
+  ],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
     const limit = Number(req.query.limit) || 50;
     const skip = Number(req.query.skip) || 0;
+    const filter = {};
+    if (req.query.orderChannel) filter.orderChannel = req.query.orderChannel;
     const [orders, total] = await Promise.all([
-      Order.find()
+      Order.find(filter)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .populate("buyerId", "name businessName role phone email")
         .populate("sellerId", "name businessName role phone email")
         .populate("items.productId"),
-      Order.countDocuments(),
+      Order.countDocuments(filter),
     ]);
     return res.json({ orders, total, limit, skip });
   }
 );
+
+adminRouter.get("/orders/:id", [param("id").isMongoId()], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+  const order = await Order.findById(req.params.id)
+    .populate("buyerId", "name businessName role phone email")
+    .populate("sellerId", "name businessName role phone email")
+    .populate("items.productId");
+  if (!order) return res.status(404).json({ error: "Not found" });
+  return res.json({ order });
+});
 
 /** --- Payments (transactions overview) --- */
 
@@ -440,7 +554,17 @@ adminRouter.get(
 /** --- Analytics --- */
 
 adminRouter.get("/analytics/summary", async (_req, res) => {
-  const [revenueAgg, orderCounts, userCounts, productCount] = await Promise.all([
+  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const [
+    revenueAgg,
+    orderCounts,
+    userCounts,
+    productCount,
+    trendAgg,
+    topAgg,
+    roleCounts,
+    orderChannelAgg,
+  ] = await Promise.all([
     Order.aggregate([
       { $match: { status: { $nin: ["cancelled"] } } },
       { $group: { _id: null, totalRevenue: { $sum: "$total" } } },
@@ -455,12 +579,66 @@ adminRouter.get("/analytics/summary", async (_req, res) => {
       },
     ]),
     Product.countDocuments(),
+    Order.aggregate([
+      { $match: { status: { $nin: ["cancelled"] }, createdAt: { $gte: since } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          revenue: { $sum: "$total" },
+          orders: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]),
+    Order.aggregate([
+      { $match: { status: { $nin: ["cancelled"] } } },
+      { $unwind: "$items" },
+      {
+        $group: {
+          _id: "$items.productId",
+          units: { $sum: "$items.quantity" },
+          revenue: { $sum: { $multiply: ["$items.quantity", "$items.unitPrice"] } },
+        },
+      },
+      { $sort: { revenue: -1 } },
+      { $limit: 10 },
+    ]),
+    User.aggregate([{ $group: { _id: "$role", count: { $sum: 1 } } }]),
+    Order.aggregate([{ $group: { _id: "$orderChannel", count: { $sum: 1 } } }]),
   ]);
 
   const totalRevenue = revenueAgg[0]?.totalRevenue ?? 0;
   const activeUsers = await User.countDocuments({
     $or: [{ status: "approved" }, { status: { $exists: false } }, { status: null }, { status: "" }],
   });
+
+  const topProductIds = topAgg.map((r) => r._id).filter(Boolean);
+  const topDocs = topProductIds.length
+    ? await Product.find({ _id: { $in: topProductIds } })
+        .select("name category price")
+        .lean()
+    : [];
+  const topById = new Map(topDocs.map((p) => [String(p._id), p]));
+  const topProducts = topAgg.map((row) => {
+    const p = topById.get(String(row._id));
+    return {
+      productId: row._id,
+      name: p?.name || "Product",
+      category: p?.category || "",
+      units: row.units,
+      revenue: row.revenue,
+    };
+  });
+
+  const usersByRole = roleCounts.reduce((acc, r) => {
+    acc[r._id] = r.count;
+    return acc;
+  }, {});
+  const ordersByChannel = orderChannelAgg.reduce((acc, r) => {
+    const k = r._id === "stock" ? "stock" : "marketplace";
+    acc[k] = (acc[k] || 0) + r.count;
+    return acc;
+  }, {});
 
   return res.json({
     totalRevenue,
@@ -474,6 +652,10 @@ adminRouter.get("/analytics/summary", async (_req, res) => {
     }, {}),
     activeUsers,
     productCount,
+    salesTrend7d: trendAgg,
+    topProducts,
+    usersByRole,
+    ordersByChannel,
   });
 });
 

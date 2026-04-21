@@ -579,15 +579,19 @@ const styles = StyleSheet.create({
   },
 
   // ── Form sheet ──────────────────────────────────────────
-  sheet: {
+  sheetWrapper: {
     flex: 1,
     backgroundColor: colors.card,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
+    overflow: "hidden",
+  },
+  sheet: {
+    flex: 1,
   },
   sheetContent: {
     padding: 24,
-    paddingBottom: 48,
+    paddingBottom: 8,
   },
 
   // ── Back link ───────────────────────────────────────────
