@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
 
-const PURPOSES = ["login_email_step", "login_email_otp_only", "password_reset", "register_email_verify"];
+const PURPOSES = [
+  "login_email_step",
+  "login_phone_step",
+  "login_email_otp_only",
+  "password_reset",
+  "register_email_verify",
+];
 
 const otpChallengeSchema = new mongoose.Schema(
   {
