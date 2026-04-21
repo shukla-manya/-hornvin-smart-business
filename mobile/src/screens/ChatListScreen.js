@@ -13,6 +13,16 @@ function peerName(room, myId) {
   return p?.businessName || p?.name || "Chat";
 }
 
+function peerRoleLabel(room, myId) {
+  const others = (room.participants || []).filter((p) => (p._id || p.id) !== myId);
+  const r = others[0]?.role;
+  if (r === "distributor") return "Distributor";
+  if (r === "retail") return "Garage";
+  if (r === "end_user") return "Customer";
+  if (r === "company") return "Hornvin company";
+  return r ? String(r).replace("_", " ") : "";
+}
+
 const SUPPLY_ROLES = new Set(["company", "distributor", "retail"]);
 
 export function ChatListScreen({ navigation }) {
@@ -80,28 +90,32 @@ export function ChatListScreen({ navigation }) {
             <View style={styles.banner}>
               <Text style={styles.bannerTitle}>Supply chain chat</Text>
               <Text style={styles.bannerText}>
-                Threads with distributors, garages, and buyers — pair with Marketplace listings and Orders for fulfilment.
+                Garage ↔ distributor quotes, garage ↔ customer updates — pair threads with Marketplace and Orders.
               </Text>
             </View>
           ) : user?.role === "end_user" ? (
             <View style={styles.banner}>
               <Text style={styles.bannerTitle}>Seller messages</Text>
-              <Text style={styles.bannerText}>Reach shops and distributors before or after you order from the marketplace.</Text>
+              <Text style={styles.bannerText}>Message garages or distributors (customer ↔ seller) around parts and service.</Text>
             </View>
           ) : null
         }
         ListEmptyComponent={<Text style={styles.empty}>{loading ? "Loading…" : "No conversations yet."}</Text>}
-        renderItem={({ item }) => (
+        renderItem={({ item }) => {
+          const roleLbl = peerRoleLabel(item, me?.id);
+          return (
           <Pressable
             onPress={() => navigation.getParent()?.getParent()?.navigate("ChatRoom", { room: item })}
             style={[styles.card, shadows.card]}
           >
             <Text style={styles.title}>{peerName(item, me?.id)}</Text>
+            {roleLbl ? <Text style={styles.roleTag}>{roleLbl}</Text> : null}
             <Text style={styles.preview} numberOfLines={1}>
               {item.lastPreview || "Open chat"}
             </Text>
           </Pressable>
-        )}
+          );
+        }}
         ListFooterComponent={<FooterCredit />}
       />
     </View>
@@ -119,6 +133,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   title: { color: colors.header, fontWeight: "800", fontSize: 16 },
+  roleTag: { marginTop: 4, fontSize: 12, fontWeight: "700", color: colors.secondaryBlue },
   preview: { color: colors.textSecondary, marginTop: 6 },
   empty: { color: colors.textSecondary, textAlign: "center", marginTop: 24 },
   banner: {

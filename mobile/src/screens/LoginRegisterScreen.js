@@ -209,7 +209,6 @@ export function LoginRegisterScreen() {
           <AppLogo size={58} />
           <Text style={styles.wordmark}>Hornvin</Text>
         </View>
-        <Text style={styles.tag}>Home · Explore · Chat · Orders · Dealers</Text>
       </LinearGradient>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" style={styles.scrollView}>
         <Pressable onPress={() => navigation.navigate("RoleSelection")} style={styles.backLink}>
@@ -531,7 +530,6 @@ const styles = StyleSheet.create({
   scroll: { padding: 20, paddingBottom: 40 },
   brandRow: { flexDirection: "row", alignItems: "center", gap: 14 },
   wordmark: { fontSize: 32, fontWeight: "600", color: colors.white, letterSpacing: 1 },
-  tag: { marginTop: 12, color: "rgba(255,255,255,0.88)", fontSize: 13, fontWeight: "500", letterSpacing: 0.8 },
   backLink: { marginBottom: 8, alignSelf: "flex-start" },
   backLinkText: { color: colors.secondaryBlue, fontWeight: "700", fontSize: 14 },
   toggleRow: { flexDirection: "row", gap: 10, marginBottom: 12 },

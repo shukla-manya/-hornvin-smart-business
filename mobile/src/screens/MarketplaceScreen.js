@@ -16,6 +16,10 @@ export function MarketplaceScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   /** Retail: narrow listings to products tied to your linked Hornvin company (upstream chain). */
   const [companyChainOnly, setCompanyChainOnly] = useState(false);
+  /** Garage: show only listings posted by distributor accounts (buy side). */
+  const [distributorOnly, setDistributorOnly] = useState(false);
+  /** spare_part | vehicle | (empty = all). */
+  const [listingType, setListingType] = useState("");
 
   const load = useCallback(
     async (chainFilter) => {
@@ -25,18 +29,23 @@ export function MarketplaceScreen({ navigation }) {
         const params = {};
         if (q.trim()) params.q = q.trim();
         if (category.trim()) params.category = category.trim();
+        if (listingType) params.listingType = listingType;
         if (useChain && user?.role === "retail" && user?.companyId) {
           params.companyId = String(user.companyId);
         }
         const { data } = await productsApi.list(params);
-        setItems(data.products || []);
+        let products = data.products || [];
+        if (distributorOnly) {
+          products = products.filter((p) => p.sellerId && p.sellerId.role === "distributor");
+        }
+        setItems(products);
       } catch {
         setItems([]);
       } finally {
         setLoading(false);
       }
     },
-    [q, category, companyChainOnly, user?.role, user?.companyId]
+    [q, category, companyChainOnly, listingType, distributorOnly, user?.role, user?.companyId]
   );
 
   useFocusEffect(
@@ -55,6 +64,7 @@ export function MarketplaceScreen({ navigation }) {
   };
   const openDealerMap = () => rootNav?.navigate("DealerMap");
   const openPartFinder = () => rootNav?.navigate("PartFinder");
+  const postListing = (lt) => rootNav?.navigate("PostProduct", { listingType: lt });
   const goOrders = () => goMainTab("OrdersTab");
   const goChat = () => goMainTab("ChatTab");
   const goReminders = () => goMainTab("NotificationsTab");
@@ -81,6 +91,36 @@ export function MarketplaceScreen({ navigation }) {
         <Pressable onPress={() => load()} style={styles.btnSecondary}>
           <Text style={styles.btnSecondaryText}>Apply</Text>
         </Pressable>
+        {user?.role === "retail" ? (
+          <View style={styles.garageBuyRow}>
+            <Text style={styles.garageBuyLabel}>Garage marketplace</Text>
+            <View style={styles.chipRow}>
+              <Pressable onPress={() => setListingType("")} style={[styles.filterChip, listingType === "" && styles.filterChipOn]}>
+                <Text style={[styles.filterChipTxt, listingType === "" && styles.filterChipTxtOn]}>All types</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setListingType("spare_part")}
+                style={[styles.filterChip, listingType === "spare_part" && styles.filterChipOn]}
+              >
+                <Text style={[styles.filterChipTxt, listingType === "spare_part" && styles.filterChipTxtOn]}>Spare parts</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setListingType("vehicle")}
+                style={[styles.filterChip, listingType === "vehicle" && styles.filterChipOn]}
+              >
+                <Text style={[styles.filterChipTxt, listingType === "vehicle" && styles.filterChipTxtOn]}>Vehicles</Text>
+              </Pressable>
+            </View>
+            <Pressable
+              onPress={() => setDistributorOnly((v) => !v)}
+              style={[styles.distChip, distributorOnly && styles.distChipOn]}
+            >
+              <Text style={[styles.distChipTxt, distributorOnly && styles.distChipTxtOn]}>
+                {distributorOnly ? "Showing distributor listings" : "Buy: distributor listings only"}
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
       </View>
       <FlatList
         data={items}
@@ -165,9 +205,14 @@ export function MarketplaceScreen({ navigation }) {
                   Buy parts from listings below; post your own SKUs so distributors and buyers can order from you. Chat from any
                   product to negotiate — Dealer map helps you find suppliers.
                 </Text>
-                <Pressable style={styles.garageSellBtn} onPress={() => navigation.getParent()?.getParent()?.navigate("PostProduct")}>
-                  <Text style={styles.garageSellBtnTxt}>Post marketplace listing</Text>
-                </Pressable>
+                <View style={styles.sellRow}>
+                  <Pressable style={styles.garageSellBtn} onPress={() => postListing("spare_part")}>
+                    <Text style={styles.garageSellBtnTxt}>Sell spare part</Text>
+                  </Pressable>
+                  <Pressable style={[styles.garageSellBtn, styles.garageSellBtnAlt]} onPress={() => postListing("vehicle")}>
+                    <Text style={styles.garageSellBtnTxt}>Sell vehicle</Text>
+                  </Pressable>
+                </View>
               </View>
             ) : null}
           </>
@@ -183,6 +228,7 @@ export function MarketplaceScreen({ navigation }) {
             <Text style={styles.title}>{item.name}</Text>
             <Text style={styles.meta}>
               {item.category} · ₹{item.price} · Qty {item.quantity}
+              {item.listingType && item.listingType !== "other" ? ` · ${item.listingType === "vehicle" ? "Vehicle" : "Spare part"}` : ""}
             </Text>
             {(item.sellerId || item.companyId)?.businessName || (item.sellerId || item.companyId)?.name ? (
               <Text style={styles.seller}>
@@ -252,8 +298,10 @@ const styles = StyleSheet.create({
   },
   garageSellTitle: { fontSize: 16, fontWeight: "800", color: colors.header, marginBottom: 6 },
   garageSellBody: { color: colors.textSecondary, fontSize: 13, lineHeight: 19, marginBottom: 12 },
-  garageSellBtn: { alignSelf: "flex-start", backgroundColor: colors.cta, paddingVertical: 11, paddingHorizontal: 16, borderRadius: 12 },
-  garageSellBtnTxt: { color: colors.white, fontWeight: "800", fontSize: 14 },
+  sellRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  garageSellBtn: { backgroundColor: colors.cta, paddingVertical: 11, paddingHorizontal: 14, borderRadius: 12 },
+  garageSellBtnAlt: { backgroundColor: colors.header },
+  garageSellBtnTxt: { color: colors.white, fontWeight: "800", fontSize: 13 },
   filters: { padding: 12, gap: 8, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.white },
   input: {
     borderWidth: 1,
@@ -266,6 +314,17 @@ const styles = StyleSheet.create({
   },
   btnSecondary: { alignSelf: "flex-start", backgroundColor: colors.secondaryBlue, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 12 },
   btnSecondaryText: { fontWeight: "800", color: colors.white },
+  garageBuyRow: { marginTop: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
+  garageBuyLabel: { fontWeight: "800", color: colors.header, marginBottom: 8, fontSize: 13 },
+  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 8 },
+  filterChip: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 999, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white },
+  filterChipOn: { borderColor: colors.cta, backgroundColor: "#FFF5F0" },
+  filterChipTxt: { fontSize: 12, fontWeight: "700", color: colors.textSecondary },
+  filterChipTxtOn: { color: colors.cta },
+  distChip: { alignSelf: "flex-start", paddingVertical: 8, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.selectionBorder, backgroundColor: colors.selectionBg },
+  distChipOn: { borderColor: colors.secondaryBlue, backgroundColor: "#E8F0FA" },
+  distChipTxt: { fontSize: 12, fontWeight: "700", color: colors.header },
+  distChipTxtOn: { color: colors.secondaryBlue },
   card: {
     backgroundColor: colors.card,
     borderRadius: 14,

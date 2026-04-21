@@ -69,6 +69,8 @@ const SUPER_ADMIN_STACK_ROUTES = new Set([
   "AdminPayments",
   "AdminCatalog",
   "AdminCategories",
+  "AdminCoupons",
+  "AdminPush",
 ]);
 
 const GARAGE_STACK_ROUTES = new Set([
@@ -109,16 +111,19 @@ export function profileQuickLinkRoutes(user) {
     links.push({ nestedTab: "NotificationsTab", label: "Reminders" });
     links.push({ route: "Payments", label: "Payments" });
     links.push({ route: "MarketplaceBrowse", label: "Browse parts (optional)" });
+    links.push({ route: "Rewards", label: "Coupons & rewards" });
     links.push({ route: "Locations", label: "Saved locations" });
     return links;
   }
   if (user?.role === "retail") {
     links.push({ nestedTab: "GarageTab", label: "Internal tools (garage)" });
     links.push({ route: "PostProduct", label: "Sell on marketplace" });
+    links.push({ route: "MarketplaceBrowse", label: "Marketplace (buy from distributors)" });
   }
   if (user?.role === "company" && user?.isPlatformOwner) {
     links.push({ route: "AdminHome", label: "Hornvin Admin (/api/admin)" });
   }
+  links.push({ route: "Rewards", label: "Coupons & rewards" });
   links.push({ route: "Wishlist", label: "Wishlist" });
   links.push({ route: "DealerMap", label: "Dealer locator" });
   links.push({ route: "Payments", label: "Payments" });
