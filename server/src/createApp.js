@@ -23,6 +23,7 @@ import { notificationsRouter } from "./routes/notifications.js";
 import { wishlistRouter } from "./routes/wishlist.js";
 import { adminRouter } from "./routes/admin.js";
 import { garageRouter } from "./routes/garage.js";
+import { partFinderRouter } from "./routes/partFinder.js";
 import { ChatRoom } from "./models/ChatRoom.js";
 import { Product } from "./models/Product.js";
 import { User, getAccountAccessDenial } from "./models/User.js";
@@ -40,6 +41,7 @@ function loadOpenApiSpec() {
 export function createApp() {
   const app = express();
   app.use(cors());
+  app.use("/api/part-finder", express.json({ limit: "10mb" }), partFinderRouter);
   app.use(express.json({ limit: "2mb" }));
 
   app.get("/health", (_req, res) => res.json({ ok: true }));

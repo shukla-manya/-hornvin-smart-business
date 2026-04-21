@@ -42,9 +42,10 @@ async function findProductsForQuery(searchQuery) {
   if (!tokens.length) return [];
   const rx = new RegExp(tokens.map(escapeRegex).join("|"), "i");
   return Product.find({
-    $or: [{ isGlobalCatalog: true }, { isGlobalCatalog: { $ne: true } }],
-    quantity: { $gt: 0 },
-    $or: [{ name: rx }, { description: rx }, { category: rx }],
+    $and: [
+      { $or: [{ isGlobalCatalog: true }, { isGlobalCatalog: { $ne: true } }] },
+      { $or: [{ name: rx }, { description: rx }, { category: rx }] },
+    ],
   })
     .sort({ updatedAt: -1 })
     .limit(40)
