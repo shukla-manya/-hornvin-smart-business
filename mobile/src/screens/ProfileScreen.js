@@ -294,12 +294,11 @@ export function ProfileScreen({ navigation }) {
         <Row label="Phone" value={user?.phone || "—"} isLast={companyProfile || showBusinessForm} />
         {!showBusinessForm ? <Row label="Address" value={user?.address || "—"} isLast /> : null}
       </View>
-      <Pressable
-        onPress={() => open("ChangePassword")}
-        style={styles.changePw}
-      >
-        <Text style={styles.changePwText}>Change password</Text>
-      </Pressable>
+      {!companyProfile && (
+        <Pressable onPress={() => open("ChangePassword")} style={styles.changePw}>
+          <Text style={styles.changePwText}>Change password</Text>
+        </Pressable>
+      )}
       <Pressable onPress={onLogout} style={styles.logout}>
         <Text style={styles.logoutText}>Logout</Text>
       </Pressable>

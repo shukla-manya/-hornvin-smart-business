@@ -159,9 +159,9 @@ function MainTabs() {
     return tabKeys.includes(preferred) ? preferred : tabKeys[0];
   }, [user?.role, tabKeys]);
 
-  const tabBarBottomPad = insets.bottom > 0 ? insets.bottom : 4;
-  const tabBarTopPad = 6;
-  const tabBarRow = 52;
+  const tabBarBottomPad = insets.bottom > 0 ? insets.bottom : 0;
+  const tabBarTopPad = 4;
+  const tabBarRow = 44;
   const tabBarStyle = useMemo(
     () => ({
       backgroundColor: colors.card,
