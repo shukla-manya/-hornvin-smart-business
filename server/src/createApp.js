@@ -169,6 +169,26 @@ export async function runStartupMigrations() {
     console.warn("User status migration skipped:", e.message);
   }
   try {
+    const companies = await User.find({ role: "company" }).sort({ createdAt: 1 }).select("_id").lean();
+    if (companies.length > 1) {
+      const keepId = companies[0]._id;
+      for (let i = 1; i < companies.length; i++) {
+        await User.updateOne(
+          { _id: companies[i]._id },
+          { $set: { role: "distributor", isPlatformOwner: false, companyId: keepId } }
+        );
+      }
+      console.warn(
+        "Users migrated: demoted extra `company` accounts to distributor under the Hornvin root",
+        companies.length - 1
+      );
+    }
+    await User.updateMany({ role: "company" }, { $set: { isPlatformOwner: true } });
+    await User.updateMany({ role: { $ne: "company" }, isPlatformOwner: true }, { $set: { isPlatformOwner: false } });
+  } catch (e) {
+    console.warn("Single-root company migration skipped:", e.message);
+  }
+  try {
     const r = await Product.updateMany(
       { $or: [{ sellerId: { $exists: false } }, { sellerId: null }] },
       [{ $set: { sellerId: "$companyId" } }]

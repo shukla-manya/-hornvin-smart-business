@@ -44,11 +44,6 @@ const userSchema = new mongoose.Schema(
 
 userSchema.index({ location: "2dsphere" });
 userSchema.index({ createdBy: 1 });
-/** At most one platform owner document (company = Super Admin). */
-userSchema.index(
-  { isPlatformOwner: 1 },
-  { unique: true, partialFilterExpression: { isPlatformOwner: true } }
-);
 
 userSchema.methods.comparePassword = function comparePassword(plain) {
   return bcrypt.compare(plain, this.passwordHash);

@@ -38,16 +38,37 @@ function needsEmailVerificationGate(user) {
   return user.role === "end_user" && user.email && user.emailVerified === false;
 }
 
-authRouter.get("/roles", (_req, res) => {
-  const registerableIds = computeRegisterableRoleIds();
-  return res.json({
-    roles: USER_ROLES.map((id) => ({ id, label: rolePublicLabel(id) })),
-    registerableRoles: registerableIds.map((id) => ({ id, label: rolePublicLabel(id) })),
-    policy: {
-      registerAllowedRolesEnvSet: Boolean((process.env.REGISTER_ALLOWED_ROLES || "").trim()),
-      distributorSelfRegisterAllowed: process.env.ALLOW_DOWNSTREAM_SELF_REGISTER === "1",
-    },
-  });
+authRouter.get("/roles", async (_req, res) => {
+  try {
+    const registerableIds = computeRegisterableRoleIds();
+    const allowedCsv = (process.env.REGISTER_ALLOWED_ROLES || "").trim();
+    const allowedList = allowedCsv ? allowedCsv.split(",").map((s) => s.trim()).filter(Boolean) : null;
+
+    const bootstrapEmail = (process.env.BOOTSTRAP_PLATFORM_OWNER_EMAIL || "").trim().toLowerCase();
+    const companyRootExists = await User.exists({ role: "company" });
+    const hornvinRootSignupOpen = !companyRootExists && Boolean(bootstrapEmail);
+
+    let finalIds = registerableIds;
+    if (hornvinRootSignupOpen) {
+      const canOfferCompany = !allowedList || allowedList.includes("company");
+      if (canOfferCompany && !finalIds.includes("company")) {
+        finalIds = ["company", ...finalIds];
+      }
+    }
+
+    return res.json({
+      roles: USER_ROLES.map((id) => ({ id, label: rolePublicLabel(id) })),
+      registerableRoles: finalIds.map((id) => ({ id, label: rolePublicLabel(id) })),
+      policy: {
+        registerAllowedRolesEnvSet: Boolean(allowedCsv),
+        distributorSelfRegisterAllowed: process.env.ALLOW_DOWNSTREAM_SELF_REGISTER === "1",
+        companyRootExists: !!companyRootExists,
+        hornvinRootSignupOpen,
+      },
+    });
+  } catch {
+    return res.status(500).json({ error: "Could not load roles" });
+  }
 });
 
 authRouter.post(
@@ -89,18 +110,32 @@ authRouter.post(
       });
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
-    let isPlatformOwner = false;
-    const bootstrapEmail = (process.env.BOOTSTRAP_PLATFORM_OWNER_EMAIL || "").trim().toLowerCase();
-    if (
-      bootstrapEmail &&
-      email &&
-      email.trim().toLowerCase() === bootstrapEmail &&
-      role === "company"
-    ) {
-      const existing = await User.exists({ isPlatformOwner: true });
-      if (!existing) isPlatformOwner = true;
+    const emailNorm = email ? email.trim().toLowerCase() : "";
+    if (role === "company") {
+      if (!emailNorm) {
+        return res.status(400).json({
+          code: "COMPANY_REQUIRES_EMAIL",
+          error: "The Hornvin company (Super Admin) account must be created with email (no phone-only sign-up).",
+        });
+      }
+      if (await User.exists({ role: "company" })) {
+        return res.status(403).json({
+          code: "PLATFORM_ROOT_EXISTS",
+          error: "A Hornvin company / Super Admin account already exists. There can only be one root company.",
+        });
+      }
+      const bootstrapEmail = (process.env.BOOTSTRAP_PLATFORM_OWNER_EMAIL || "").trim().toLowerCase();
+      if (!bootstrapEmail || emailNorm !== bootstrapEmail) {
+        return res.status(403).json({
+          code: "COMPANY_REGISTER_BOOTSTRAP_EMAIL_ONLY",
+          error:
+            "Only the email configured as BOOTSTRAP_PLATFORM_OWNER_EMAIL on the server may create the sole Hornvin company (Super Admin) account.",
+        });
+      }
     }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    const isPlatformOwner = role === "company";
 
     const skipApproval = process.env.SKIP_USER_APPROVAL === "1";
     /** Self-serve retail / garage: always pending until Super Admin approves (even in dev skip mode). */
@@ -114,7 +149,6 @@ authRouter.post(
             ? "approved"
             : "pending";
 
-    const emailNorm = email ? email.trim().toLowerCase() : "";
     const emailVerified = role === "end_user" && emailNorm ? false : true;
 
     try {
