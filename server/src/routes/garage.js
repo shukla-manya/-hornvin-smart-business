@@ -5,6 +5,9 @@ import { allowRoles } from "../middleware/roles.js";
 import { GarageInventoryItem } from "../models/GarageInventoryItem.js";
 import { GarageServiceRecord } from "../models/GarageServiceRecord.js";
 import { GarageCustomer } from "../models/GarageCustomer.js";
+import { GarageVehicle } from "../models/GarageVehicle.js";
+import { GarageEstimate } from "../models/GarageEstimate.js";
+import { GarageShopInvoice } from "../models/GarageShopInvoice.js";
 
 export const garageRouter = Router();
 garageRouter.use(requireAuth(true), allowRoles("retail"));
@@ -25,7 +28,16 @@ function buildCallScript({ customerName, topic, vehicle }) {
 
 garageRouter.get("/summary", async (req, res) => {
   const uid = req.user._id;
-  const [inventoryCount, lowStock, serviceCount, customerCount, upcomingReminders] = await Promise.all([
+  const [
+    inventoryCount,
+    lowStock,
+    serviceCount,
+    customerCount,
+    upcomingReminders,
+    vehicleCount,
+    estimateDraftCount,
+    shopInvoicePending,
+  ] = await Promise.all([
     GarageInventoryItem.countDocuments({ garageUserId: uid }),
     GarageInventoryItem.countDocuments({ garageUserId: uid, $expr: { $lte: ["$quantity", "$reorderAt"] } }),
     GarageServiceRecord.countDocuments({ garageUserId: uid }),
@@ -34,6 +46,9 @@ garageRouter.get("/summary", async (req, res) => {
       garageUserId: uid,
       nextReminderAt: { $exists: true, $ne: null, $lte: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) },
     }),
+    GarageVehicle.countDocuments({ garageUserId: uid }),
+    GarageEstimate.countDocuments({ garageUserId: uid, status: { $in: ["draft", "sent"] } }),
+    GarageShopInvoice.countDocuments({ garageUserId: uid, paymentStatus: { $ne: "paid" } }),
   ]);
   return res.json({
     inventoryCount,
@@ -41,6 +56,9 @@ garageRouter.get("/summary", async (req, res) => {
     serviceHistoryCount: serviceCount,
     customerCount,
     remindersDueSoon: upcomingReminders,
+    vehicleCount,
+    estimateOpenCount: estimateDraftCount,
+    shopInvoiceOpenCount: shopInvoicePending,
   });
 });
 
@@ -59,6 +77,7 @@ garageRouter.post(
     body("reorderAt").optional().isFloat({ min: 0 }),
     body("unit").optional().isString().trim(),
     body("notes").optional().isString().trim(),
+    body("linkedProductId").optional().isMongoId(),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -71,6 +90,7 @@ garageRouter.post(
       reorderAt: req.body.reorderAt ?? 0,
       unit: req.body.unit || "pcs",
       notes: req.body.notes || "",
+      linkedProductId: req.body.linkedProductId || undefined,
     });
     return res.status(201).json({ item: doc });
   }
@@ -175,6 +195,9 @@ garageRouter.post(
     body("notes").optional().isString().trim(),
     body("nextReminderAt").optional().isISO8601(),
     body("reminderLabel").optional().isString().trim(),
+    body("paymentReminderAt").optional().isISO8601(),
+    body("paymentReminderLabel").optional().isString().trim(),
+    body("automatedMessageTemplate").optional().isString().trim(),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -189,6 +212,9 @@ garageRouter.post(
       notes: req.body.notes || "",
       nextReminderAt: req.body.nextReminderAt ? new Date(req.body.nextReminderAt) : undefined,
       reminderLabel: req.body.reminderLabel || "",
+      paymentReminderAt: req.body.paymentReminderAt ? new Date(req.body.paymentReminderAt) : undefined,
+      paymentReminderLabel: req.body.paymentReminderLabel || "",
+      automatedMessageTemplate: req.body.automatedMessageTemplate || "",
     });
     return res.status(201).json({ customer: doc });
   }
@@ -206,6 +232,9 @@ garageRouter.patch(
     body("notes").optional().isString().trim(),
     body("nextReminderAt").optional().isString().trim(),
     body("reminderLabel").optional().isString().trim(),
+    body("paymentReminderAt").optional().isString().trim(),
+    body("paymentReminderLabel").optional().isString().trim(),
+    body("automatedMessageTemplate").optional().isString().trim(),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -231,6 +260,16 @@ garageRouter.patch(
       }
     }
     if (b.reminderLabel !== undefined) c.reminderLabel = b.reminderLabel;
+    if (b.paymentReminderAt !== undefined) {
+      const raw = b.paymentReminderAt;
+      if (raw === null || raw === "" || raw === "null") c.set("paymentReminderAt", undefined);
+      else {
+        const d = new Date(raw);
+        if (!Number.isNaN(d.getTime())) c.paymentReminderAt = d;
+      }
+    }
+    if (b.paymentReminderLabel !== undefined) c.paymentReminderLabel = b.paymentReminderLabel;
+    if (b.automatedMessageTemplate !== undefined) c.automatedMessageTemplate = b.automatedMessageTemplate;
     await c.save();
     return res.json({ customer: c });
   }
