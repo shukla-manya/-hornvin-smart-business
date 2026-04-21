@@ -103,6 +103,10 @@ export function LoginRegisterScreen() {
         Alert.alert("Contact", "Enter email or phone.");
         return;
       }
+      if (!businessName.trim()) {
+        Alert.alert("Business", "Enter your business or shop name.");
+        return;
+      }
       setBusy(true);
       try {
         const data = await register({
@@ -111,7 +115,7 @@ export function LoginRegisterScreen() {
           password,
           role,
           name,
-          businessName,
+          businessName: businessName.trim(),
         });
         if (data?.needsEmailVerification) {
           setAwaitingRegisterVerify(true);
@@ -136,8 +140,10 @@ export function LoginRegisterScreen() {
             ? "Distributor accounts"
             : code === "REGISTER_ROLE_NOT_ALLOWED"
               ? "Sign-up not available"
-              : "Auth",
-          msg
+              : code === "BUSINESS_NAME_REQUIRED"
+                ? "Business name"
+                : "Auth",
+          code === "BUSINESS_NAME_REQUIRED" ? "Enter your business or shop name." : msg
         );
       } finally {
         setBusy(false);
@@ -264,11 +270,11 @@ export function LoginRegisterScreen() {
             ) : null}
             <Text style={styles.label}>Your name</Text>
             <TextInput value={name} onChangeText={setName} placeholder="Full name" placeholderTextColor={colors.textSecondary} style={styles.input} />
-            <Text style={styles.label}>Business (optional)</Text>
+            <Text style={styles.label}>Business name</Text>
             <TextInput
               value={businessName}
               onChangeText={setBusinessName}
-              placeholder="Shop or company name"
+              placeholder="Shop or company name (required)"
               placeholderTextColor={colors.textSecondary}
               style={styles.input}
             />

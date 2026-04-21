@@ -176,7 +176,7 @@ components:
 
     RegisterRequest:
       type: object
-      required: [password, role]
+      required: [password, role, businessName]
       properties:
         email:
           type: string
