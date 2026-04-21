@@ -58,6 +58,17 @@ export function HomeScreen({ navigation }) {
         </View>
       ) : null}
 
+      {role === "company" || role === "distributor" ? (
+        <View style={[styles.card, shadows.card, { marginBottom: 12 }]}>
+          <Text style={styles.cardTitle}>Marketplace — supply chain (Side 2)</Text>
+          <View style={styles.panelBody}>
+            <Text style={styles.panelLine}>Flow: Hornvin company → distributor → garage (retail) → end customer.</Text>
+            <Text style={styles.panelLine}>Marketplace tab — listings, search, and product pages for ordering.</Text>
+            <Text style={styles.panelLine}>Chat — negotiate with downstream garages and buyers; Dealer map for geography.</Text>
+          </View>
+        </View>
+      ) : null}
+
       {role === "retail" ? (
         <View style={[styles.card, shadows.card, { marginBottom: 12 }]}>
           <Text style={styles.cardTitle}>Hornvin Garage (operations)</Text>
@@ -85,7 +96,11 @@ export function HomeScreen({ navigation }) {
 
       <View style={[styles.card, shadows.card]}>
         <Text style={styles.cardTitle}>Dashboard</Text>
-        <Action title="Explore products" subtitle="Search, categories, seller info" onPress={() => navigation.navigate("ExploreTab")} />
+        <Action
+          title={role === "end_user" ? "Explore products" : "Marketplace listings"}
+          subtitle={role === "end_user" ? "Search, categories, seller info" : "Supply chain catalog + distributor & garage SKUs"}
+          onPress={() => navigation.navigate("ExploreTab")}
+        />
         <Action title="Orders" subtitle="Track pending → completed" onPress={() => navigation.navigate("OrdersTab")} />
         <Action title="Chat" subtitle="Message threads" onPress={() => navigation.navigate("ChatTab")} />
         <Action title="Dealer locator" subtitle="Map and nearby dealers" onPress={() => openStack("DealerMap")} />

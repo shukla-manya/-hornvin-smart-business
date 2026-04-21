@@ -138,9 +138,17 @@ function MainTabs() {
         tabBarInactiveTintColor: colors.textSecondary,
       }}
     >
-      {tabKeys.map((name) => (
-        <Tabs.Screen key={name} name={name} component={TAB_REGISTRY[name].component} options={TAB_REGISTRY[name].options} />
-      ))}
+      {tabKeys.map((name) => {
+        const base = TAB_REGISTRY[name].options;
+        const marketplaceTitle = user?.role === "end_user" ? "Explore" : "Marketplace";
+        const merged =
+          name === "ExploreTab"
+            ? { ...base, title: marketplaceTitle, tabBarLabel: marketplaceTitle }
+            : name === "OrdersTab" && user?.role && user.role !== "end_user"
+              ? { ...base, tabBarLabel: "Orders" }
+              : base;
+        return <Tabs.Screen key={name} name={name} component={TAB_REGISTRY[name].component} options={merged} />;
+      })}
     </Tabs.Navigator>
   );
 }
