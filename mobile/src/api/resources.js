@@ -76,6 +76,10 @@ export const adminApi = {
   createRetailAdmin: (body) => api.post("/admin/users/retail", body),
   orders: (params) => api.get("/admin/orders", { params }),
   payments: (params) => api.get("/admin/payments", { params }),
+  couponsList: () => api.get("/admin/coupons"),
+  createCoupon: (body) => api.post("/admin/coupons", body),
+  patchCoupon: (couponId, body) => api.patch(`/admin/coupons/${couponId}`, body),
+  pushBroadcast: (body) => api.post("/admin/push/broadcast", body),
   categories: () => api.get("/admin/categories"),
   postCategory: (body) => api.post("/admin/categories", body),
   patchCategory: (categoryId, body) => api.patch(`/admin/categories/${categoryId}`, body),
@@ -134,4 +138,9 @@ export const garageApi = {
   aiCallScript: (body) => api.post("/garage/ai-call-script", body),
   aiCallBatch: (body) => api.post("/garage/ai-call-batch", body),
   workEstimate: (body) => api.post("/garage/work-estimate", body),
+};
+
+export const rewardsApi = {
+  me: () => api.get("/rewards/me"),
+  redeem: (body) => api.post("/rewards/redeem", body),
 };

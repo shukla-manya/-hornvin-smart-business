@@ -92,34 +92,37 @@ const headerScreenOptions = {
   headerShadowVisible: false,
 };
 
+const tabIcon = (icon, size = 22) =>
+  ({ color }) => <Text style={{ color, fontSize: size }}>{icon}</Text>;
+
 const TAB_REGISTRY = {
   HomeTab: {
     component: HomeScreen,
-    options: { title: "Home", tabBarIcon: () => <Text style={{ color: colors.header, fontSize: 18 }}>⌂</Text> },
+    options: { title: "Home", tabBarIcon: tabIcon("⌂", 24) },
   },
   GarageTab: {
     component: GarageHubScreen,
-    options: { title: "Garage", tabBarIcon: () => <Text style={{ color: colors.header, fontSize: 15, fontWeight: "800" }}>G</Text> },
+    options: { title: "Garage", tabBarIcon: tabIcon("G", 20) },
   },
   ExploreTab: {
     component: MarketplaceScreen,
-    options: { title: "Explore", tabBarIcon: () => <Text style={{ color: colors.header, fontSize: 16 }}>◇</Text> },
+    options: { title: "Explore", tabBarIcon: tabIcon("◇", 22) },
   },
   ChatTab: {
     component: ChatListScreen,
-    options: { title: "Chat", tabBarIcon: () => <Text style={{ color: colors.header, fontSize: 16 }}>💬</Text> },
+    options: { title: "Chat", tabBarIcon: tabIcon("💬", 22) },
   },
   OrdersTab: {
     component: OrdersScreen,
-    options: { title: "Orders", tabBarIcon: () => <Text style={{ color: colors.header, fontSize: 16 }}>▣</Text> },
+    options: { title: "Orders", tabBarIcon: tabIcon("▣", 22) },
   },
   NotificationsTab: {
     component: NotificationsScreen,
-    options: { title: "Reminders", tabBarIcon: () => <Text style={{ color: colors.header, fontSize: 15 }}>⏰</Text> },
+    options: { title: "Reminders", tabBarIcon: tabIcon("⏰", 21) },
   },
   ProfileTab: {
     component: ProfileScreen,
-    options: { title: "Profile", tabBarIcon: () => <Text style={{ color: colors.header, fontSize: 16 }}>◎</Text> },
+    options: { title: "Profile", tabBarIcon: tabIcon("◎", 22) },
   },
 };
 
@@ -140,9 +143,9 @@ function MainTabs() {
     return tabKeys.includes(preferred) ? preferred : tabKeys[0];
   }, [user?.role, tabKeys]);
 
-  const tabBarBottomPad = Math.max(insets.bottom, 10);
-  const tabBarTopPad = 6;
-  const tabBarRow = 48;
+  const tabBarBottomPad = Math.max(insets.bottom, 12);
+  const tabBarTopPad = 8;
+  const tabBarRow = 58;
   const tabBarStyle = useMemo(
     () => ({
       backgroundColor: colors.card,
@@ -151,6 +154,13 @@ function MainTabs() {
       paddingTop: tabBarTopPad,
       paddingBottom: tabBarBottomPad,
       height: tabBarRow + tabBarTopPad + tabBarBottomPad,
+      // Shadow for iOS
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: -3 },
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
+      // Elevation for Android
+      elevation: 12,
     }),
     [tabBarBottomPad]
   );
