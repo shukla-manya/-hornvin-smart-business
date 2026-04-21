@@ -476,6 +476,24 @@ garageRouter.patch(
     if (est.status === "converted") return res.status(400).json({ error: "Estimate already converted to invoice" });
     if (req.body.title !== undefined) est.title = req.body.title;
     if (req.body.status !== undefined) est.status = req.body.status;
+    if (req.body.garageCustomerId !== undefined) {
+      const v = req.body.garageCustomerId;
+      if (v === null || v === "") est.garageCustomerId = undefined;
+      else {
+        const gc = await GarageCustomer.findOne({ _id: v, garageUserId: req.user._id });
+        if (!gc) return res.status(400).json({ error: "Customer not found" });
+        est.garageCustomerId = gc._id;
+      }
+    }
+    if (req.body.garageVehicleId !== undefined) {
+      const v = req.body.garageVehicleId;
+      if (v === null || v === "") est.garageVehicleId = undefined;
+      else {
+        const gv = await GarageVehicle.findOne({ _id: v, garageUserId: req.user._id });
+        if (!gv) return res.status(400).json({ error: "Vehicle not found" });
+        est.garageVehicleId = gv._id;
+      }
+    }
     if (req.body.taxPercent !== undefined) est.taxPercent = Number(req.body.taxPercent) || 0;
     if (req.body.lineItems) {
       est.lineItems = req.body.lineItems.map((x) => ({
