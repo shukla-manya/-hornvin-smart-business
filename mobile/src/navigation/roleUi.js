@@ -77,6 +77,8 @@ const GARAGE_STACK_ROUTES = new Set([
   "GarageReminders",
   "GarageAiCalling",
   "GarageWorkEstimate",
+  "GarageVehicles",
+  "GarageShopInvoices",
 ]);
 
 /** Stack routes that are not for every role (everything else is allowed when authenticated). */

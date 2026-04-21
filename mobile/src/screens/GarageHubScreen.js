@@ -92,7 +92,7 @@ export function GarageHubScreen({ navigation }) {
             onPress={() => go("GarageServiceHistory")}
           />
           <Tile title="Due soon" value={summary?.remindersDueSoon ?? "—"} subtitle="Next 14 days" onPress={() => go("GarageReminders")} />
-          <Tile title="AI calling" value="⌁" subtitle="Batch scripts" onPress={() => go("GarageAiCalling")} />
+          <Tile title="AI calling" value="AI" subtitle="Batch scripts" onPress={() => go("GarageAiCalling")} />
         </View>
       )}
 

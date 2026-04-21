@@ -14,11 +14,13 @@ import {
   Linking,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, shadows, radii } from "../theme";
 import { garageApi } from "../api/resources";
 import { FooterCredit } from "../components/FooterCredit";
 
 export function GarageInventoryScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
@@ -191,7 +193,7 @@ export function GarageInventoryScreen({ navigation }) {
         ListFooterComponent={<View style={{ height: 24 }}><FooterCredit /></View>}
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
       />
-      <Pressable style={styles.fab} onPress={openAdd}>
+      <Pressable style={[styles.fab, { bottom: 16 + insets.bottom }]} onPress={openAdd}>
         <Text style={styles.fabTxt}>+ Add line</Text>
       </Pressable>
       <Modal visible={modal} animationType="slide" transparent>
@@ -259,7 +261,6 @@ const styles = StyleSheet.create({
   miniDangerTxt: { color: colors.error, fontWeight: "600" },
   fab: {
     position: "absolute",
-    bottom: 20,
     right: 16,
     left: 16,
     backgroundColor: colors.cta,

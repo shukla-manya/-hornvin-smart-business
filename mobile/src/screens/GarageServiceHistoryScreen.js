@@ -29,6 +29,10 @@ function formatDate(iso) {
 
 export function GarageServiceHistoryScreen() {
   const [records, setRecords] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [garageCustomerId, setGarageCustomerId] = useState("");
+  const [garageVehicleId, setGarageVehicleId] = useState("");
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
   const [summary, setSummary] = useState("");
@@ -44,13 +48,50 @@ export function GarageServiceHistoryScreen() {
   const load = async () => {
     setLoading(true);
     try {
-      const { data } = await garageApi.serviceList();
-      setRecords(data.records || []);
+      const [{ data: svc }, { data: cust }] = await Promise.all([garageApi.serviceList(), garageApi.customersList()]);
+      setRecords(svc.records || []);
+      setCustomers(cust.customers || []);
     } catch {
       setRecords([]);
+      setCustomers([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadVehicles = async (cid) => {
+    if (!cid) {
+      setVehicles([]);
+      return;
+    }
+    try {
+      const { data } = await garageApi.vehiclesList(cid);
+      setVehicles(data.vehicles || []);
+    } catch {
+      setVehicles([]);
+    }
+  };
+
+  const pickCustomer = (c) => {
+    setGarageCustomerId(c._id);
+    setCustomerName(c.name || "");
+    setCustomerPhone(c.phone || "");
+    setGarageVehicleId("");
+    setVehiclePlate(c.vehiclePlate || "");
+    setVehicleModel(c.vehicleModel || "");
+    loadVehicles(c._id);
+  };
+
+  const pickVehicle = (v) => {
+    setGarageVehicleId(v._id);
+    setVehiclePlate(v.plateNumber || "");
+    setVehicleModel(v.model || "");
+  };
+
+  const clearLinks = () => {
+    setGarageCustomerId("");
+    setGarageVehicleId("");
+    setVehicles([]);
   };
 
   useFocusEffect(
@@ -68,6 +109,8 @@ export function GarageServiceHistoryScreen() {
     try {
       await garageApi.serviceCreate({
         summary: summary.trim(),
+        garageCustomerId: garageCustomerId || undefined,
+        garageVehicleId: garageVehicleId || undefined,
         customerName: customerName.trim(),
         customerPhone: customerPhone.trim(),
         vehiclePlate: vehiclePlate.trim(),
@@ -78,6 +121,9 @@ export function GarageServiceHistoryScreen() {
       });
       setModal(false);
       setSummary("");
+      setGarageCustomerId("");
+      setGarageVehicleId("");
+      setVehicles([]);
       setCustomerName("");
       setCustomerPhone("");
       setVehiclePlate("");
@@ -161,10 +207,36 @@ export function GarageServiceHistoryScreen() {
               multiline
               placeholderTextColor={colors.textSecondary}
             />
+            <Text style={styles.label}>Link customer (optional)</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
+              <Pressable onPress={clearLinks} style={[styles.chip, !garageCustomerId && styles.chipOn]}>
+                <Text style={[styles.chipTxt, !garageCustomerId && styles.chipTxtOn]}>Manual / walk-in</Text>
+              </Pressable>
+              {customers.map((c) => (
+                <Pressable key={c._id} onPress={() => pickCustomer(c)} style={[styles.chip, garageCustomerId === c._id && styles.chipOn]}>
+                  <Text style={[styles.chipTxt, garageCustomerId === c._id && styles.chipTxtOn]}>{c.name}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
             <Text style={styles.label}>Customer</Text>
             <TextInput value={customerName} onChangeText={setCustomerName} style={styles.input} placeholderTextColor={colors.textSecondary} />
             <Text style={styles.label}>Phone</Text>
             <TextInput value={customerPhone} onChangeText={setCustomerPhone} keyboardType="phone-pad" style={styles.input} placeholderTextColor={colors.textSecondary} />
+            {garageCustomerId && vehicles.length ? (
+              <>
+                <Text style={styles.label}>Link vehicle</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
+                  <Pressable onPress={() => { setGarageVehicleId(""); }} style={[styles.chip, !garageVehicleId && styles.chipOn]}>
+                    <Text style={[styles.chipTxt, !garageVehicleId && styles.chipTxtOn]}>Any / type below</Text>
+                  </Pressable>
+                  {vehicles.map((v) => (
+                    <Pressable key={v._id} onPress={() => pickVehicle(v)} style={[styles.chip, garageVehicleId === v._id && styles.chipOn]}>
+                      <Text style={[styles.chipTxt, garageVehicleId === v._id && styles.chipTxtOn]}>{v.plateNumber}</Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              </>
+            ) : null}
             <Text style={styles.label}>Vehicle plate</Text>
             <TextInput value={vehiclePlate} onChangeText={setVehiclePlate} autoCapitalize="characters" style={styles.input} placeholderTextColor={colors.textSecondary} />
             <Text style={styles.label}>Vehicle model</Text>
@@ -223,6 +295,19 @@ const styles = StyleSheet.create({
   modalScroll: { maxHeight: "88%" },
   modalCard: { backgroundColor: colors.card, padding: 20, borderTopLeftRadius: 20, borderTopRightRadius: 20 },
   modalTitle: { fontSize: 18, fontWeight: "700", color: colors.header, marginBottom: 8 },
+  chipScroll: { marginTop: 6, marginBottom: 4, maxHeight: 44 },
+  chip: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginRight: 8,
+    backgroundColor: colors.white,
+  },
+  chipOn: { backgroundColor: colors.header, borderColor: colors.header },
+  chipTxt: { fontWeight: "700", fontSize: 13, color: colors.text },
+  chipTxtOn: { color: colors.white },
   label: { marginTop: 10, fontWeight: "600", color: colors.textSecondary, fontSize: 12 },
   input: {
     borderWidth: 1,
