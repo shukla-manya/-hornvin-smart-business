@@ -6,12 +6,23 @@ import { colors, shadows } from "../theme";
 
 export function AdminHomeScreen({ navigation }) {
   const [summary, setSummary] = useState(null);
+  const [platform, setPlatform] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
-    const { data } = await adminApi.analyticsSummary();
-    setSummary(data);
+    try {
+      const { data } = await adminApi.platform();
+      setPlatform(data);
+    } catch {
+      setPlatform(null);
+    }
+    try {
+      const { data } = await adminApi.analyticsSummary();
+      setSummary(data);
+    } catch {
+      setSummary(null);
+    }
   }, []);
 
   useFocusEffect(
@@ -46,14 +57,25 @@ export function AdminHomeScreen({ navigation }) {
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      <Text style={styles.h1}>Super Admin</Text>
-      <Text style={styles.sub}>Platform control · company owner</Text>
-      <View style={[styles.banner, shadows.card]}>
-        <Text style={styles.bannerTitle}>System control checklist</Text>
-        <Text style={styles.bannerLine}>1. Users → filter Pending → Approve or reject (only you can unlock accounts).</Text>
-        <Text style={styles.bannerLine}>2. Create distributors — distributors and retail cannot use this admin API.</Text>
-        <Text style={styles.bannerLine}>3. Orders, payments, global catalog — full platform visibility.</Text>
-      </View>
+      <Text style={styles.h1}>Hornvin Super Admin</Text>
+      <Text style={styles.sub}>You are the only company root — global catalog, distributors, all garages, orders & analytics</Text>
+      {platform?.controls?.length ? (
+        <View style={[styles.banner, shadows.card]}>
+          <Text style={styles.bannerTitle}>Your /api/admin controls</Text>
+          {platform.controls.map((c) => (
+            <Text key={c.id} style={styles.bannerLine}>
+              • {c.label}
+            </Text>
+          ))}
+        </View>
+      ) : (
+        <View style={[styles.banner, shadows.card]}>
+          <Text style={styles.bannerTitle}>System control checklist</Text>
+          <Text style={styles.bannerLine}>1. Users → Pending → approve garages and downstream accounts.</Text>
+          <Text style={styles.bannerLine}>2. Create distributors (always under Hornvin company).</Text>
+          <Text style={styles.bannerLine}>3. Global catalog, categories, all orders, payments, analytics.</Text>
+        </View>
+      )}
 
       {loading && !summary ? (
         <ActivityIndicator style={{ marginTop: 24 }} color={colors.secondaryBlue} />

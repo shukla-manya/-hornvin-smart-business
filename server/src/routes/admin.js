@@ -11,9 +11,33 @@ import { requirePlatformOwner } from "../middleware/platformOwner.js";
 import { maybeNotifyStockLowAfterDecrease } from "../services/pushNotify.js";
 import { emailTemporaryCredentials } from "../services/onboardingMail.js";
 
+/**
+ * Hornvin Super Admin API (`/api/admin/*`).
+ *
+ * Only the single Hornvin `company` user (`isPlatformOwner`) may call these routes. They control:
+ * - Global product catalog (`/catalog/products`, categories)
+ * - Distributor creation (`/users/distributor` — always linked to this company)
+ * - All garages / users (`/users`, `/users/retail`, PATCH user status — retail must use this company id)
+ * - All orders, all payments, analytics summary
+ */
 export const adminRouter = Router();
 
 adminRouter.use(requireAuth(true), requirePlatformOwner);
+
+adminRouter.get("/platform", (_req, res) => {
+  return res.json({
+    identity: "hornvin_company_super_admin",
+    singleRoot: true,
+    adminApiPrefix: "/api/admin",
+    controls: [
+      { id: "global_catalog", label: "Global product catalog", paths: ["/admin/catalog/products", "/admin/categories"] },
+      { id: "distributors", label: "Create & link distributors", paths: ["/admin/users/distributor"] },
+      { id: "garages", label: "All garages (retail) & user moderation", paths: ["/admin/users", "/admin/users/retail"] },
+      { id: "commerce", label: "All orders & payments", paths: ["/admin/orders", "/admin/payments"] },
+      { id: "analytics", label: "Platform analytics", paths: ["/admin/analytics/summary"] },
+    ],
+  });
+});
 
 function safeUserDoc(doc) {
   const o = doc.toObject ? doc.toObject() : doc;
@@ -122,13 +146,21 @@ adminRouter.post(
     const { email, phone, password, name, businessName, companyId, distributorId } = req.body;
     if (!email && !phone) return res.status(400).json({ error: "email or phone required" });
 
+    if (String(companyId) !== String(req.user._id)) {
+      return res.status(403).json({
+        code: "ADMIN_RETAIL_MUST_USE_HORNVIN_COMPANY",
+        error:
+          "Super Admin may only create garages under the Hornvin company (your account). companyId must match your user id.",
+      });
+    }
+
     const dist = await User.findOne({
       _id: distributorId,
       role: "distributor",
-      companyId,
+      companyId: req.user._id,
     });
     if (!dist) {
-      return res.status(400).json({ error: "Distributor not found for this company" });
+      return res.status(400).json({ error: "Distributor not found under your Hornvin company" });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);

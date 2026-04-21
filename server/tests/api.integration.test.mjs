@@ -256,7 +256,7 @@ test("super admin analytics OK; non-owner gets 403 on /api/admin", async () => {
 
   const forbid = await request(app).get("/api/admin/analytics/summary").set("Authorization", `Bearer ${regularToken}`);
   assert.equal(forbid.status, 403);
-  assert.equal(forbid.body.code, "SUPER_ADMIN_ONLY");
+  assert.equal(forbid.body.code, "HORNVIN_SUPER_ADMIN_ONLY");
 });
 
 test("Super Admin with email logs in with password only (no mail OTP step)", async () => {
@@ -549,7 +549,7 @@ test("distributor cannot access Super Admin admin API", async () => {
   assert.equal(dLogin.status, 200);
   const forbid = await request(app).get("/api/admin/analytics/summary").set("Authorization", `Bearer ${dLogin.body.token}`);
   assert.equal(forbid.status, 403);
-  assert.equal(forbid.body.code, "SUPER_ADMIN_ONLY");
+  assert.equal(forbid.body.code, "HORNVIN_SUPER_ADMIN_ONLY");
 });
 
 test("retail cannot access Super Admin admin API", async () => {
@@ -564,7 +564,7 @@ test("retail cannot access Super Admin admin API", async () => {
   assert.equal(login.status, 200);
   const forbid = await request(app).get("/api/admin/analytics/summary").set("Authorization", `Bearer ${login.body.token}`);
   assert.equal(forbid.status, 403);
-  assert.equal(forbid.body.code, "SUPER_ADMIN_ONLY");
+  assert.equal(forbid.body.code, "HORNVIN_SUPER_ADMIN_ONLY");
 });
 
 test("Super Admin approves pending retail scoped by companyId (no distributor)", async () => {

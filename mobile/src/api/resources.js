@@ -59,6 +59,7 @@ export const usersApi = {
 };
 
 export const adminApi = {
+  platform: () => api.get("/admin/platform"),
   analyticsSummary: () => api.get("/admin/analytics/summary"),
   users: (params) => api.get("/admin/users", { params }),
   patchUser: (userId, body) => api.patch(`/admin/users/${userId}`, body),

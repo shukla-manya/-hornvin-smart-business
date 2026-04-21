@@ -4,6 +4,7 @@ import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import * as Location from "expo-location";
 import { dealerLocatorApi, authApi } from "../api/resources";
 import { FooterCredit } from "../components/FooterCredit";
+import { useAuth } from "../context/AuthContext";
 import { colors, shadows } from "../theme";
 import { formatDistanceMeters, openDrivingDirections } from "../utils/maps";
 
@@ -16,6 +17,7 @@ const ROLE_OPTIONS = [
 ];
 
 export function DealerMapScreen() {
+  const { user } = useAuth();
   const [dealerRole, setDealerRole] = useState("distributor");
   const [region, setRegion] = useState({
     latitude: 28.6139,
@@ -96,6 +98,12 @@ export function DealerMapScreen() {
 
   return (
     <View style={styles.root}>
+      {user?.role && user.role !== "end_user" ? (
+        <Text style={styles.supplyHint}>
+          Supply chain geography: locate distributor branches and garage partners for pickups, stock transfers, and field
+          service.
+        </Text>
+      ) : null}
       <View style={{ height: MAP_HEIGHT }}>
         <MapView
           style={StyleSheet.absoluteFill}
@@ -166,6 +174,17 @@ export function DealerMapScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
+  supplyHint: {
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: 6,
+    color: colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 19,
+    backgroundColor: colors.white,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
   roleRow: {
     flexDirection: "row",
     gap: 10,
