@@ -483,6 +483,86 @@ test("Super Admin creates distributor with mustChangePassword until password cha
   assert.equal(ok.status, 200);
 });
 
+test("GET /api/admin/platform describes Hornvin super-admin controls", async () => {
+  const ownerPhone = `+1914${String(Date.now()).slice(-8)}`;
+  await User.create({
+    phone: ownerPhone,
+    passwordHash: await bcrypt.hash("secret12", 10),
+    role: "company",
+    status: "approved",
+    isPlatformOwner: true,
+    location: { type: "Point", coordinates: [0, 0] },
+  });
+  const login = await request(app).post("/api/auth/login").send({ phone: ownerPhone, password: "secret12" });
+  const res = await request(app).get("/api/admin/platform").set("Authorization", `Bearer ${login.body.token}`);
+  assert.equal(res.status, 200);
+  assert.equal(res.body.identity, "hornvin_company_super_admin");
+  assert.equal(res.body.singleRoot, true);
+  assert.ok(Array.isArray(res.body.controls));
+  assert.ok(res.body.controls.some((c) => c.id === "global_catalog"));
+});
+
+test("Super Admin POST admin retail rejects foreign companyId; accepts Hornvin companyId", async () => {
+  const hornvin = await User.create({
+    phone: `+1915${String(Date.now()).slice(-8)}`,
+    passwordHash: await bcrypt.hash("secret12", 10),
+    role: "company",
+    status: "approved",
+    isPlatformOwner: true,
+    location: { type: "Point", coordinates: [0, 0] },
+  });
+  const otherCo = await User.create({
+    phone: `+1916${String(Date.now()).slice(-8)}`,
+    passwordHash: await bcrypt.hash("secret12", 10),
+    role: "company",
+    status: "approved",
+    isPlatformOwner: false,
+    location: { type: "Point", coordinates: [0, 0] },
+  });
+  const distB = await User.create({
+    phone: `+1917${String(Date.now()).slice(-8)}`,
+    passwordHash: await bcrypt.hash("secret12", 10),
+    role: "distributor",
+    status: "approved",
+    companyId: otherCo._id,
+    location: { type: "Point", coordinates: [0, 0] },
+  });
+  const ownerLogin = await request(app).post("/api/auth/login").send({ phone: hornvin.phone, password: "secret12" });
+  const bad = await request(app)
+    .post("/api/admin/users/retail")
+    .set("Authorization", `Bearer ${ownerLogin.body.token}`)
+    .send({
+      phone: `+1918${String(Date.now()).slice(-8)}`,
+      password: "secret12",
+      name: "X",
+      companyId: String(otherCo._id),
+      distributorId: String(distB._id),
+    });
+  assert.equal(bad.status, 403, JSON.stringify(bad.body));
+  assert.equal(bad.body.code, "ADMIN_RETAIL_MUST_USE_HORNVIN_COMPANY");
+
+  const distGood = await User.create({
+    phone: `+1919${String(Date.now()).slice(-8)}`,
+    passwordHash: await bcrypt.hash("secret12", 10),
+    role: "distributor",
+    status: "approved",
+    companyId: hornvin._id,
+    location: { type: "Point", coordinates: [0, 0] },
+  });
+  const ok = await request(app)
+    .post("/api/admin/users/retail")
+    .set("Authorization", `Bearer ${ownerLogin.body.token}`)
+    .send({
+      phone: `+1920${String(Date.now()).slice(-8)}`,
+      password: "secret12",
+      name: "Garage OK",
+      companyId: String(hornvin._id),
+      distributorId: String(distGood._id),
+    });
+  assert.equal(ok.status, 201, JSON.stringify(ok.body));
+  assert.equal(ok.body.user.role, "retail");
+});
+
 test("Super Admin approves self-registered retail linked to distributor; retail can log in", async () => {
   const ownerPhone = `+1600${String(Date.now()).slice(-8)}`;
   const owner = await User.create({
