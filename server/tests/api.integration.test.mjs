@@ -8,6 +8,8 @@ import { createApp, runStartupMigrations } from "../src/createApp.js";
 import { User } from "../src/models/User.js";
 import { GarageInventoryItem } from "../src/models/GarageInventoryItem.js";
 import { Product } from "../src/models/Product.js";
+import { Coupon } from "../src/models/Coupon.js";
+import { CouponRedemption } from "../src/models/CouponRedemption.js";
 
 process.env.JWT_SECRET = "integration-test-jwt-secret-do-not-use-elsewhere";
 process.env.NODE_ENV = "test";
@@ -1130,6 +1132,57 @@ test("POST /api/part-finder/identify manual query returns products and nearby se
 
   await Product.deleteMany({ sellerId: retail._id });
   await User.deleteMany({ _id: { $in: [retail._id, company._id] } });
+});
+
+test("rewards: Super Admin creates coupon; user redeems points", async () => {
+  const ownerPhone = `+1710${String(Date.now()).slice(-8)}`;
+  const owner = await User.create({
+    phone: ownerPhone,
+    passwordHash: await bcrypt.hash("secret12", 10),
+    role: "company",
+    status: "approved",
+    isPlatformOwner: true,
+  });
+  const buyerPhone = `+1711${String(Date.now()).slice(-8)}`;
+  const buyer = await User.create({
+    phone: buyerPhone,
+    passwordHash: await bcrypt.hash("secret12", 10),
+    role: "end_user",
+    status: "approved",
+  });
+  const adminLogin = await request(app).post("/api/auth/login").send({ phone: ownerPhone, password: "secret12" });
+  assert.equal(adminLogin.status, 200, JSON.stringify(adminLogin.body));
+  const buyerLogin = await request(app).post("/api/auth/login").send({ phone: buyerPhone, password: "secret12" });
+  assert.equal(buyerLogin.status, 200, JSON.stringify(buyerLogin.body));
+
+  const createC = await request(app)
+    .post("/api/admin/coupons")
+    .set("Authorization", `Bearer ${adminLogin.body.token}`)
+    .send({ code: "WELCOME50", title: "Welcome", pointsValue: 50, maxUses: 10 });
+  assert.equal(createC.status, 201, JSON.stringify(createC.body));
+
+  const redeem = await request(app)
+    .post("/api/rewards/redeem")
+    .set("Authorization", `Bearer ${buyerLogin.body.token}`)
+    .send({ code: "welcome50" });
+  assert.equal(redeem.status, 200, JSON.stringify(redeem.body));
+  assert.equal(redeem.body.pointsAwarded, 50);
+  assert.equal(redeem.body.rewardPoints, 50);
+
+  const me = await request(app).get("/api/rewards/me").set("Authorization", `Bearer ${buyerLogin.body.token}`);
+  assert.equal(me.status, 200);
+  assert.equal(me.body.rewardPoints, 50);
+
+  const dup = await request(app)
+    .post("/api/rewards/redeem")
+    .set("Authorization", `Bearer ${buyerLogin.body.token}`)
+    .send({ code: "WELCOME50" });
+  assert.equal(dup.status, 400);
+  assert.equal(dup.body.code, "COUPON_ALREADY_USED");
+
+  await CouponRedemption.deleteMany({ userId: buyer._id });
+  await Coupon.deleteMany({ code: "WELCOME50" });
+  await User.deleteMany({ _id: { $in: [owner._id, buyer._id] } });
 });
 
 test("garage API forbidden for non-retail roles", async () => {
