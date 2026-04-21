@@ -1,25 +1,133 @@
-import React from "react";
-import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
+import React, { useCallback, useState } from "react";
+import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import { FooterCredit } from "../components/FooterCredit";
 import { colors, shadows, radii } from "../theme";
+import { ordersApi, paymentsApi, productsApi, garageApi, dealerLocatorApi, usersApi } from "../api/resources";
 
-function Action({ title, subtitle, onPress }) {
+const ACTIVE_ORDER_STATUSES = new Set(["pending", "confirmed", "shipped"]);
+
+function orderInvolvesUser(order, userId) {
+  if (!userId || !order) return false;
+  const b = order.buyerId;
+  const s = order.sellerId;
+  const bid = typeof b === "string" ? b : b?.id || b?._id;
+  const sid = typeof s === "string" ? s : s?.id || s?._id;
+  return String(bid) === String(userId) || String(sid) === String(userId);
+}
+
+function DashboardRow({ title, value, subtitle, onPress, alertTone }) {
   return (
-    <Pressable onPress={onPress} style={styles.action}>
+    <Pressable onPress={onPress} style={[styles.dashRow, alertTone && styles.dashRowAlert]}>
       <View style={{ flex: 1 }}>
-        <Text style={styles.actionTitle}>{title}</Text>
-        {subtitle ? <Text style={styles.actionSub}>{subtitle}</Text> : null}
+        <Text style={styles.dashTitle}>{title}</Text>
+        <Text style={[styles.dashValue, alertTone && styles.dashValueAlert]}>{value}</Text>
+        {subtitle ? <Text style={styles.dashSub}>{subtitle}</Text> : null}
       </View>
       <Text style={styles.chev}>›</Text>
     </Pressable>
   );
 }
 
+function SectionHeader({ emoji, label, tone }) {
+  return (
+    <View style={[styles.sectionHead, tone === "business" ? styles.sectionHeadBiz : styles.sectionHeadMkt]}>
+      <Text style={styles.sectionEmoji}>{emoji}</Text>
+      <Text style={[styles.sectionLabel, tone === "business" ? styles.sectionLabelBiz : styles.sectionLabelMkt]}>
+        {label}
+      </Text>
+    </View>
+  );
+}
+
 export function HomeScreen({ navigation }) {
   const { user } = useAuth();
   const role = user?.role;
+  const userId = user?.id;
   const openStack = (name) => navigation.getParent()?.getParent()?.navigate(name);
+
+  const [loading, setLoading] = useState(true);
+  const [activeOrders, setActiveOrders] = useState(0);
+  const [pendingPayments, setPendingPayments] = useState(0);
+  const [lowStock, setLowStock] = useState(null);
+  const [remindersSoon, setRemindersSoon] = useState(null);
+  const [productSample, setProductSample] = useState(0);
+  const [nearbyDistributors, setNearbyDistributors] = useState(null);
+  const [distWorkspace, setDistWorkspace] = useState(null);
+
+  const showMergedDashboard = role === "retail" || role === "company" || role === "distributor" || role === "end_user";
+
+  const loadDashboard = useCallback(async () => {
+    if (!showMergedDashboard || !userId) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      const requests = [
+        ordersApi.list().catch(() => ({ data: { orders: [] } })),
+        paymentsApi.list().catch(() => ({ data: { payments: [] } })),
+        productsApi.list({}).catch(() => ({ data: { products: [] } })),
+      ];
+      if (role === "retail") {
+        requests.push(garageApi.summary().catch(() => null));
+      } else {
+        requests.push(Promise.resolve(null));
+      }
+      if (role === "distributor") {
+        requests.push(usersApi.workspaceSummary().catch(() => null));
+      } else {
+        requests.push(Promise.resolve(null));
+      }
+
+      const [ordersRes, payRes, prodRes, garageRes, wsRes] = await Promise.all(requests);
+      const orders = ordersRes.data?.orders || [];
+      const active = orders.filter((o) => ACTIVE_ORDER_STATUSES.has(o.status) && orderInvolvesUser(o, userId));
+      setActiveOrders(active.length);
+
+      const payments = payRes.data?.payments || [];
+      setPendingPayments(payments.filter((p) => p.status === "pending").length);
+
+      const products = prodRes.data?.products || [];
+      setProductSample(products.length);
+
+      if (garageRes?.data) {
+        setLowStock(garageRes.data.lowStockCount ?? 0);
+        setRemindersSoon(garageRes.data.remindersDueSoon ?? 0);
+      } else {
+        setLowStock(null);
+        setRemindersSoon(null);
+      }
+
+      if (wsRes?.data) {
+        setDistWorkspace(wsRes.data);
+      } else {
+        setDistWorkspace(null);
+      }
+
+      const coords = user?.location?.coordinates;
+      if (Array.isArray(coords) && coords.length >= 2) {
+        const [lng, lat] = coords;
+        try {
+          const { data } = await dealerLocatorApi.nearby({ lat, lng, role: "distributor" });
+          setNearbyDistributors((data.dealers || []).length);
+        } catch {
+          setNearbyDistributors(null);
+        }
+      } else {
+        setNearbyDistributors(null);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [role, userId, user?.location?.coordinates, showMergedDashboard]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadDashboard();
+    }, [loadDashboard])
+  );
 
   const headline =
     role === "company"
@@ -32,23 +140,80 @@ export function HomeScreen({ navigation }) {
             ? "Your service, payments, and reminders"
             : "Discover products & nearby dealers";
 
+  const workSubtitle =
+    role === "distributor" && distWorkspace != null
+      ? `${distWorkspace.ordersOpenAsSeller ?? 0} selling · ${distWorkspace.ordersOpenAsBuyer ?? 0} buying · ${distWorkspace.pendingApprovalCount ?? 0} shops pending approval`
+      : role === "distributor"
+        ? "Open orders from your account; link to company for workspace totals"
+        : remindersSoon != null && remindersSoon > 0
+          ? `${remindersSoon} customer reminder(s) due soon — tap for garage`
+          : "Orders you need to move or receive";
+
+  const workValue =
+    role === "distributor" && distWorkspace != null
+      ? `${(distWorkspace.ordersOpenAsSeller || 0) + (distWorkspace.ordersOpenAsBuyer || 0)} open`
+      : `${activeOrders} active`;
+
   return (
     <ScrollView style={styles.root} contentContainerStyle={{ paddingBottom: 32 }}>
       <Text style={styles.h1}>Welcome{user?.name ? `, ${user.name}` : ""}</Text>
       <Text style={styles.sub}>{headline}</Text>
 
-      {role === "end_user" ? (
-        <View style={[styles.card, shadows.card, styles.primaryCard, { marginBottom: 12 }]}>
-          <Text style={styles.primaryBadge}>END CUSTOMER · LIGHT ROLE</Text>
-          <Text style={styles.cardTitle}>What you use here</Text>
-          <View style={styles.panelBody}>
-            <Text style={styles.panelStrong}>Receive service</Text>
-            <Text style={styles.panelLine}>Completed work and purchases show under the Service tab (your orders).</Text>
-            <Text style={styles.panelStrong}>Pay</Text>
-            <Text style={styles.panelLine}>Record or review what you owe from Profile → Payments, linked to orders when your shop uses them.</Text>
-            <Text style={styles.panelStrong}>Get reminders</Text>
-            <Text style={styles.panelLine}>Turn on push in Reminders; in-app feed lists service and payment alerts from Hornvin.</Text>
-          </View>
+      {showMergedDashboard ? (
+        <View style={[styles.card, shadows.card, { marginBottom: 12 }]}>
+          {loading ? (
+            <View style={styles.loadingRow}>
+              <ActivityIndicator color={colors.secondaryBlue} />
+              <Text style={styles.loadingTxt}>Loading dashboard…</Text>
+            </View>
+          ) : null}
+
+          <SectionHeader emoji="🟢" label="Business" tone="business" />
+
+          <DashboardRow
+            title="Today's work"
+            value={workValue}
+            subtitle={workSubtitle}
+            onPress={() => navigation.navigate("OrdersTab")}
+          />
+          <DashboardRow
+            title="Pending payments"
+            value={pendingPayments > 0 ? `${pendingPayments} to settle` : "All clear"}
+            subtitle="Cash, UPI, bank, card — mark completed when done"
+            onPress={() => openStack("Payments")}
+            alertTone={pendingPayments > 0}
+          />
+          <DashboardRow
+            title="Low stock alert"
+            value={role === "retail" && lowStock != null ? (lowStock > 0 ? `${lowStock} SKU(s) at or below reorder` : "No low-stock SKUs") : "—"}
+            subtitle={role === "retail" ? "Garage inventory vs reorder level" : "Retail garage accounts see live stock alerts"}
+            onPress={() => {
+              if (role === "retail") openStack("GarageInventory");
+              else navigation.navigate("ExploreTab");
+            }}
+            alertTone={role === "retail" && lowStock > 0}
+          />
+
+          <View style={styles.sectionDivider} />
+
+          <SectionHeader emoji="🔵" label="Marketplace" tone="marketplace" />
+
+          <DashboardRow
+            title="Products"
+            value={productSample >= 100 ? "100+ listings" : `${productSample} in feed`}
+            subtitle="Search, categories, buy & sell"
+            onPress={() => navigation.navigate("ExploreTab")}
+          />
+          <DashboardRow
+            title="Nearby distributors"
+            value={nearbyDistributors != null ? `${nearbyDistributors} on map` : "Set location"}
+            subtitle={
+              nearbyDistributors != null
+                ? "Based on your saved map location"
+                : "Allow location in Dealer locator to count nearby partners"
+            }
+            onPress={() => openStack("DealerMap")}
+          />
         </View>
       ) : null}
 
@@ -75,35 +240,21 @@ export function HomeScreen({ navigation }) {
       ) : null}
 
       {role === "retail" ? (
-        <>
-          <View style={[styles.card, shadows.card, styles.primaryCard, { marginBottom: 12 }]}>
-            <Text style={styles.primaryBadge}>MAIN USER · GARAGE</Text>
-            <Text style={styles.cardTitle}>You run both sides in one app</Text>
-            <View style={styles.panelBody}>
-              <Text style={styles.panelStrong}>Internal tools</Text>
-              <Text style={styles.panelLine}>Garage tab — inventory, service history, customer reminders, invoices, estimates, AI call prep.</Text>
-              <Text style={styles.panelStrong}>External marketplace</Text>
-              <Text style={styles.panelLine}>
-                Marketplace tab — buy parts, sell listings, chat with suppliers & buyers, dealer map to find partners.
-              </Text>
-            </View>
+        <View style={[styles.card, shadows.card, { marginBottom: 12 }]}>
+          <Text style={styles.cardTitle}>Distributor → you</Text>
+          <View style={styles.panelBody}>
+            <Text style={styles.panelLine}>
+              Your distributor buys from Hornvin company and supplies you; you sell to drivers and workshops on the marketplace.
+            </Text>
           </View>
-          <View style={[styles.card, shadows.card, { marginBottom: 12 }]}>
-            <Text style={styles.cardTitle}>Distributor → you</Text>
-            <View style={styles.panelBody}>
-              <Text style={styles.panelLine}>
-                Your distributor buys from Hornvin company and supplies you; you sell to drivers and workshops on the marketplace.
-              </Text>
-            </View>
-          </View>
-        </>
+        </View>
       ) : null}
 
       {role === "company" && user?.isPlatformOwner ? (
         <View style={[styles.card, shadows.card, { marginBottom: 12 }]}>
           <Text style={styles.cardTitle}>Approvals</Text>
           <Text style={styles.hint}>
-            As the sole Hornvin Super Admin, approve pending garages here: Profile → Super Admin → Users (filter Pending).
+            As the sole Hornvin Super Admin, approve pending garages here: Profile → Hornvin Admin → Users (filter Pending).
           </Text>
         </View>
       ) : null}
@@ -126,7 +277,7 @@ export function HomeScreen({ navigation }) {
         </View>
       ) : (
         <View style={[styles.card, shadows.card]}>
-          <Text style={styles.cardTitle}>Dashboard</Text>
+          <Text style={styles.cardTitle}>More</Text>
           <Action
             title="Marketplace listings"
             subtitle="Supply chain catalog + distributor & garage SKUs"
@@ -193,10 +344,61 @@ export function HomeScreen({ navigation }) {
   );
 }
 
+function Action({ title, subtitle, onPress }) {
+  return (
+    <Pressable onPress={onPress} style={styles.action}>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.actionTitle}>{title}</Text>
+        {subtitle ? <Text style={styles.actionSub}>{subtitle}</Text> : null}
+      </View>
+      <Text style={styles.chev}>›</Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background, padding: 16 },
   h1: { fontSize: 26, fontWeight: "600", color: colors.text, letterSpacing: -0.3 },
   sub: { marginTop: 8, color: colors.textSecondary, marginBottom: 18, fontSize: 15, lineHeight: 22 },
+  loadingRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 12, paddingVertical: 10 },
+  loadingTxt: { color: colors.textSecondary, fontSize: 13 },
+  sectionHead: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginHorizontal: 12,
+    marginTop: 10,
+    marginBottom: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+  },
+  sectionHeadBiz: { backgroundColor: "#ECFDF5" },
+  sectionHeadMkt: { backgroundColor: "#EFF6FF" },
+  sectionEmoji: { fontSize: 16 },
+  sectionLabel: { fontSize: 14, fontWeight: "800", letterSpacing: 0.4, textTransform: "uppercase" },
+  sectionLabelBiz: { color: "#15803d" },
+  sectionLabelMkt: { color: colors.secondaryBlue },
+  sectionDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.border,
+    marginVertical: 10,
+    marginHorizontal: 12,
+  },
+  dashRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+  },
+  dashRowAlert: { backgroundColor: "#FFFBEB" },
+  dashTitle: { color: colors.textSecondary, fontSize: 13, fontWeight: "600" },
+  dashValue: { color: colors.text, fontSize: 20, fontWeight: "800", marginTop: 4 },
+  dashValueAlert: { color: "#B45309" },
+  dashSub: { color: colors.textSecondary, fontSize: 12, marginTop: 4, lineHeight: 17 },
   card: {
     backgroundColor: colors.card,
     borderRadius: radii.card,
@@ -206,32 +408,6 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   cardTitle: { color: colors.header, fontWeight: "600", marginBottom: 4, marginHorizontal: 12, marginTop: 12, fontSize: 15, letterSpacing: 0.2 },
-  primaryCard: { borderColor: colors.selectionBorder, backgroundColor: colors.selectionBg },
-  primaryBadge: {
-    marginHorizontal: 12,
-    marginTop: 12,
-    alignSelf: "flex-start",
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-    color: colors.header,
-    backgroundColor: colors.white,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.selectionBorder,
-  },
-  panelStrong: {
-    marginTop: 10,
-    marginBottom: 4,
-    marginHorizontal: 12,
-    fontWeight: "800",
-    fontSize: 13,
-    color: colors.header,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
   action: {
     flexDirection: "row",
     alignItems: "center",
