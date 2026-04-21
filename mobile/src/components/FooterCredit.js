@@ -14,7 +14,7 @@ export function FooterCredit({ compact, global: isGlobal }) {
       ]}
       accessibilityRole="text"
     >
-      <Text style={styles.text}>Made with ♥ love by MANYA SHUKLA · 2026</Text>
+      <Text style={styles.text}>Made with ♥  by MANYA SHUKLA · 2026</Text>
     </View>
   );
 }

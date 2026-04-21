@@ -65,7 +65,7 @@ export function createApp() {
   <main>
     <h1>Vello Trade API</h1>
     <p><a href="/api-docs">Open API documentation (Swagger UI)</a></p>
-    <p class="muted">Made with love by Manya Shukla</p>
+    <p class="muted">Made with  by Manya Shukla</p>
   </main>
 </body>
 </html>`);

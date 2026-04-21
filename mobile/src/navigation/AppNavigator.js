@@ -31,6 +31,10 @@ import { AdminCatalogScreen } from "../screens/AdminCatalogScreen";
 import { AdminCategoriesScreen } from "../screens/AdminCategoriesScreen";
 import { AdminCouponsScreen } from "../screens/AdminCouponsScreen";
 import { AdminPushScreen } from "../screens/AdminPushScreen";
+import { AdminUserDetailScreen } from "../screens/AdminUserDetailScreen";
+import { AdminOrderDetailScreen } from "../screens/AdminOrderDetailScreen";
+import { AdminAnalyticsScreen } from "../screens/AdminAnalyticsScreen";
+import { AdminChatHubScreen } from "../screens/AdminChatHubScreen";
 import { RewardsScreen } from "../screens/RewardsScreen";
 import { DistributorWorkspaceScreen } from "../screens/DistributorWorkspaceScreen";
 import { CompanyCatalogScreen } from "../screens/CompanyCatalogScreen";
@@ -62,6 +66,10 @@ const GuardedAdminCatalog = withStackRouteGuard(AdminCatalogScreen, "AdminCatalo
 const GuardedAdminCategories = withStackRouteGuard(AdminCategoriesScreen, "AdminCategories");
 const GuardedAdminCoupons = withStackRouteGuard(AdminCouponsScreen, "AdminCoupons");
 const GuardedAdminPush = withStackRouteGuard(AdminPushScreen, "AdminPush");
+const GuardedAdminUserDetail = withStackRouteGuard(AdminUserDetailScreen, "AdminUserDetail");
+const GuardedAdminOrderDetail = withStackRouteGuard(AdminOrderDetailScreen, "AdminOrderDetail");
+const GuardedAdminAnalytics = withStackRouteGuard(AdminAnalyticsScreen, "AdminAnalytics");
+const GuardedAdminChatHub = withStackRouteGuard(AdminChatHubScreen, "AdminChatHub");
 const GuardedDistributorWorkspace = withStackRouteGuard(DistributorWorkspaceScreen, "DistributorWorkspace");
 const GuardedPostProduct = withStackRouteGuard(PostProductScreen, "PostProduct");
 const GuardedInvoices = withStackRouteGuard(InvoicesScreen, "Invoices");
@@ -251,12 +259,16 @@ export function AppNavigator() {
         <Stack.Screen name="Wishlist" component={WishlistScreen} options={{ title: "Wishlist" }} />
         <Stack.Screen name="AdminHome" component={GuardedAdminHome} options={{ title: "Hornvin Admin" }} />
         <Stack.Screen name="AdminUsers" component={GuardedAdminUsers} options={{ title: "Users" }} />
+        <Stack.Screen name="AdminUserDetail" component={GuardedAdminUserDetail} options={{ title: "User detail" }} />
         <Stack.Screen name="AdminOrders" component={GuardedAdminOrders} options={{ title: "All orders" }} />
+        <Stack.Screen name="AdminOrderDetail" component={GuardedAdminOrderDetail} options={{ title: "Order detail" }} />
         <Stack.Screen name="AdminPayments" component={GuardedAdminPayments} options={{ title: "Transactions" }} />
         <Stack.Screen name="AdminCatalog" component={GuardedAdminCatalog} options={{ title: "Global products" }} />
         <Stack.Screen name="AdminCategories" component={GuardedAdminCategories} options={{ title: "Categories" }} />
         <Stack.Screen name="AdminCoupons" component={GuardedAdminCoupons} options={{ title: "Coupons & rewards" }} />
         <Stack.Screen name="AdminPush" component={GuardedAdminPush} options={{ title: "Push broadcast" }} />
+        <Stack.Screen name="AdminAnalytics" component={GuardedAdminAnalytics} options={{ title: "Analytics" }} />
+        <Stack.Screen name="AdminChatHub" component={GuardedAdminChatHub} options={{ title: "Distributor chat" }} />
         <Stack.Screen name="Rewards" component={RewardsScreen} options={{ title: "Coupons & rewards" }} />
         <Stack.Screen name="DistributorWorkspace" component={GuardedDistributorWorkspace} options={{ title: "Distributor" }} />
         <Stack.Screen name="CompanyCatalog" component={CompanyCatalogScreen} options={{ title: "Company catalog" }} />
