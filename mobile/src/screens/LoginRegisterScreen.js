@@ -286,6 +286,20 @@ export function LoginRegisterScreen() {
           style={styles.input}
         />
 
+        {mode === "login" ? (
+          <>
+            <Text style={styles.label}>Phone (only if you sign in with phone, not email)</Text>
+            <TextInput
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+              placeholder="+91…"
+              placeholderTextColor={colors.textSecondary}
+              style={styles.input}
+            />
+          </>
+        ) : null}
+
         {mode === "login" && (
           <>
             <Text style={styles.hint}>
