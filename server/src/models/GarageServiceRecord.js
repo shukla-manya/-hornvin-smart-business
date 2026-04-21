@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 const garageServiceRecordSchema = new mongoose.Schema(
   {
     garageUserId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    garageCustomerId: { type: mongoose.Schema.Types.ObjectId, ref: "GarageCustomer" },
+    garageVehicleId: { type: mongoose.Schema.Types.ObjectId, ref: "GarageVehicle" },
     customerName: { type: String, trim: true, default: "" },
     customerPhone: { type: String, trim: true, default: "" },
     vehiclePlate: { type: String, trim: true, default: "" },

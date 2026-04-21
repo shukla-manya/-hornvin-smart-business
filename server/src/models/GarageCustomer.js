@@ -11,6 +11,10 @@ const garageCustomerSchema = new mongoose.Schema(
     notes: { type: String, trim: true, default: "" },
     nextReminderAt: { type: Date },
     reminderLabel: { type: String, trim: true, default: "" },
+    paymentReminderAt: { type: Date },
+    paymentReminderLabel: { type: String, trim: true, default: "" },
+    /** Tokens: {{name}}, {{plate}}, {{paymentDue}} — used for SMS/WhatsApp automation drafts */
+    automatedMessageTemplate: { type: String, trim: true, default: "" },
   },
   { timestamps: true }
 );

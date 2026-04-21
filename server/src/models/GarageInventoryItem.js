@@ -9,6 +9,7 @@ const garageInventoryItemSchema = new mongoose.Schema(
     reorderAt: { type: Number, default: 0, min: 0 },
     unit: { type: String, trim: true, default: "pcs" },
     notes: { type: String, trim: true, default: "" },
+    linkedProductId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
   },
   { timestamps: true }
 );
