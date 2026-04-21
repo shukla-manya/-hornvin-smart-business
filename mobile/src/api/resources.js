@@ -69,12 +69,15 @@ export const usersApi = {
 
 export const adminApi = {
   platform: () => api.get("/admin/platform"),
+  dashboard: () => api.get("/admin/dashboard"),
   analyticsSummary: () => api.get("/admin/analytics/summary"),
   users: (params) => api.get("/admin/users", { params }),
+  userDetail: (userId) => api.get(`/admin/users/${userId}`),
   patchUser: (userId, body) => api.patch(`/admin/users/${userId}`, body),
   createDistributor: (body) => api.post("/admin/users/distributor", body),
   createRetailAdmin: (body) => api.post("/admin/users/retail", body),
   orders: (params) => api.get("/admin/orders", { params }),
+  orderDetail: (orderId) => api.get(`/admin/orders/${orderId}`),
   payments: (params) => api.get("/admin/payments", { params }),
   couponsList: () => api.get("/admin/coupons"),
   createCoupon: (body) => api.post("/admin/coupons", body),
@@ -86,6 +89,7 @@ export const adminApi = {
   deleteCategory: (categoryId) => api.delete(`/admin/categories/${categoryId}`),
   listGlobalProducts: () => api.get("/admin/catalog/products"),
   createGlobalProduct: (body) => api.post("/admin/catalog/products", body),
+  patchGlobalProduct: (productId, body) => api.patch(`/admin/catalog/products/${productId}`, body),
   deleteGlobalProduct: (productId) => api.delete(`/admin/catalog/products/${productId}`),
 };
 

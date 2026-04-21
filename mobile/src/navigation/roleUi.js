@@ -65,12 +65,16 @@ export function getInitialMainTabKey(role) {
 const SUPER_ADMIN_STACK_ROUTES = new Set([
   "AdminHome",
   "AdminUsers",
+  "AdminUserDetail",
   "AdminOrders",
+  "AdminOrderDetail",
   "AdminPayments",
   "AdminCatalog",
   "AdminCategories",
   "AdminCoupons",
   "AdminPush",
+  "AdminAnalytics",
+  "AdminChatHub",
 ]);
 
 const GARAGE_STACK_ROUTES = new Set([
