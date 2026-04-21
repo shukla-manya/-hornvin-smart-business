@@ -95,8 +95,11 @@ export function ChatListScreen({ navigation }) {
             </View>
           ) : user?.role === "end_user" ? (
             <View style={styles.banner}>
-              <Text style={styles.bannerTitle}>Seller messages</Text>
-              <Text style={styles.bannerText}>Message garages or distributors (customer ↔ seller) around parts and service.</Text>
+              <Text style={styles.bannerTitle}>Chat with your garage</Text>
+              <Text style={styles.bannerText}>
+                Open a thread from a product or order, or continue here — message garages and sellers about service, parts, and
+                pickup times.
+              </Text>
             </View>
           ) : null
         }

@@ -314,17 +314,22 @@ export function HomeScreen({ navigation }) {
 
       {role === "end_user" ? (
         <View style={[styles.card, shadows.card]}>
-          <Text style={styles.cardTitle}>Shortcuts</Text>
+          <Text style={styles.cardTitle}>Your Hornvin (customer)</Text>
+          <Text style={styles.hint}>
+            Light role: track service and orders, get reminders, pay and view invoices, and message your garage or seller.
+          </Text>
           <Action
             title="Service"
-            subtitle="Orders and completed service from your shop or marketplace"
+            subtitle="Orders and service status from your garage or marketplace"
             onPress={() => navigation.navigate("OrdersTab")}
           />
+          <Action title="Chat with garage" subtitle="Threads with garages and sellers" onPress={() => navigation.navigate("ChatTab")} />
+          <Action title="Invoices" subtitle="View bills and mark paid when you have paid" onPress={() => openStack("Invoices")} />
           <Action title="Pay" subtitle="Payments you make or track" onPress={() => openStack("Payments")} />
           <Action title="Reminders" subtitle="Push setup and alert feed" onPress={() => navigation.navigate("NotificationsTab")} />
           <Action
             title="Browse parts (optional)"
-            subtitle="Only when you need to shop — not the main focus"
+            subtitle="Only when you need to shop"
             onPress={() => openStack("MarketplaceBrowse")}
           />
         </View>

@@ -103,8 +103,18 @@ export function InvoicesScreen() {
   };
 
   const sellOrders = orders.filter((o) => (o.sellerId?._id || o.sellerId) === user?.id);
+  const isEndCustomer = user?.role === "end_user";
 
-  const header = (
+  const header = isEndCustomer ? (
+    <View style={{ marginBottom: 12 }}>
+      <Text style={styles.section}>Your invoices</Text>
+      <Text style={styles.muted}>
+        When a garage or seller bills you for service or parts, it appears here. Use Service for order status, Chat if you need to
+        reach the garage, and Mark paid when you have settled outside the app (cash, UPI, etc.).
+      </Text>
+      <Text style={[styles.section, { marginTop: 14 }]}>List</Text>
+    </View>
+  ) : (
     <View style={{ marginBottom: 12 }}>
       <Text style={styles.section}>Generate invoice (you are seller)</Text>
       {sellOrders.length === 0 ? (
