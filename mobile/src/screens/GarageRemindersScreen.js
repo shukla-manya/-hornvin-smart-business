@@ -113,8 +113,12 @@ export function GarageRemindersScreen({ navigation }) {
         phone: phone.trim(),
         vehiclePlate: vehiclePlate.trim(),
         vehicleModel: vehicleModel.trim(),
+        notes: notes.trim(),
         reminderLabel: reminderLabelText.trim(),
         nextReminderAt: nextDate.trim() ? `${nextDate.trim()}T09:00:00.000Z` : undefined,
+        paymentReminderAt: paymentDate.trim() ? `${paymentDate.trim()}T09:00:00.000Z` : undefined,
+        paymentReminderLabel: paymentLabel.trim(),
+        automatedMessageTemplate: autoTemplate.trim(),
       };
       if (editId) await garageApi.customerPatch(editId, payload);
       else await garageApi.customerCreate(payload);
@@ -143,6 +147,28 @@ export function GarageRemindersScreen({ navigation }) {
         },
       },
     ]);
+  };
+
+  const previewAutoMessage = async (customerId) => {
+    try {
+      const { data } = await garageApi.customerAutomatedMessage(customerId);
+      const msg = data.message || "";
+      await Share.share({ message: msg });
+    } catch (e) {
+      Alert.alert("Preview", e.response?.data?.error || e.message);
+    }
+  };
+
+  const whatsappAutoMessage = async (customerId) => {
+    try {
+      const { data } = await garageApi.customerAutomatedMessage(customerId);
+      const msg = data.message || "";
+      const url = `whatsapp://send?text=${encodeURIComponent(msg)}`;
+      if (await Linking.canOpenURL(url)) await Linking.openURL(url);
+      else await Share.share({ message: msg });
+    } catch (e) {
+      Alert.alert("WhatsApp", e.response?.data?.error || e.message);
+    }
   };
 
   return (
