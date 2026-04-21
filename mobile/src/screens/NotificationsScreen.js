@@ -5,11 +5,14 @@ import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { api } from "../services/api";
 import { notificationsFeedApi, chatApi } from "../api/resources";
+import { useAuth } from "../context/AuthContext";
 import { FooterCredit } from "../components/FooterCredit";
 import { colors, shadows } from "../theme";
 
 export function NotificationsScreen() {
   const navigation = useNavigation();
+  const { user } = useAuth();
+  const isEndUser = user?.role === "end_user";
   const [pushStatus, setPushStatus] = useState(null);
   const [feedRows, setFeedRows] = useState([]);
   const [feedMeta, setFeedMeta] = useState(null);
@@ -91,7 +94,10 @@ export function NotificationsScreen() {
       } catch {
         /* fall through */
       }
-      Alert.alert("Chat", "Open the Chat tab and select this conversation.");
+      Alert.alert(
+        "Chat",
+        isEndUser ? "From a product, use Message seller — there is no separate Chat tab on your account." : "Open the Chat tab and select this conversation."
+      );
       return;
     }
 
@@ -116,8 +122,12 @@ export function NotificationsScreen() {
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={{ paddingBottom: 32 }}>
-      <Text style={styles.h1}>Notifications</Text>
-      <Text style={styles.sub}>In-app feed (orders, chat, low stock) and optional device push.</Text>
+      <Text style={styles.h1}>{isEndUser ? "Reminders" : "Notifications"}</Text>
+      <Text style={styles.sub}>
+        {isEndUser
+          ? "Service visits, payment due dates, and order updates — plus optional push."
+          : "In-app feed (orders, chat, low stock) and optional device push."}
+      </Text>
 
       <View style={[styles.card, shadows.card]}>
         <Text style={styles.cardTitle}>Push status (server)</Text>
@@ -156,7 +166,11 @@ export function NotificationsScreen() {
           </Text>
         ) : null}
         {feedRows.length === 0 ? (
-          <Text style={styles.muted}>No notifications yet. New orders, messages, and low-stock alerts appear here.</Text>
+          <Text style={styles.muted}>
+            {isEndUser
+              ? "Nothing yet. When your shop or Hornvin sends alerts, they appear here."
+              : "No notifications yet. New orders, messages, and low-stock alerts appear here."}
+          </Text>
         ) : (
           feedRows.map((n) => (
             <Pressable

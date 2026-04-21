@@ -11,7 +11,11 @@ export const APP_ROLES = [
     label: "Garage (retail)",
     blurb: "Primary user — internal tools + marketplace (buy, sell, chat, suppliers)",
   },
-  { id: "end_user", label: "End user", blurb: "Self-signup · email code to verify, then sign-in mail OTP" },
+  {
+    id: "end_user",
+    label: "End customer",
+    blurb: "Light role — service (orders), pay, reminders; optional browse. Self-signup with email verify + sign-in OTP",
+  },
 ];
 
 /**

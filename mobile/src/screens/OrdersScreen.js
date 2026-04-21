@@ -78,8 +78,11 @@ export function OrdersScreen() {
       </View>
     ) : user?.role === "end_user" ? (
       <View style={styles.chainBanner}>
-        <Text style={styles.chainBannerTitle}>Your orders</Text>
-        <Text style={styles.chainBannerText}>Track marketplace purchases; message sellers from Chat or the product page.</Text>
+        <Text style={styles.chainBannerTitle}>Service you receive</Text>
+        <Text style={styles.chainBannerText}>
+          Work and purchases from your shop or the marketplace show here. Use Pay on Home or Profile for what you owe. Reminders
+          carries follow-ups and due dates.
+        </Text>
       </View>
     ) : null;
 
