@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import {
-  View, Text, TextInput, Pressable, StyleSheet,
+  View, Text, Pressable, StyleSheet,
   Alert, KeyboardAvoidingView, Platform, ScrollView,
 } from "react-native";
+import { PasswordInput } from "../components/PasswordInput";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import { authApi } from "../api/resources";
@@ -46,25 +47,10 @@ export function ChangePasswordScreen() {
           <Text style={styles.cardSub}>Enter your current password, then choose a new one.</Text>
 
           <Text style={styles.label}>Current password</Text>
-          <TextInput
-            style={styles.input}
-            value={current}
-            onChangeText={setCurrent}
-            secureTextEntry
-            autoCapitalize="none"
-            placeholder="Current password"
-            placeholderTextColor={colors.textSecondary}
-          />
+          <PasswordInput value={current} onChangeText={setCurrent} placeholder="Current password" />
 
           <Text style={styles.label}>New password</Text>
-          <TextInput
-            style={styles.input}
-            value={next}
-            onChangeText={setNext}
-            secureTextEntry
-            placeholder="At least 6 characters"
-            placeholderTextColor={colors.textSecondary}
-          />
+          <PasswordInput value={next} onChangeText={setNext} placeholder="At least 6 characters" />
 
           <Pressable onPress={submit} disabled={busy || !token} style={[styles.cta, busy && { opacity: 0.55 }]}>
             <Text style={styles.ctaText}>Save password</Text>

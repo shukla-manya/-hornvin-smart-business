@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import {
-  View, Text, TextInput, Pressable, StyleSheet,
+  View, Text, Pressable, StyleSheet,
   Alert, KeyboardAvoidingView, Platform, ScrollView,
 } from "react-native";
+import { PasswordInput } from "../components/PasswordInput";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../context/AuthContext";
 import { authApi } from "../api/resources";
@@ -57,25 +58,10 @@ export function ForcePasswordChangeScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Text style={styles.label}>Temporary password</Text>
-          <TextInput
-            style={styles.input}
-            value={current}
-            onChangeText={setCurrent}
-            secureTextEntry
-            autoCapitalize="none"
-            placeholder="Password you were given"
-            placeholderTextColor={colors.textSecondary}
-          />
+          <PasswordInput value={current} onChangeText={setCurrent} placeholder="Password you were given" />
 
           <Text style={styles.label}>New password</Text>
-          <TextInput
-            style={styles.input}
-            value={next}
-            onChangeText={setNext}
-            secureTextEntry
-            placeholder="At least 6 characters"
-            placeholderTextColor={colors.textSecondary}
-          />
+          <PasswordInput value={next} onChangeText={setNext} placeholder="At least 6 characters" />
 
           <Pressable onPress={submit} disabled={busy || !token} style={[styles.cta, busy && { opacity: 0.55 }]}>
             <Text style={styles.ctaText}>Save & continue</Text>

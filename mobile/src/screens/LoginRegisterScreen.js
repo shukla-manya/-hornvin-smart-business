@@ -328,14 +328,7 @@ export function LoginRegisterScreen() {
         {mode === "login" && (
           <>
             <Text style={styles.label}>Password</Text>
-            <TextInput
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              placeholder="••••••••"
-              placeholderTextColor={colors.textSecondary}
-              style={styles.input}
-            />
+            <PasswordInput value={password} onChangeText={setPassword} placeholder="••••••••" />
             {email.trim() && awaitingLoginOtp ? (
               <>
                 <Text style={styles.label}>Code from email</Text>
@@ -366,14 +359,7 @@ export function LoginRegisterScreen() {
             <Text style={styles.label}>{email.trim() ? "Mobile (required with email)" : "Phone (if no email)"}</Text>
             <TextInput value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="+91…" placeholderTextColor={colors.textSecondary} style={styles.input} />
             <Text style={styles.label}>Password</Text>
-            <TextInput
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              placeholder="••••••••"
-              placeholderTextColor={colors.textSecondary}
-              style={styles.input}
-            />
+            <PasswordInput value={password} onChangeText={setPassword} placeholder="••••••••" />
             {awaitingRegisterVerify ? (
               <>
                 <Text style={styles.hint}>Enter the verification code we sent to your email.</Text>
@@ -482,14 +468,7 @@ export function LoginRegisterScreen() {
                   placeholderTextColor={colors.textSecondary}
                   style={styles.input}
                 />
-                <TextInput
-                  value={forgotNewPw}
-                  onChangeText={setForgotNewPw}
-                  secureTextEntry
-                  placeholder="New password (min 6)"
-                  placeholderTextColor={colors.textSecondary}
-                  style={[styles.input, { marginTop: 10 }]}
-                />
+                <PasswordInput value={forgotNewPw} onChangeText={setForgotNewPw} placeholder="New password (min 6)" style={{ marginTop: 10 }} />
                 <View style={styles.modalActions}>
                   <Pressable onPress={() => setForgotStep(1)} style={styles.modalSecondary}>
                     <Text style={styles.modalSecondaryText}>Back</Text>

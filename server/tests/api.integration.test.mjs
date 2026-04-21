@@ -31,6 +31,22 @@ after(async () => {
   if (mongo) await mongo.stop();
 });
 
+/** Fields so approved retail passes `computeNeedsProfileSetup` in integration tests. */
+function retailOnboardedProfile(overrides = {}) {
+  return {
+    name: "Garage Owner",
+    businessName: "Test Garage",
+    address: "1 Industrial Road",
+    addressLandmark: "Near highway",
+    stateRegion: "MH",
+    businessType: "independent",
+    gstNumber: "",
+    shopPhotoUrl: "https://example.com/tests/garage-shop.jpg",
+    profilePhotoUrl: "https://example.com/tests/garage-owner.jpg",
+    ...overrides,
+  };
+}
+
 test("GET /health returns ok", async () => {
   const res = await request(app).get("/health");
   assert.equal(res.status, 200);
@@ -537,6 +553,7 @@ test("retail with companyId can create marketplace listing (POST /api/products)"
     status: "approved",
     companyId: company._id,
     location: { type: "Point", coordinates: [0, 0] },
+    ...retailOnboardedProfile(),
   });
   const login = await request(app).post("/api/auth/login").send({ phone: retailPhone, password: "secret12" });
   assert.equal(login.status, 200);
@@ -570,10 +587,9 @@ test("retail: needsGarageServiceSelection until PATCH profile garageServices", a
     passwordHash: await bcrypt.hash("secret12", 10),
     role: "retail",
     status: "approved",
-    name: "Owner",
-    businessName: "Bay One",
     companyId: company._id,
     location: { type: "Point", coordinates: [0, 0] },
+    ...retailOnboardedProfile({ name: "Owner", businessName: "Bay One" }),
   });
   const login = await request(app).post("/api/auth/login").send({ phone: retailPhone, password: "secret12" });
   assert.equal(login.status, 200);
@@ -750,6 +766,7 @@ test("retail cannot access Super Admin admin API", async () => {
     passwordHash: await bcrypt.hash("secret12", 10),
     role: "retail",
     status: "approved",
+    ...retailOnboardedProfile(),
   });
   const login = await request(app).post("/api/auth/login").send({ phone: retailPhone, password: "secret12" });
   assert.equal(login.status, 200);
@@ -774,6 +791,7 @@ test("Super Admin approves pending retail scoped by companyId (no distributor)",
     role: "retail",
     status: "pending",
     companyId: owner._id,
+    ...retailOnboardedProfile(),
   });
 
   const ownerLogin = await request(app).post("/api/auth/login").send({ phone: ownerPhone, password: "secret12" });
@@ -805,6 +823,7 @@ test("RBAC: company cannot place marketplace orders", async () => {
     role: "retail",
     status: "approved",
     companyId: hornvin._id,
+    ...retailOnboardedProfile(),
   });
   const prod = await Product.create({
     companyId: hornvin._id,
@@ -1103,6 +1122,7 @@ test("retail garage API: inventory summary and work estimate", async () => {
     status: "approved",
     companyId: company._id,
     location: { type: "Point", coordinates: [0, 0] },
+    ...retailOnboardedProfile(),
   });
   const login = await request(app).post("/api/auth/login").send({ phone: retailPhone, password: "secret12" });
   assert.equal(login.status, 200, JSON.stringify(login.body));
