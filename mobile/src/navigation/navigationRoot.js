@@ -32,3 +32,16 @@ export function resetToForcePasswordChange() {
     navigationRef.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "ForcePasswordChange" }] }));
   });
 }
+
+export function resetToProfileSetup() {
+  dispatchWhenReady(() => {
+    navigationRef.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "ProfileSetup" }] }));
+  });
+}
+
+/** After sign-in or password change: choose Main vs forced flows. */
+export function resetAfterAuth(user) {
+  if (user?.mustChangePassword) resetToForcePasswordChange();
+  else if (user?.needsProfileSetup) resetToProfileSetup();
+  else resetToMain();
+}

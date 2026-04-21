@@ -37,6 +37,7 @@ import { GarageRemindersScreen } from "../screens/GarageRemindersScreen";
 import { GarageAiCallingScreen } from "../screens/GarageAiCallingScreen";
 import { GarageWorkEstimateScreen } from "../screens/GarageWorkEstimateScreen";
 import { ForcePasswordChangeScreen } from "../screens/ForcePasswordChangeScreen";
+import { ProfileSetupScreen } from "../screens/ProfileSetupScreen";
 import { ChangePasswordScreen } from "../screens/ChangePasswordScreen";
 import { useAuth } from "../context/AuthContext";
 import { getInitialMainTabKey, getVisibleMainTabKeys } from "./roleUi";
@@ -173,6 +174,7 @@ export function AppNavigator() {
       >
         <Stack.Screen name="Splash" component={SplashScreen} options={{ headerShown: false }} />
         <Stack.Screen name="ForcePasswordChange" component={ForcePasswordChangeScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} options={{ headerShown: false }} />
         <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: "Change password" }} />
         <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} options={{ headerShown: false }} />
         <Stack.Screen name="LoginRegister" component={LoginRegisterScreen} options={{ headerShown: false }} />

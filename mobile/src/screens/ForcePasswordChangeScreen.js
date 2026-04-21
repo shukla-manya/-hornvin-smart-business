@@ -3,7 +3,7 @@ import { View, Text, TextInput, Pressable, StyleSheet, Alert, KeyboardAvoidingVi
 import { useAuth } from "../context/AuthContext";
 import { authApi } from "../api/resources";
 import { colors } from "../theme";
-import { resetToMain } from "../navigation/navigationRoot";
+import { resetAfterAuth } from "../navigation/navigationRoot";
 
 /**
  * Shown after first login when Super Admin / distributor created the account with a temporary password.
@@ -21,8 +21,8 @@ export function ForcePasswordChangeScreen() {
     setBusy(true);
     try {
       await authApi.changePassword({ currentPassword: current, newPassword: next });
-      await refreshMe();
-      resetToMain();
+      const u = await refreshMe();
+      resetAfterAuth(u);
     } catch (e) {
       Alert.alert("Could not update", e.response?.data?.error || e.message);
     } finally {

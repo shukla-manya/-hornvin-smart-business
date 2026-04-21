@@ -12,12 +12,19 @@ export function SplashScreen() {
   const navigation = useNavigation();
   const { booting, isAuthenticated, user } = useAuth();
   const mustChangePassword = Boolean(isAuthenticated && user?.mustChangePassword);
+  const needsProfileSetup = Boolean(isAuthenticated && user?.needsProfileSetup);
 
   useEffect(() => {
     if (booting) return;
 
     const go = () => {
-      const target = mustChangePassword ? "ForcePasswordChange" : isAuthenticated ? "Main" : "RoleSelection";
+      const target = mustChangePassword
+        ? "ForcePasswordChange"
+        : needsProfileSetup
+          ? "ProfileSetup"
+          : isAuthenticated
+            ? "Main"
+            : "LoginRegister";
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
@@ -28,7 +35,7 @@ export function SplashScreen() {
 
     const t = setTimeout(go, MIN_MS);
     return () => clearTimeout(t);
-  }, [booting, isAuthenticated, mustChangePassword, navigation]);
+  }, [booting, isAuthenticated, mustChangePassword, needsProfileSetup, navigation]);
 
   return (
     <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.root}>
