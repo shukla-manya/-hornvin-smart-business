@@ -153,6 +153,7 @@ test("register without SKIP_USER_APPROVAL: company blocked without bootstrap; en
       .post("/api/auth/register")
       .send({
         email: `blocked-co-${Date.now()}@example.com`,
+        phone: `+1577${String(Date.now()).slice(-8)}`,
         password: "secret12",
         role: "company",
         name: "No bootstrap",
@@ -173,8 +174,10 @@ test("end_user email: verify registration OTP then login mail OTP (no admin appr
   delete process.env.SKIP_USER_APPROVAL;
   try {
     const em = `buyer-${Date.now()}@example.com`;
+    const buyerPhone = `+1877${String(Date.now()).slice(-8)}`;
     const reg = await request(app).post("/api/auth/register").send({
       email: em,
+      phone: buyerPhone,
       password: "secret12",
       role: "end_user",
       name: "Email Buyer",
@@ -203,7 +206,12 @@ test("end_user email: verify registration OTP then login mail OTP (no admin appr
 
     const step2 = await request(app)
       .post("/api/auth/login")
-      .send({ email: em, password: "secret12", otpCode: step1.body._testOnlyEmailCode });
+      .send({
+        email: em,
+        password: "secret12",
+        emailOtp: step1.body._testOnlyEmailCode,
+        phoneOtp: step1.body._testOnlyPhoneCode,
+      });
     assert.equal(step2.status, 200, JSON.stringify(step2.body));
     assert.ok(step2.body.token);
   } finally {
@@ -417,10 +425,16 @@ test("retail created by distributor with email skips login mail OTP until passwo
   const dToken = dLogin.body.token;
 
   const em = `retail-prov-${Date.now()}@example.com`;
-  const create = await request(app)
+    const create = await request(app)
     .post("/api/users/retail")
     .set("Authorization", `Bearer ${dToken}`)
-    .send({ email: em, password: "temp1234", name: "Shop", businessName: "Garage" });
+    .send({
+      email: em,
+      phone: `+1578${String(Date.now()).slice(-8)}`,
+      password: "temp1234",
+      name: "Shop",
+      businessName: "Garage",
+    });
   assert.equal(create.status, 201, JSON.stringify(create.body));
   assert.equal(create.body.user.mustChangePassword, true);
 
@@ -990,6 +1004,7 @@ test("cannot self-register a second Hornvin company when platform root already e
   try {
     const res = await request(app).post("/api/auth/register").send({
       email: em,
+      phone: `+1579${String(Date.now()).slice(-8)}`,
       password: "anotherpw12",
       role: "company",
       name: "Second root",
