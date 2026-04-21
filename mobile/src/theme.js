@@ -82,9 +82,9 @@ export function orderStatusLabel(status) {
     case "pending":
       return "Pending";
     case "confirmed":
-      return "Confirmed";
+      return "Processing";
     case "shipped":
-      return "Delivered";
+      return "Out for delivery";
     case "completed":
       return "Completed";
     case "cancelled":
@@ -98,9 +98,9 @@ export function orderStatusLabel(status) {
 export function orderNextActionLabel(currentStatus) {
   switch (currentStatus) {
     case "pending":
-      return "Confirm";
+      return "Accept";
     case "confirmed":
-      return "Mark delivered";
+      return "Ship / dispatch";
     case "shipped":
       return "Mark completed";
     default:

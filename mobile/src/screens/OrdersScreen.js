@@ -72,8 +72,8 @@ export function OrdersScreen() {
       <View style={styles.chainBanner}>
         <Text style={styles.chainBannerTitle}>Supply chain orders</Text>
         <Text style={styles.chainBannerText}>
-          Marketplace purchases and stock-channel replenishment (garage ↔ distributor ↔ company) show here. Use Chat from a
-          product for pre-sales threads.
+          Stock purchase from Hornvin company and orders from your garages appear here. As seller: Accept or Reject new
+          requests, then move through processing → delivered → completed. Use Invoices to bill garages after fulfilment.
         </Text>
       </View>
     ) : user?.role === "end_user" ? (
@@ -109,6 +109,9 @@ export function OrdersScreen() {
               <Text style={styles.meta}>
                 {isBuyer ? "Buying from" : "Selling to"} {isBuyer ? seller?.businessName || seller?.name : buyer?.businessName || buyer?.name}
               </Text>
+              <Text style={styles.channel}>
+                {item.orderChannel === "stock" ? "Stock order (company catalog)" : "Marketplace order"}
+              </Text>
               <Text style={styles.items}>
                 {(item.items || [])
                   .map((it) => `${it.title || "Item"} × ${it.quantity}`)
@@ -118,6 +121,11 @@ export function OrdersScreen() {
                 {isSeller && NEXT_STATUS[item.status] ? (
                   <Pressable onPress={() => advance(item)} style={styles.btnSecondary}>
                     <Text style={styles.btnSecondaryText}>{orderNextActionLabel(item.status)}</Text>
+                  </Pressable>
+                ) : null}
+                {isSeller && item.status === "pending" ? (
+                  <Pressable onPress={() => cancel(item)} style={styles.danger}>
+                    <Text style={styles.dangerText}>Reject</Text>
                   </Pressable>
                 ) : null}
                 {isBuyer && item.status === "pending" ? (
@@ -150,6 +158,7 @@ const styles = StyleSheet.create({
   tag: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, borderWidth: 1 },
   tagText: { fontSize: 12, fontWeight: "800", textTransform: "capitalize" },
   meta: { color: colors.textSecondary, marginTop: 8, fontSize: 13 },
+  channel: { marginTop: 4, fontSize: 12, fontWeight: "700", color: colors.secondaryBlue },
   items: { color: colors.text, marginTop: 8 },
   row: { flexDirection: "row", gap: 10, marginTop: 12, flexWrap: "wrap" },
   btnSecondary: { backgroundColor: colors.secondaryBlue, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12 },

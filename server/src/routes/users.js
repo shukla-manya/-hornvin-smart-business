@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { body, validationResult } from "express-validator";
 import { User } from "../models/User.js";
 import { Order } from "../models/Order.js";
+import { Product } from "../models/Product.js";
 import { emailTemporaryCredentials } from "../services/onboardingMail.js";
 import { requireAuth } from "../middleware/auth.js";
 import { allowRoles } from "../middleware/roles.js";
@@ -20,17 +21,54 @@ usersRouter.get("/workspace-summary", allowRoles("distributor"), async (req, res
     return res.status(400).json({ error: "Link to a company first (companyId missing)" });
   }
   const openStatuses = ["pending", "confirmed", "shipped"];
-  const [retailLinkedCount, pendingApprovalCount, ordersOpenAsSeller, ordersOpenAsBuyer] = await Promise.all([
+  const retailIds = await User.find({ role: "retail", distributorId: req.user._id }).distinct("_id");
+  const [
+    retailLinkedCount,
+    pendingApprovalCount,
+    ordersOpenAsSeller,
+    ordersOpenAsBuyer,
+    revenueAgg,
+    lowStockSkuCount,
+    stockOrdersOpenAsBuyer,
+    garageOrdersPendingAsSeller,
+  ] = await Promise.all([
     User.countDocuments({ role: "retail", distributorId: req.user._id }),
     User.countDocuments({ role: "retail", status: "pending", distributorId: req.user._id }),
     Order.countDocuments({ sellerId: req.user._id, status: { $in: openStatuses } }),
     Order.countDocuments({ buyerId: req.user._id, status: { $in: openStatuses } }),
+    Order.aggregate([
+      { $match: { sellerId: req.user._id, status: "completed" } },
+      { $group: { _id: null, total: { $sum: "$total" } } },
+    ]),
+    Product.countDocuments({
+      sellerId: req.user._id,
+      quantity: { $lte: 5 },
+      isGlobalCatalog: { $ne: true },
+    }),
+    Order.countDocuments({
+      buyerId: req.user._id,
+      orderChannel: "stock",
+      status: { $in: openStatuses },
+    }),
+    retailIds.length
+      ? Order.countDocuments({
+          sellerId: req.user._id,
+          buyerId: { $in: retailIds },
+          status: "pending",
+          orderChannel: { $ne: "stock" },
+        })
+      : Promise.resolve(0),
   ]);
+  const completedRevenueAsSeller = revenueAgg[0]?.total ?? 0;
   return res.json({
     retailLinkedCount,
     pendingApprovalCount,
     ordersOpenAsSeller,
     ordersOpenAsBuyer,
+    completedRevenueAsSeller,
+    lowStockSkuCount,
+    stockOrdersOpenAsBuyer,
+    garageOrdersPendingAsSeller,
   });
 });
 

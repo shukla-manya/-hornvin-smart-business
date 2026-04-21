@@ -45,7 +45,7 @@ export function HomeScreen({ navigation }) {
   const { user } = useAuth();
   const role = user?.role;
   const userId = user?.id;
-  const openStack = (name) => navigation.getParent()?.getParent()?.navigate(name);
+  const openStack = (name, params) => navigation.getParent()?.getParent()?.navigate(name, params);
 
   const [loading, setLoading] = useState(true);
   const [activeOrders, setActiveOrders] = useState(0);
@@ -219,15 +219,20 @@ export function HomeScreen({ navigation }) {
 
       {role === "distributor" ? (
         <View style={[styles.card, shadows.card, { marginBottom: 12 }]}>
-          <Text style={styles.cardTitle}>Distributor — supplier in the chain</Text>
+          <Text style={styles.cardTitle}>Distributor panel</Text>
           <View style={styles.panelBody}>
             <Text style={styles.panelLine}>
-              Stock flow: Hornvin company (Super Admin) → you → garage inventory. Use company catalog & stock orders upstream;
-              push fulfilment and marketplace listings downstream.
+              Hornvin company → you (stock + fulfilment) → garages. Accept or reject garage orders in Orders; bill with
+              Invoices; track money in Payments; message company & shops from Chat.
             </Text>
-            <Text style={styles.panelLine}>Distributor workspace — linked garages, approvals, create retail logins.</Text>
-            <Text style={styles.panelLine}>Marketplace + Chat — orders from garages, delivery coordination, messaging.</Text>
           </View>
+          <Action title="Distributor workspace" subtitle="Dashboard, retailers, stock & chat shortcuts" onPress={() => openStack("DistributorWorkspace")} />
+          <Action title="Company catalog" subtitle="Browse Hornvin SKUs and place stock orders" onPress={() => openStack("CompanyCatalog")} />
+          <Action title="My inventory" subtitle="Your listed SKUs, quantities, low-stock alerts" onPress={() => openStack("DistributorInventory")} />
+          <Action title="Orders" subtitle="Garage purchases + your stock buys — status & accept/reject" onPress={() => navigation.navigate("OrdersTab")} />
+          <Action title="Invoices" subtitle="Generate from completed orders for garages" onPress={() => openStack("Invoices")} />
+          <Action title="Payments" subtitle="Track what garages pay you (UPI, cash, …)" onPress={() => openStack("Payments")} />
+          <Action title="Nearby garages" subtitle="Dealer map filtered to retail" onPress={() => openStack("DealerMap", { initialRole: "retail" })} />
         </View>
       ) : null}
 

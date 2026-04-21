@@ -87,13 +87,15 @@ const GARAGE_STACK_ROUTES = new Set([
   "GarageShopInvoices",
 ]);
 
+const DISTRIBUTOR_STACK_ROUTES = new Set(["DistributorWorkspace", "DistributorInventory"]);
+
 /** Stack routes that are not for every role (everything else is allowed when authenticated). */
 export function userCanAccessStackRoute(user, routeName) {
   if (!user) return false;
   if (SUPER_ADMIN_STACK_ROUTES.has(routeName)) {
     return user.role === "company" && !!user.isPlatformOwner;
   }
-  if (routeName === "DistributorWorkspace") {
+  if (DISTRIBUTOR_STACK_ROUTES.has(routeName)) {
     return user.role === "distributor";
   }
   if (routeName === "PostProduct") {
@@ -124,6 +126,12 @@ export function profileQuickLinkRoutes(user) {
     links.push({ route: "PostProduct", label: "Sell on marketplace" });
     links.push({ route: "MarketplaceBrowse", label: "Marketplace (buy from distributors)" });
     links.push({ route: "GarageServiceSelection", label: "Service focus (edit)", params: { edit: true } });
+  }
+  if (user?.role === "distributor") {
+    links.push({ route: "DistributorWorkspace", label: "Distributor panel" });
+    links.push({ route: "DistributorInventory", label: "My inventory & low stock" });
+    links.push({ route: "CompanyCatalog", label: "Company catalog (stock orders)" });
+    links.push({ route: "DealerMap", label: "Nearby garages", params: { initialRole: "retail" } });
   }
   if (user?.role === "company" && user?.isPlatformOwner) {
     links.push({ route: "AdminHome", label: "Hornvin Admin (/api/admin)" });

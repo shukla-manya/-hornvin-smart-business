@@ -520,7 +520,8 @@ authRouter.patch(
 
     const companyLike = req.user.role === "company" || req.user.isPlatformOwner;
     const retailLike = req.user.role === "retail";
-    if (!companyLike && !retailLike && ("businessName" in req.body || "address" in req.body)) {
+    const distributorLike = req.user.role === "distributor";
+    if (!companyLike && !retailLike && !distributorLike && ("businessName" in req.body || "address" in req.body)) {
       return res.status(400).json({
         error: "Only your name can be updated from the profile screen.",
         code: "PROFILE_NAME_ONLY",
@@ -531,7 +532,7 @@ authRouter.patch(
       const name = typeof req.body.name === "string" ? req.body.name.trim() : "";
       req.user.name = name || undefined;
     }
-    if (companyLike || retailLike) {
+    if (companyLike || retailLike || distributorLike) {
       if (req.body.businessName !== undefined) {
         const b = typeof req.body.businessName === "string" ? req.body.businessName.trim() : "";
         req.user.businessName = b || undefined;
