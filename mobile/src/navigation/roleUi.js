@@ -9,6 +9,7 @@ export const MAIN_TAB_KEYS = {
   EXPLORE: "ExploreTab",
   CHAT: "ChatTab",
   ORDERS: "OrdersTab",
+  NOTIFICATIONS: "NotificationsTab",
   PROFILE: "ProfileTab",
 };
 
@@ -30,8 +31,13 @@ const RETAIL_TABS = [
   MAIN_TAB_KEYS.PROFILE,
 ];
 
-/** End users: consumer shell — no business “Home” hub tab; Explore is the primary surface. */
-const END_USER_TABS = [MAIN_TAB_KEYS.EXPLORE, MAIN_TAB_KEYS.ORDERS, MAIN_TAB_KEYS.CHAT, MAIN_TAB_KEYS.PROFILE];
+/** End customer: light shell — service (orders), pay, reminders; optional marketplace from Home / Profile. */
+const END_USER_TABS = [
+  MAIN_TAB_KEYS.HOME,
+  MAIN_TAB_KEYS.ORDERS,
+  MAIN_TAB_KEYS.NOTIFICATIONS,
+  MAIN_TAB_KEYS.PROFILE,
+];
 
 export function getVisibleMainTabKeys(role) {
   if (role === "end_user") return END_USER_TABS;
@@ -50,7 +56,7 @@ export function getInitialMainTabKey(role) {
       /** Primary persona: land on Home (command center for internal + external). */
       return MAIN_TAB_KEYS.HOME;
     case "end_user":
-      return MAIN_TAB_KEYS.EXPLORE;
+      return MAIN_TAB_KEYS.HOME;
     default:
       return visible[0] || MAIN_TAB_KEYS.HOME;
   }
@@ -97,6 +103,13 @@ export function userCanAccessStackRoute(user, routeName) {
 /** Profile → deep links into the root stack. */
 export function profileQuickLinkRoutes(user) {
   const links = [];
+  if (user?.role === "end_user") {
+    links.push({ nestedTab: "NotificationsTab", label: "Reminders" });
+    links.push({ route: "Payments", label: "Payments" });
+    links.push({ route: "MarketplaceBrowse", label: "Browse parts (optional)" });
+    links.push({ route: "Locations", label: "Saved locations" });
+    return links;
+  }
   if (user?.role === "retail") {
     links.push({ nestedTab: "GarageTab", label: "Internal tools (garage)" });
     links.push({ route: "PostProduct", label: "Sell on marketplace" });
