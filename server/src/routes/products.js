@@ -9,7 +9,7 @@ import { canAddProducts, canSell } from "../utils/permissions.js";
 export const productsRouter = Router();
 
 /** Marketplace list: global catalog + normal listings; scoped by seller/company excludes global-only OR. */
-function buildProductListFilter(query) {
+export function buildProductListFilter(query) {
   const category = query.category;
   const companyId = query.companyId;
   const sellerId = query.sellerId;

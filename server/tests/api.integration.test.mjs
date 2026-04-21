@@ -953,6 +953,7 @@ test("wishlist + in-app notifications feed (seller sees new order)", async () =>
     password: "secret12",
     role: "end_user",
     name: "Wish Buyer",
+    businessName: "Wish Buyer Motors",
   });
   assert.equal(buyer.status, 201);
   const tokenB = buyer.body.token;
@@ -1018,6 +1019,7 @@ test("cannot self-register a second Hornvin company when platform root already e
       password: "anotherpw12",
       role: "company",
       name: "Second root",
+      businessName: "Second Root Hornvin",
     });
     assert.equal(res.status, 403, JSON.stringify(res.body));
     assert.equal(res.body.code, "PLATFORM_ROOT_EXISTS");
@@ -1097,6 +1099,7 @@ test("PATCH /api/auth/profile updates display name only", async () => {
     password: "secret12",
     role: "end_user",
     name: "Before",
+    businessName: "Before Profile Shop",
   });
   assert.equal(reg.status, 201, JSON.stringify(reg.body));
   const token = reg.body.token;
