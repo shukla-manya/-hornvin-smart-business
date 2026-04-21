@@ -1171,6 +1171,7 @@ test("POST /api/part-finder/identify manual query returns products and nearby se
     status: "approved",
     companyId: company._id,
     location: { type: "Point", coordinates: [77.21, 28.614] },
+    ...retailOnboardedProfile(),
   });
   const login = await request(app).post("/api/auth/login").send({ phone: retailPhone, password: "secret12" });
   assert.equal(login.status, 200, JSON.stringify(login.body));
