@@ -39,6 +39,7 @@ import { GarageAiCallingScreen } from "../screens/GarageAiCallingScreen";
 import { GarageWorkEstimateScreen } from "../screens/GarageWorkEstimateScreen";
 import { GarageVehiclesScreen } from "../screens/GarageVehiclesScreen";
 import { GarageShopInvoicesScreen } from "../screens/GarageShopInvoicesScreen";
+import { PartFinderScreen } from "../screens/PartFinderScreen";
 import { ForcePasswordChangeScreen } from "../screens/ForcePasswordChangeScreen";
 import { ProfileSetupScreen } from "../screens/ProfileSetupScreen";
 import { ChangePasswordScreen } from "../screens/ChangePasswordScreen";
@@ -219,6 +220,7 @@ export function AppNavigator() {
         <Stack.Screen name="GarageWorkEstimate" component={GuardedGarageWorkEstimate} options={{ title: "Work estimate" }} />
         <Stack.Screen name="GarageVehicles" component={GuardedGarageVehicles} options={{ title: "Vehicles" }} />
         <Stack.Screen name="GarageShopInvoices" component={GuardedGarageShopInvoices} options={{ title: "Shop invoices" }} />
+        <Stack.Screen name="PartFinder" component={PartFinderScreen} options={{ title: "Part Finder" }} />
         <Stack.Screen name="Payments" component={PaymentsScreen} options={{ title: "Payments" }} />
         <Stack.Screen name="Locations" component={LocationsScreen} options={{ title: "Saved locations" }} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: "Notifications" }} />
