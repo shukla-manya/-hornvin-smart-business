@@ -22,6 +22,7 @@ import { dealerLocatorRouter } from "./routes/dealerLocator.js";
 import { notificationsRouter } from "./routes/notifications.js";
 import { wishlistRouter } from "./routes/wishlist.js";
 import { adminRouter } from "./routes/admin.js";
+import { garageRouter } from "./routes/garage.js";
 import { ChatRoom } from "./models/ChatRoom.js";
 import { Product } from "./models/Product.js";
 import { User, getAccountAccessDenial } from "./models/User.js";
@@ -100,6 +101,7 @@ export function createApp() {
   app.use("/api/notifications", notificationsRouter);
   app.use("/api/wishlist", wishlistRouter);
   app.use("/api/admin", adminRouter);
+  app.use("/api/garage", garageRouter);
 
   app.use((err, _req, res, _next) => {
     console.error(err);
