@@ -171,8 +171,8 @@ export function ProductDetailScreen({ route, navigation }) {
 
       {user?.role === "end_user" ? (
         <Text style={styles.hint}>
-          Opens a chat thread with the seller so you can ask questions before buying. Use Dealer map on Home to find nearby
-          distributors and garages.
+          Opens a chat thread with the seller when you need to ask something before paying. Your day-to-day flows stay on Home:
+          Service, Pay, and Reminders.
         </Text>
       ) : null}
       {user?.role === "retail" || user?.role === "distributor" || user?.role === "company" ? (

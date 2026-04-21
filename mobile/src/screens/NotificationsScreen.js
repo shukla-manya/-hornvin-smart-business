@@ -102,7 +102,9 @@ export function NotificationsScreen() {
     }
 
     if ((n.type === "order_new" || n.type === "order_status") && n.orderId) {
-      navigation.navigate("Main", { screen: "OrdersTab" });
+      const tabNames = navigation.getState?.()?.routeNames;
+      if (tabNames?.includes("OrdersTab")) navigation.navigate("OrdersTab");
+      else navigation.navigate("Main", { screen: "OrdersTab" });
       return;
     }
 

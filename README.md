@@ -115,7 +115,7 @@ The HTTP server from `createApp()` also hosts **Socket.IO** with CORS `origin: "
 ### Prerequisites
 
 - Node.js **18+**
-- MongoDB (local URI default in code: `mongodb://127.0.0.1:27017/vello`)
+- MongoDB (local URI default in code: `mongodb://127.0.0.1:27017/hornvin_users`)
 
 ### Server
 

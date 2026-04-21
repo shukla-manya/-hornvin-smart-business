@@ -6,7 +6,7 @@ import { User } from "../src/models/User.js";
 
 const email = (process.env.BOOTSTRAP_PLATFORM_OWNER_EMAIL || "").trim().toLowerCase();
 const password = process.env.BOOTSTRAP_PLATFORM_OWNER_PASSWORD || "";
-const uri = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/vello";
+const uri = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/hornvin_users";
 
 async function main() {
   if (!email || !password) {
