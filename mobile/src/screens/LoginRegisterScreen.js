@@ -483,8 +483,7 @@ export function LoginRegisterScreen() {
                           );
                           return;
                         }
-                        if (data?.user?.mustChangePassword) resetToForcePasswordChange();
-                        else if (data?.token) resetToMain();
+                        if (data?.token && data?.user) resetAfterOnboarding(data.user);
                       } catch (e) {
                         Alert.alert("Error", e.response?.data?.error || e.message);
                       } finally {
