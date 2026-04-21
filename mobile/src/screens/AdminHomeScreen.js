@@ -6,6 +6,7 @@ import { colors, shadows } from "../theme";
 
 export function AdminHomeScreen({ navigation }) {
   const [summary, setSummary] = useState(null);
+  const [dashboard, setDashboard] = useState(null);
   const [platform, setPlatform] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -22,6 +23,12 @@ export function AdminHomeScreen({ navigation }) {
       setSummary(data);
     } catch {
       setSummary(null);
+    }
+    try {
+      const { data } = await adminApi.dashboard();
+      setDashboard(data);
+    } catch {
+      setDashboard(null);
     }
   }, []);
 
@@ -58,7 +65,10 @@ export function AdminHomeScreen({ navigation }) {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
       <Text style={styles.h1}>Hornvin Super Admin</Text>
-      <Text style={styles.sub}>You are the only company root — global catalog, distributors, all garages, orders & analytics</Text>
+      <Text style={styles.sub}>
+        Single platform owner (company role). No public self-registration for this account — use the credentials provisioned for
+        Hornvin. You control distributors, garage approvals, global catalog, all orders, analytics, coupons, and push broadcasts.
+      </Text>
       {platform?.controls?.length ? (
         <View style={[styles.banner, shadows.card]}>
           <Text style={styles.bannerTitle}>Your /api/admin controls</Text>
@@ -77,28 +87,61 @@ export function AdminHomeScreen({ navigation }) {
         </View>
       )}
 
-      {loading && !summary ? (
+      {loading && !summary && !dashboard ? (
         <ActivityIndicator style={{ marginTop: 24 }} color={colors.secondaryBlue} />
       ) : (
-        <View style={[styles.card, shadows.card]}>
-          <Text style={styles.cardTitle}>Overview</Text>
-          <Row label="Total sales (excl. cancelled)" value={`₹${Number(summary?.totalRevenue ?? 0).toFixed(2)}`} />
-          <Row label="Active users (approved)" value={String(summary?.activeUsers ?? "—")} />
-          <Row label="Product rows" value={String(summary?.productCount ?? "—")} />
-          {summary?.orderCountByStatus ? (
-            <Text style={styles.small}>
-              Orders: {Object.entries(summary.orderCountByStatus)
-                .map(([k, v]) => `${k} ${v}`)
-                .join(" · ")}
-            </Text>
-          ) : null}
-        </View>
+        <>
+          <View style={[styles.card, shadows.card]}>
+            <Text style={styles.cardTitle}>Dashboard</Text>
+            <Row label="Garages (under Hornvin)" value={String(dashboard?.totalGarages ?? "—")} />
+            <Row label="Distributors" value={String(dashboard?.totalDistributors ?? "—")} />
+            <Row label="Garages pending approval" value={String(dashboard?.retailPendingApproval ?? 0)} />
+            <Row label="Total orders (all channels)" value={String(dashboard?.totalOrders ?? "—")} />
+            <Row label="Marketplace orders" value={String(dashboard?.ordersMarketplace ?? "—")} />
+            <Row label="Stock orders" value={String(dashboard?.ordersStock ?? "—")} />
+            <Row label="Revenue (excl. cancelled)" value={`₹${Number(dashboard?.totalRevenue ?? summary?.totalRevenue ?? 0).toFixed(2)}`} />
+            <Row label="Active users" value={String(dashboard?.activeUsers ?? summary?.activeUsers ?? "—")} />
+          </View>
+          <View style={[styles.card, shadows.card]}>
+            <Text style={styles.cardTitle}>Catalog & activity</Text>
+            <Row label="Product rows" value={String(summary?.productCount ?? "—")} />
+            {summary?.orderCountByStatus ? (
+              <Text style={styles.small}>
+                Order statuses: {Object.entries(summary.orderCountByStatus)
+                  .map(([k, v]) => `${k} ${v}`)
+                  .join(" · ")}
+              </Text>
+            ) : null}
+          </View>
+        </>
       )}
 
-      <NavCard title="Users" desc="Approve, reject, block, permissions, create distributors" onPress={() => navigation.navigate("AdminUsers")} />
-      <NavCard title="All orders" desc="Monitor every order" onPress={() => navigation.navigate("AdminOrders")} />
+      {dashboard?.recentOrders?.length ? (
+        <View style={[styles.card, shadows.card]}>
+          <Text style={styles.cardTitle}>Recent platform orders</Text>
+          {dashboard.recentOrders.slice(0, 8).map((o) => (
+            <Pressable
+              key={String(o._id)}
+              onPress={() => navigation.navigate("AdminOrderDetail", { orderId: o._id })}
+              style={styles.recentRow}
+            >
+              <Text style={styles.recentAmt}>₹{Number(o.total).toFixed(0)} · {o.status}</Text>
+              <Text style={styles.recentSub}>
+                {o.orderChannel === "stock" ? "Stock" : "Marketplace"} ·{" "}
+                {(o.buyerId && (o.buyerId.businessName || o.buyerId.name)) || "?"} →{" "}
+                {(o.sellerId && (o.sellerId.businessName || o.sellerId.name)) || "?"}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+
+      <NavCard title="Users" desc="All accounts, filters, open user details" onPress={() => navigation.navigate("AdminUsers")} />
+      <NavCard title="Distributors & chat" desc="List distributors, open DM to resolve issues" onPress={() => navigation.navigate("AdminChatHub")} />
+      <NavCard title="Analytics & reports" desc="Trends, top products, users by role" onPress={() => navigation.navigate("AdminAnalytics")} />
+      <NavCard title="All orders" desc="Marketplace + stock, filters, order details" onPress={() => navigation.navigate("AdminOrders")} />
       <NavCard title="Transactions" desc="Payments across the platform" onPress={() => navigation.navigate("AdminPayments")} />
-      <NavCard title="Global products" desc="Platform catalog" onPress={() => navigation.navigate("AdminCatalog")} />
+      <NavCard title="Global products" desc="Catalog, pricing, hide from marketplace" onPress={() => navigation.navigate("AdminCatalog")} />
       <NavCard title="Categories" desc="Manage category list" onPress={() => navigation.navigate("AdminCategories")} />
       <NavCard title="Coupons" desc="Points, discount codes, campaign caps" onPress={() => navigation.navigate("AdminCoupons")} />
       <NavCard title="Push broadcast" desc="Notify selected roles or everyone" onPress={() => navigation.navigate("AdminPush")} />
@@ -146,6 +189,13 @@ const styles = StyleSheet.create({
   rowLabel: { color: colors.textSecondary, flex: 1, paddingRight: 8 },
   rowValue: { fontWeight: "700", color: colors.text },
   small: { marginTop: 8, color: colors.textSecondary, fontSize: 12 },
+  recentRow: {
+    paddingVertical: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+  },
+  recentAmt: { fontWeight: "800", color: colors.text, fontSize: 14 },
+  recentSub: { marginTop: 4, fontSize: 12, color: colors.textSecondary },
   navCard: {
     backgroundColor: colors.white,
     borderRadius: 14,

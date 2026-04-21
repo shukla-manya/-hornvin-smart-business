@@ -228,10 +228,6 @@ export function LoginRegisterScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Pressable onPress={() => navigation.navigate("RoleSelection")} style={styles.backLink}>
-          <Text style={styles.backLinkText}>← Choose account type</Text>
-        </Pressable>
-
         {/* Mode toggle pill */}
         <View style={styles.togglePill}>
           <Pressable
@@ -326,9 +322,6 @@ export function LoginRegisterScreen() {
 
         {mode === "login" && (
           <>
-            <Text style={styles.hint}>
-              Email + password sign-in sends two verification codes — one to your email, one to your phone.
-            </Text>
             <Text style={styles.label}>Password</Text>
             <TextInput
               value={password}
@@ -593,9 +586,6 @@ const styles = StyleSheet.create({
   },
 
   // ── Back link ───────────────────────────────────────────
-  backLink: { marginBottom: 18, alignSelf: "flex-start" },
-  backLinkText: { color: colors.secondaryBlue, fontWeight: "600", fontSize: 13 },
-
   // ── Toggle pill ─────────────────────────────────────────
   togglePill: {
     flexDirection: "row",
@@ -625,7 +615,7 @@ const styles = StyleSheet.create({
   label: {
     color: colors.textSecondary,
     marginBottom: 6,
-    marginTop: 14,
+    marginTop: 10,
     fontSize: 11,
     fontWeight: "700",
     textTransform: "uppercase",

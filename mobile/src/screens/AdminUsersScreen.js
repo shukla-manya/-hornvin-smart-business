@@ -24,9 +24,18 @@ const STATUS_FILTERS = [
   { id: "blocked", label: "Blocked" },
 ];
 
-export function AdminUsersScreen() {
+const ROLE_FILTERS = [
+  { id: "", label: "All roles" },
+  { id: "distributor", label: "Distributors" },
+  { id: "retail", label: "Garages" },
+  { id: "company", label: "Company" },
+  { id: "end_user", label: "End users" },
+];
+
+export function AdminUsersScreen({ navigation }) {
   const [users, setUsers] = useState([]);
   const [statusFilter, setStatusFilter] = useState("pending");
+  const [roleFilter, setRoleFilter] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [modal, setModal] = useState(false);
@@ -38,9 +47,10 @@ export function AdminUsersScreen() {
   const load = useCallback(async () => {
     const params = { limit: 100 };
     if (statusFilter !== "all") params.status = statusFilter;
+    if (roleFilter) params.role = roleFilter;
     const { data } = await adminApi.users(params);
     setUsers(data.users || []);
-  }, [statusFilter]);
+  }, [statusFilter, roleFilter]);
 
   useFocusEffect(
     useCallback(() => {
@@ -151,6 +161,7 @@ export function AdminUsersScreen() {
       <Text style={styles.intro}>
         Approve pending signups so they receive a session. Create distributors here — they cannot self-register in production.
       </Text>
+      <Text style={styles.filterLabel}>Status</Text>
       <View style={styles.filterRow}>
         {STATUS_FILTERS.map((f) => (
           <Pressable
@@ -159,6 +170,18 @@ export function AdminUsersScreen() {
             style={[styles.filterChip, statusFilter === f.id && styles.filterChipOn]}
           >
             <Text style={[styles.filterChipTxt, statusFilter === f.id && styles.filterChipTxtOn]}>{f.label}</Text>
+          </Pressable>
+        ))}
+      </View>
+      <Text style={styles.filterLabel}>Role</Text>
+      <View style={styles.filterRow}>
+        {ROLE_FILTERS.map((f) => (
+          <Pressable
+            key={f.id || "allroles"}
+            onPress={() => setRoleFilter(f.id)}
+            style={[styles.filterChip, roleFilter === f.id && styles.filterChipOn]}
+          >
+            <Text style={[styles.filterChipTxt, roleFilter === f.id && styles.filterChipTxtOn]}>{f.label}</Text>
           </Pressable>
         ))}
       </View>
@@ -186,6 +209,12 @@ export function AdminUsersScreen() {
               {u.permissions?.canPlaceOrders !== false ? "on" : "off"}
             </Text>
             <View style={styles.row}>
+              <Pressable
+                onPress={() => navigation.navigate("AdminUserDetail", { userId: u._id || u.id })}
+                style={[styles.btn, styles.btnPrimary]}
+              >
+                <Text style={styles.btnTxtPrimary}>Details</Text>
+              </Pressable>
               <Pressable onPress={() => moderate(u)} style={styles.btn}>
                 <Text style={styles.btnTxt}>Status</Text>
               </Pressable>
@@ -230,6 +259,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
   },
+  filterLabel: { marginHorizontal: 16, marginBottom: 6, fontSize: 12, fontWeight: "800", color: colors.header },
   filterRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginHorizontal: 16, marginBottom: 12 },
   filterChip: {
     paddingHorizontal: 12,
