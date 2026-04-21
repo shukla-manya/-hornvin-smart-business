@@ -137,17 +137,19 @@ export function HomeScreen({ navigation }) {
         : role === "retail"
           ? "Your garage — primary workspace"
           : role === "end_user"
-            ? "Your service, payments, and reminders"
+            ? "Service, invoices, chat & reminders"
             : "Discover products & nearby dealers";
 
   const workSubtitle =
-    role === "distributor" && distWorkspace != null
-      ? `${distWorkspace.ordersOpenAsSeller ?? 0} selling · ${distWorkspace.ordersOpenAsBuyer ?? 0} buying · ${distWorkspace.pendingApprovalCount ?? 0} shops pending approval`
-      : role === "distributor"
-        ? "Open orders from your account; link to company for workspace totals"
-        : remindersSoon != null && remindersSoon > 0
-          ? `${remindersSoon} customer reminder(s) due soon — tap for garage`
-          : "Orders you need to move or receive";
+    role === "end_user"
+      ? "Garage and marketplace orders you are part of — status, pickup, and messages"
+      : role === "distributor" && distWorkspace != null
+        ? `${distWorkspace.ordersOpenAsSeller ?? 0} selling · ${distWorkspace.ordersOpenAsBuyer ?? 0} buying · ${distWorkspace.pendingApprovalCount ?? 0} shops pending approval`
+        : role === "distributor"
+          ? "Open orders from your account; link to company for workspace totals"
+          : remindersSoon != null && remindersSoon > 0
+            ? `${remindersSoon} customer reminder(s) due soon — tap for garage`
+            : "Orders you need to move or receive";
 
   const workValue =
     role === "distributor" && distWorkspace != null
@@ -168,10 +170,10 @@ export function HomeScreen({ navigation }) {
             </View>
           ) : null}
 
-          <SectionHeader emoji="🟢" label="Business" tone="business" />
+          <SectionHeader emoji={role === "end_user" ? "📋" : "🟢"} label={role === "end_user" ? "Service & pay" : "Business"} tone="business" />
 
           <DashboardRow
-            title="Today's work"
+            title={role === "end_user" ? "Your service" : "Today's work"}
             value={workValue}
             subtitle={workSubtitle}
             onPress={() => navigation.navigate("OrdersTab")}
@@ -214,6 +216,22 @@ export function HomeScreen({ navigation }) {
             }
             onPress={() => openStack("DealerMap")}
           />
+          {role === "end_user" ? (
+            <>
+              <DashboardRow
+                title="Invoices"
+                value="View & pay"
+                subtitle="Bills from garages and sellers — mark paid when settled"
+                onPress={() => openStack("Invoices")}
+              />
+              <DashboardRow
+                title="Chat"
+                value="Garage & seller"
+                subtitle="Continue conversations about service and orders"
+                onPress={() => navigation.navigate("ChatTab")}
+              />
+            </>
+          ) : null}
           {role === "retail" ? (
             <>
               <DashboardRow
