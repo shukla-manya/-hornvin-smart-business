@@ -924,6 +924,10 @@ test("distributor workspace-summary returns limited report counts", async () => 
   assert.equal(typeof res.body.pendingApprovalCount, "number");
   assert.equal(typeof res.body.ordersOpenAsSeller, "number");
   assert.equal(typeof res.body.ordersOpenAsBuyer, "number");
+  assert.equal(typeof res.body.completedRevenueAsSeller, "number");
+  assert.equal(typeof res.body.lowStockSkuCount, "number");
+  assert.equal(typeof res.body.stockOrdersOpenAsBuyer, "number");
+  assert.equal(typeof res.body.garageOrdersPendingAsSeller, "number");
 });
 
 test("Super Admin suspend or block revokes API access with distinct error codes", async () => {

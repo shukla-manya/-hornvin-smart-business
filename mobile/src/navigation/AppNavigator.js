@@ -37,6 +37,7 @@ import { AdminAnalyticsScreen } from "../screens/AdminAnalyticsScreen";
 import { AdminChatHubScreen } from "../screens/AdminChatHubScreen";
 import { RewardsScreen } from "../screens/RewardsScreen";
 import { DistributorWorkspaceScreen } from "../screens/DistributorWorkspaceScreen";
+import { DistributorInventoryScreen } from "../screens/DistributorInventoryScreen";
 import { CompanyCatalogScreen } from "../screens/CompanyCatalogScreen";
 import { GarageHubScreen } from "../screens/GarageHubScreen";
 import { GarageInventoryScreen } from "../screens/GarageInventoryScreen";
@@ -71,6 +72,7 @@ const GuardedAdminOrderDetail = withStackRouteGuard(AdminOrderDetailScreen, "Adm
 const GuardedAdminAnalytics = withStackRouteGuard(AdminAnalyticsScreen, "AdminAnalytics");
 const GuardedAdminChatHub = withStackRouteGuard(AdminChatHubScreen, "AdminChatHub");
 const GuardedDistributorWorkspace = withStackRouteGuard(DistributorWorkspaceScreen, "DistributorWorkspace");
+const GuardedDistributorInventory = withStackRouteGuard(DistributorInventoryScreen, "DistributorInventory");
 const GuardedPostProduct = withStackRouteGuard(PostProductScreen, "PostProduct");
 const GuardedInvoices = withStackRouteGuard(InvoicesScreen, "Invoices");
 const GuardedGarageInventory = withStackRouteGuard(GarageInventoryScreen, "GarageInventory");
@@ -270,7 +272,8 @@ export function AppNavigator() {
         <Stack.Screen name="AdminAnalytics" component={GuardedAdminAnalytics} options={{ title: "Analytics" }} />
         <Stack.Screen name="AdminChatHub" component={GuardedAdminChatHub} options={{ title: "Distributor chat" }} />
         <Stack.Screen name="Rewards" component={RewardsScreen} options={{ title: "Coupons & rewards" }} />
-        <Stack.Screen name="DistributorWorkspace" component={GuardedDistributorWorkspace} options={{ title: "Distributor" }} />
+        <Stack.Screen name="DistributorWorkspace" component={GuardedDistributorWorkspace} options={{ title: "Distributor panel" }} />
+        <Stack.Screen name="DistributorInventory" component={GuardedDistributorInventory} options={{ title: "My inventory" }} />
         <Stack.Screen name="CompanyCatalog" component={CompanyCatalogScreen} options={{ title: "Company catalog" }} />
       </Stack.Navigator>
     </NavigationContainer>

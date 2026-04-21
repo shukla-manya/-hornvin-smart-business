@@ -1,13 +1,13 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Pressable, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import {
+  View, Text, TextInput, Pressable, StyleSheet,
+  Alert, KeyboardAvoidingView, Platform, ScrollView,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import { authApi } from "../api/resources";
-import { colors } from "../theme";
+import { colors, radii, shadows } from "../theme";
 
-/**
- * Voluntary password change while signed in (Profile). Same API as first-login forced change.
- */
 export function ChangePasswordScreen() {
   const navigation = useNavigation();
   const { token, refreshMe } = useAuth();
@@ -16,8 +16,8 @@ export function ChangePasswordScreen() {
   const [busy, setBusy] = useState(false);
 
   const submit = async () => {
-    if (next.length < 6) return Alert.alert("Password", "Use at least 6 characters for the new password.");
     if (!current) return Alert.alert("Password", "Enter your current password.");
+    if (next.length < 6) return Alert.alert("Password", "New password must be at least 6 characters.");
     setBusy(true);
     try {
       await authApi.changePassword({ currentPassword: current, newPassword: next });
@@ -31,51 +31,124 @@ export function ChangePasswordScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <ScrollView contentContainerStyle={styles.root} keyboardShouldPersistTaps="handled">
-        <Text style={styles.h1}>Change password</Text>
-        <Text style={styles.sub}>Enter your current password, then choose a new one (at least 6 characters).</Text>
-        <Text style={styles.label}>Current password</Text>
-        <TextInput
-          style={styles.input}
-          value={current}
-          onChangeText={setCurrent}
-          secureTextEntry
-          autoCapitalize="none"
-          placeholder="Current password"
-          placeholderTextColor={colors.textSecondary}
-        />
-        <Text style={styles.label}>New password</Text>
-        <TextInput
-          style={styles.input}
-          value={next}
-          onChangeText={setNext}
-          secureTextEntry
-          placeholder="At least 6 characters"
-          placeholderTextColor={colors.textSecondary}
-        />
-        <Pressable onPress={submit} disabled={busy || !token} style={[styles.cta, busy && { opacity: 0.6 }]}>
-          <Text style={styles.ctaText}>Save password</Text>
-        </Pressable>
+    <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Icon card header */}
+        <View style={styles.card}>
+          <View style={styles.iconWrap}>
+            <Text style={styles.iconText}>🔑</Text>
+          </View>
+          <Text style={styles.cardTitle}>Change password</Text>
+          <Text style={styles.cardSub}>Enter your current password, then choose a new one.</Text>
+
+          <Text style={styles.label}>Current password</Text>
+          <TextInput
+            style={styles.input}
+            value={current}
+            onChangeText={setCurrent}
+            secureTextEntry
+            autoCapitalize="none"
+            placeholder="Current password"
+            placeholderTextColor={colors.textSecondary}
+          />
+
+          <Text style={styles.label}>New password</Text>
+          <TextInput
+            style={styles.input}
+            value={next}
+            onChangeText={setNext}
+            secureTextEntry
+            placeholder="At least 6 characters"
+            placeholderTextColor={colors.textSecondary}
+          />
+
+          <Pressable onPress={submit} disabled={busy || !token} style={[styles.cta, busy && { opacity: 0.55 }]}>
+            <Text style={styles.ctaText}>Save password</Text>
+          </Pressable>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.background },
-  root: { padding: 24, paddingTop: 16 },
-  h1: { fontSize: 22, fontWeight: "800", color: colors.header },
-  sub: { marginTop: 10, color: colors.textSecondary, lineHeight: 20, marginBottom: 8 },
-  label: { color: colors.textSecondary, fontWeight: "600", marginBottom: 6, marginTop: 12 },
-  input: {
+  root: { flex: 1, backgroundColor: colors.background },
+  scroll: {
+    flexGrow: 1,
+    padding: 20,
+    justifyContent: "center",
+  },
+
+  card: {
+    backgroundColor: colors.card,
+    borderRadius: 24,
+    padding: 24,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 12,
-    padding: 14,
-    backgroundColor: colors.white,
-    color: colors.text,
+    ...shadows.card,
   },
-  cta: { marginTop: 28, backgroundColor: colors.cta, paddingVertical: 16, borderRadius: 14, alignItems: "center" },
-  ctaText: { color: colors.white, fontWeight: "800", fontSize: 16 },
+
+  iconWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 18,
+    backgroundColor: colors.selectionBg,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.selectionBorder,
+  },
+  iconText: { fontSize: 28 },
+
+  cardTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: colors.header,
+    marginBottom: 6,
+    letterSpacing: 0.2,
+  },
+  cardSub: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 19,
+    marginBottom: 8,
+  },
+
+  label: {
+    color: colors.textSecondary,
+    marginBottom: 6,
+    marginTop: 14,
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.9,
+  },
+  input: {
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: radii.input,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    color: colors.text,
+    backgroundColor: colors.background,
+    fontSize: 15,
+  },
+  cta: {
+    marginTop: 26,
+    backgroundColor: colors.cta,
+    paddingVertical: 16,
+    borderRadius: radii.button,
+    alignItems: "center",
+    shadowColor: colors.cta,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    elevation: 6,
+  },
+  ctaText: { color: "#FFFFFF", fontWeight: "700", fontSize: 16, letterSpacing: 0.5 },
 });

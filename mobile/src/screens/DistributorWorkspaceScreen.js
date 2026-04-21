@@ -1,14 +1,15 @@
 import React, { useCallback, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable, Modal, TextInput, Alert, RefreshControl } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable, Modal, TextInput, Alert, RefreshControl, ActivityIndicator } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { usersApi } from "../api/resources";
+import { usersApi, chatApi } from "../api/resources";
 import { colors, shadows } from "../theme";
 
-/** Distributor panel: company catalog, retailers, chat pointers. Cannot create distributors. */
+/** Distributor panel: dashboard, stock, garage orders, inventory, billing, map, chat. */
 export function DistributorWorkspaceScreen({ navigation }) {
   const [retail, setRetail] = useState([]);
   const [summary, setSummary] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [openingChat, setOpeningChat] = useState(null);
   const [modal, setModal] = useState(false);
   const [rEmail, setREmail] = useState("");
   const [rPhone, setRPhone] = useState("");
@@ -67,56 +68,76 @@ export function DistributorWorkspaceScreen({ navigation }) {
     }
   };
 
+  const openChatWith = async (userId) => {
+    setOpeningChat(userId);
+    try {
+      const { data } = await chatApi.openRoom(userId);
+      navigation.navigate("ChatRoom", { room: data.room });
+    } catch (e) {
+      Alert.alert("Chat", e.response?.data?.error || e.message);
+    } finally {
+      setOpeningChat(null);
+    }
+  };
+
+  const goTab = (tab) => navigation.navigate("Main", { screen: tab });
+
   return (
     <ScrollView
       style={styles.root}
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      <Text style={styles.h1}>Distributor workspace</Text>
+      <Text style={styles.h1}>Distributor panel</Text>
       <Text style={styles.sub}>
-        You buy stock from Hornvin company, sell to garages in your local network, and manage downstream listings. You cannot
-        create other distributors — only Hornvin Super Admin can. Pending shop sign-ups are approved by Super Admin. Company
-        catalog + stock orders for upstream; Marketplace + Chat for downstream; retailers list here.
+        You were created by Hornvin Super Admin. Buy stock from the linked company, sell to approved garages, and run your
+        branch on the marketplace. Use Orders to accept or reject garage requests and move fulfilment status; Invoices and
+        Payments for billing.
       </Text>
 
       {summary ? (
         <View style={[styles.card, shadows.card]}>
-          <Text style={styles.cardTitle}>Reports (limited)</Text>
-          <Text style={styles.para}>
-            Downstream snapshot only. Full platform analytics are Super Admin only (Profile → Super Admin).
+          <Text style={styles.cardTitle}>Dashboard</Text>
+          <Text style={styles.statLine}>Open orders to you (garages & buyers): {summary.ordersOpenAsSeller}</Text>
+          <Text style={styles.statLine}>Open stock purchases from company: {summary.stockOrdersOpenAsBuyer ?? 0}</Text>
+          <Text style={styles.statLine}>Completed sales revenue (you as seller): ₹{Number(summary.completedRevenueAsSeller ?? 0).toFixed(2)}</Text>
+          <Text style={styles.statLine}>Low-stock SKUs (≤5 units): {summary.lowStockSkuCount ?? 0}</Text>
+          <Text style={styles.statLine}>New garage orders awaiting accept: {summary.garageOrdersPendingAsSeller ?? 0}</Text>
+          <Text style={[styles.statLine, { paddingBottom: 12 }]}>
+            Linked garages: {summary.retailLinkedCount} · Pending Super Admin approval: {summary.pendingApprovalCount}
           </Text>
-          <Text style={styles.statLine}>Retailers linked: {summary.retailLinkedCount}</Text>
-          <Text style={styles.statLine}>
-            Retail awaiting Super Admin approval: {summary.pendingApprovalCount}
-          </Text>
-          <Text style={styles.statLine}>Open orders as seller: {summary.ordersOpenAsSeller}</Text>
-          <Text style={[styles.statLine, { paddingBottom: 14 }]}>Open orders as buyer: {summary.ordersOpenAsBuyer}</Text>
         </View>
-      ) : null}
+      ) : (
+        <View style={[styles.card, shadows.card]}>
+          <Text style={styles.muted}>Could not load workspace summary. Link to a company if prompted.</Text>
+        </View>
+      )}
 
       <View style={[styles.card, shadows.card]}>
-        <Text style={styles.cardTitle}>Company & stock</Text>
-        <Pressable onPress={() => navigation.navigate("CompanyCatalog")} style={styles.row}>
-          <Text style={styles.rowTitle}>Company catalog</Text>
-          <Text style={styles.rowSub}>View products from your linked company; buy stock as orders</Text>
-          <Text style={styles.chev}>›</Text>
-        </Pressable>
-        <Pressable onPress={() => navigation.navigate("Main", { screen: "ExploreTab" })} style={styles.row}>
-          <Text style={styles.rowTitle}>Full marketplace</Text>
-          <Text style={styles.rowSub}>Explore all listings</Text>
-          <Text style={styles.chev}>›</Text>
-        </Pressable>
+        <Text style={styles.cardTitle}>Stock & products</Text>
+        <RowNav title="Company catalog" sub="Browse Hornvin SKUs, place stock orders, track in Orders" onPress={() => navigation.navigate("CompanyCatalog")} />
+        <RowNav title="My inventory" sub="Adjust quantities, low-stock highlights" onPress={() => navigation.navigate("DistributorInventory")} />
+        <RowNav title="Add custom product" sub="Optional marketplace listing" onPress={() => navigation.navigate("PostProduct")} />
+        <RowNav title="Full marketplace" sub="Explore all listings" onPress={() => goTab("ExploreTab")} />
       </View>
 
       <View style={[styles.card, shadows.card]}>
-        <Text style={styles.cardTitle}>Chat</Text>
-        <Text style={styles.para}>Use the Chat tab to message your company and retailers (open a room with their user).</Text>
+        <Text style={styles.cardTitle}>Orders & billing</Text>
+        <RowNav title="Orders" sub="Accept / reject, processing, delivery — stock + marketplace" onPress={() => goTab("OrdersTab")} />
+        <RowNav title="Invoices" sub="Generate for garages from fulfilled orders" onPress={() => navigation.navigate("Invoices")} />
+        <RowNav title="Payments" sub="Track UPI and cash from shops" onPress={() => navigation.navigate("Payments")} />
+      </View>
+
+      <View style={[styles.card, shadows.card]}>
+        <Text style={styles.cardTitle}>Chat & map</Text>
+        <RowNav title="Chat tab" sub="Threads with Hornvin company and garages" onPress={() => goTab("ChatTab")} />
+        <RowNav title="Nearby garages" sub="Dealer locator (retail)" onPress={() => navigation.navigate("DealerMap", { initialRole: "retail" })} />
+        <RowNav title="Notifications" sub="Orders, messages, system" onPress={() => navigation.navigate("Notifications")} />
       </View>
 
       <View style={[styles.card, shadows.card]}>
         <View style={styles.retailHeader}>
-          <Text style={styles.cardTitle}>My retailers</Text>
+          <Text style={styles.cardTitle}>My garages</Text>
           <Pressable onPress={() => setModal(true)} style={styles.addBtn}>
             <Text style={styles.addBtnText}>+ Add retail</Text>
           </Pressable>
@@ -124,14 +145,23 @@ export function DistributorWorkspaceScreen({ navigation }) {
         {retail.length === 0 ? (
           <Text style={styles.empty}>No retail shops yet.</Text>
         ) : (
-          retail.map((u) => (
-            <View key={String(u._id)} style={styles.retailRow}>
-              <Text style={styles.rname}>{u.businessName || u.name || "Retail"}</Text>
-              <Text style={styles.rmeta}>
-                {u.status} · {u.email || u.phone || "—"}
-              </Text>
-            </View>
-          ))
+          retail.map((u) => {
+            const id = u._id || u.id;
+            const busy = openingChat === id;
+            return (
+              <View key={String(id)} style={styles.retailRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rname}>{u.businessName || u.name || "Retail"}</Text>
+                  <Text style={styles.rmeta}>
+                    {u.status} · {u.email || u.phone || "—"}
+                  </Text>
+                </View>
+                <Pressable onPress={() => openChatWith(id)} disabled={busy} style={styles.chatBtn}>
+                  <Text style={styles.chatBtnTxt}>{busy ? "…" : "Message"}</Text>
+                </Pressable>
+              </View>
+            );
+          })
         )}
       </View>
 
@@ -159,25 +189,45 @@ export function DistributorWorkspaceScreen({ navigation }) {
   );
 }
 
+function RowNav({ title, sub, onPress }) {
+  return (
+    <Pressable onPress={onPress} style={styles.row}>
+      <Text style={styles.rowTitle}>{title}</Text>
+      <Text style={styles.rowSub}>{sub}</Text>
+      <Text style={styles.chev}>›</Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
   content: { padding: 16, paddingBottom: 40 },
   h1: { fontSize: 22, fontWeight: "800", color: colors.header },
   sub: { marginTop: 8, color: colors.textSecondary, lineHeight: 20, marginBottom: 12 },
+  muted: { padding: 12, color: colors.textSecondary },
   card: { backgroundColor: colors.white, borderRadius: 14, padding: 4, marginBottom: 14, borderWidth: 1, borderColor: colors.border },
   cardTitle: { fontWeight: "800", color: colors.header, marginHorizontal: 12, marginTop: 12, marginBottom: 4 },
-  row: { paddingVertical: 12, paddingHorizontal: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
+  row: { paddingVertical: 12, paddingHorizontal: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border, position: "relative", paddingRight: 28 },
   rowTitle: { fontWeight: "700", color: colors.text },
   rowSub: { marginTop: 2, fontSize: 13, color: colors.textSecondary },
   chev: { position: "absolute", right: 12, top: 14, fontSize: 20, color: colors.lightBlue },
-  para: { paddingHorizontal: 12, paddingBottom: 12, color: colors.textSecondary, lineHeight: 20 },
-  statLine: { paddingHorizontal: 12, paddingBottom: 8, color: colors.text, fontWeight: "600" },
+  statLine: { paddingHorizontal: 12, paddingBottom: 6, color: colors.text, fontWeight: "600" },
   retailHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingRight: 8 },
   addBtn: { paddingVertical: 8, paddingHorizontal: 10 },
   addBtnText: { color: colors.cta, fontWeight: "800" },
-  retailRow: { paddingVertical: 10, paddingHorizontal: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
+  retailRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    gap: 10,
+  },
   rname: { fontWeight: "700", color: colors.text },
   rmeta: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+  chatBtn: { backgroundColor: colors.secondaryBlue, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
+  chatBtnTxt: { color: colors.white, fontWeight: "800", fontSize: 12 },
   empty: { padding: 16, color: colors.textSecondary },
   modalBg: { flex: 1, backgroundColor: "#0008", justifyContent: "center", padding: 20 },
   modalCard: { backgroundColor: colors.white, borderRadius: 16, padding: 16 },
