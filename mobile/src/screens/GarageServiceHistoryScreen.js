@@ -13,6 +13,7 @@ import {
   ScrollView,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, shadows, radii } from "../theme";
 import { garageApi } from "../api/resources";
 import { FooterCredit } from "../components/FooterCredit";
@@ -28,6 +29,7 @@ function formatDate(iso) {
 }
 
 export function GarageServiceHistoryScreen() {
+  const insets = useSafeAreaInsets();
   const [records, setRecords] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
@@ -191,7 +193,7 @@ export function GarageServiceHistoryScreen() {
         ListFooterComponent={<View style={{ height: 24 }}><FooterCredit /></View>}
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
       />
-      <Pressable style={styles.fab} onPress={() => setModal(true)}>
+      <Pressable style={[styles.fab, { bottom: 16 + insets.bottom }]} onPress={() => setModal(true)}>
         <Text style={styles.fabTxt}>+ Log service</Text>
       </Pressable>
       <Modal visible={modal} animationType="slide" transparent>
@@ -282,7 +284,6 @@ const styles = StyleSheet.create({
   delTxt: { color: colors.error, fontWeight: "600" },
   fab: {
     position: "absolute",
-    bottom: 20,
     right: 16,
     left: 16,
     backgroundColor: colors.cta,

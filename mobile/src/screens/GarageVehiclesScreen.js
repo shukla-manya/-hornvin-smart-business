@@ -12,11 +12,13 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useFocusEffect, useRoute } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, shadows, radii } from "../theme";
 import { garageApi } from "../api/resources";
 import { FooterCredit } from "../components/FooterCredit";
 
 export function GarageVehiclesScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   const route = useRoute();
   const customerId = route.params?.customerId;
   const customerName = route.params?.customerName;
@@ -145,7 +147,7 @@ export function GarageVehiclesScreen({ navigation }) {
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
         ListFooterComponent={<FooterCredit />}
       />
-      <Pressable style={styles.fab} onPress={() => setModal(true)}>
+      <Pressable style={[styles.fab, { bottom: 16 + insets.bottom }]} onPress={() => setModal(true)}>
         <Text style={styles.fabTxt}>+ Link vehicle</Text>
       </Pressable>
       <Modal visible={modal} animationType="slide" transparent>
@@ -188,7 +190,6 @@ const styles = StyleSheet.create({
   delTxt: { color: colors.error, fontWeight: "600" },
   fab: {
     position: "absolute",
-    bottom: 20,
     right: 16,
     left: 16,
     backgroundColor: colors.cta,

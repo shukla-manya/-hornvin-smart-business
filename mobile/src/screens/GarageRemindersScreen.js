@@ -15,6 +15,7 @@ import {
   Linking,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, shadows, radii } from "../theme";
 import { garageApi } from "../api/resources";
 import { FooterCredit } from "../components/FooterCredit";
@@ -32,6 +33,7 @@ function reminderLabel(c) {
 }
 
 export function GarageRemindersScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
@@ -235,7 +237,7 @@ export function GarageRemindersScreen({ navigation }) {
         }}
         contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
       />
-      <Pressable style={styles.fab} onPress={openNew}>
+      <Pressable style={[styles.fab, { bottom: 16 + insets.bottom }]} onPress={openNew}>
         <Text style={styles.fabTxt}>+ Add customer</Text>
       </Pressable>
       <Modal visible={modal} animationType="slide" transparent>
@@ -321,7 +323,6 @@ const styles = StyleSheet.create({
   delTxt: { color: colors.error, fontWeight: "600" },
   fab: {
     position: "absolute",
-    bottom: 20,
     right: 16,
     left: 16,
     backgroundColor: colors.cta,
