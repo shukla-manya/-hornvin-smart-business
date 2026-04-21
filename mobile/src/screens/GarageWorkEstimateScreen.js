@@ -185,7 +185,11 @@ export function GarageWorkEstimateScreen() {
         garageVehicleId: garageVehicleId || undefined,
       };
       if (estimateId) {
-        await garageApi.estimatePatch(estimateId, body);
+        await garageApi.estimatePatch(estimateId, {
+          ...body,
+          garageCustomerId: garageCustomerId || null,
+          garageVehicleId: garageVehicleId || null,
+        });
       } else {
         const { data } = await garageApi.estimateCreate(body);
         setEstimateId(data.estimate._id);

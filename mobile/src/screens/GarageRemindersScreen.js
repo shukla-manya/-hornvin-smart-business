@@ -10,6 +10,9 @@ import {
   Modal,
   Alert,
   ActivityIndicator,
+  ScrollView,
+  Share,
+  Linking,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { colors, shadows, radii } from "../theme";
@@ -28,7 +31,7 @@ function reminderLabel(c) {
   return `In ${days} days`;
 }
 
-export function GarageRemindersScreen() {
+export function GarageRemindersScreen({ navigation }) {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
@@ -39,6 +42,10 @@ export function GarageRemindersScreen() {
   const [vehicleModel, setVehicleModel] = useState("");
   const [reminderLabelText, setReminderLabelText] = useState("");
   const [nextDate, setNextDate] = useState("");
+  const [paymentDate, setPaymentDate] = useState("");
+  const [paymentLabel, setPaymentLabel] = useState("");
+  const [autoTemplate, setAutoTemplate] = useState("");
+  const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
 
   const load = async () => {
@@ -72,6 +79,10 @@ export function GarageRemindersScreen() {
     setVehicleModel("");
     setReminderLabelText("");
     setNextDate("");
+    setPaymentDate("");
+    setPaymentLabel("");
+    setAutoTemplate("");
+    setNotes("");
     setModal(true);
   };
 
@@ -83,6 +94,10 @@ export function GarageRemindersScreen() {
     setVehicleModel(c.vehicleModel || "");
     setReminderLabelText(c.reminderLabel || "");
     setNextDate(c.nextReminderAt ? new Date(c.nextReminderAt).toISOString().slice(0, 10) : "");
+    setPaymentDate(c.paymentReminderAt ? new Date(c.paymentReminderAt).toISOString().slice(0, 10) : "");
+    setPaymentLabel(c.paymentReminderLabel || "");
+    setAutoTemplate(c.automatedMessageTemplate || "");
+    setNotes(c.notes || "");
     setModal(true);
   };
 
