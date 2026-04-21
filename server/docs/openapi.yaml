@@ -633,6 +633,12 @@ paths:
                 oneOf:
                   - $ref: "#/components/schemas/Error"
                   - $ref: "#/components/schemas/ValidationErrors"
+        "403":
+          description: Role policy (e.g. Hornvin company root already exists or bootstrap email mismatch)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /api/auth/login:
     post:
