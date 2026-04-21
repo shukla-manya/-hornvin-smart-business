@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { View, Text, StyleSheet, Pressable, Alert, TextInput, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, Pressable, Alert, TextInput, ActivityIndicator, ScrollView } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import { resetToLoginRegister } from "../navigation/navigationRoot";
 import { profileQuickLinkRoutes } from "../navigation/roleUi";
@@ -7,10 +8,12 @@ import { FooterCredit } from "../components/FooterCredit";
 import { colors, shadows } from "../theme";
 
 export function ProfileScreen({ navigation }) {
-  const { user, logout, updateProfileName, updateProfile } = useAuth();
+  const { user, logout, updateProfile, refreshMe } = useAuth();
   const [nameDraft, setNameDraft] = useState(user?.name || "");
   const [businessDraft, setBusinessDraft] = useState(user?.businessName || "");
   const [addressDraft, setAddressDraft] = useState(user?.address || "");
+  const [upiVpaDraft, setUpiVpaDraft] = useState(user?.upiVpa || "");
+  const [upiNameDraft, setUpiNameDraft] = useState(user?.upiMerchantName || "");
   const [savingName, setSavingName] = useState(false);
 
   const companyProfile = user?.role === "company";
@@ -19,7 +22,15 @@ export function ProfileScreen({ navigation }) {
     setNameDraft(user?.name || "");
     setBusinessDraft(user?.businessName || "");
     setAddressDraft(user?.address || "");
-  }, [user?.name, user?.businessName, user?.address]);
+    setUpiVpaDraft(user?.upiVpa || "");
+    setUpiNameDraft(user?.upiMerchantName || "");
+  }, [user?.name, user?.businessName, user?.address, user?.upiVpa, user?.upiMerchantName]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshMe().catch(() => {});
+    }, [refreshMe])
+  );
 
   const rootNav = navigation.getParent()?.getParent();
   const open = (name) => rootNav?.navigate(name);
@@ -33,18 +44,24 @@ export function ProfileScreen({ navigation }) {
           name: nameDraft.trim(),
           businessName: businessDraft.trim(),
           address: addressDraft.trim(),
+          upiVpa: upiVpaDraft.trim(),
+          upiMerchantName: upiNameDraft.trim(),
         });
         Alert.alert("Saved", "Your profile was updated.");
       } else {
-        await updateProfileName(nameDraft.trim());
-        Alert.alert("Saved", "Your display name was updated.");
+        await updateProfile({
+          name: nameDraft.trim(),
+          upiVpa: upiVpaDraft.trim(),
+          upiMerchantName: upiNameDraft.trim(),
+        });
+        Alert.alert("Saved", "Your profile was updated.");
       }
     } catch (e) {
       Alert.alert("Could not save", e.response?.data?.error || e.message);
     } finally {
       setSavingName(false);
     }
-  }, [companyProfile, nameDraft, businessDraft, addressDraft, updateProfileName, updateProfile]);
+  }, [companyProfile, nameDraft, businessDraft, addressDraft, upiVpaDraft, upiNameDraft, updateProfile]);
 
   const onLogout = () => {
     Alert.alert("Logout", "End this session?", [
@@ -61,7 +78,7 @@ export function ProfileScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.root}>
+    <ScrollView style={styles.root} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
       <Text style={styles.h1}>Profile</Text>
       <View style={[styles.card, shadows.card]}>
         {profileQuickLinkRoutes(user).map((link) => (
@@ -100,13 +117,14 @@ export function ProfileScreen({ navigation }) {
               : "—"
           }
         />
+        <Row label="Reward points" value={String(user?.rewardPoints ?? 0)} />
         {user?.mustChangePassword ? (
           <Row label="Security" value="Change password on first sign-in (required)" />
         ) : null}
         <Text style={styles.sectionHint}>
           {companyProfile
-            ? "Name, business, and address (email and phone stay read-only)"
-            : "Display name (you can edit; email and phone are read-only)"}
+            ? "Name, business, address, and UPI details (email and phone stay read-only)."
+            : "Display name and UPI for payment QR (email and phone are read-only)."}
         </Text>
         <TextInput
           value={nameDraft}
@@ -137,11 +155,29 @@ export function ProfileScreen({ navigation }) {
             />
           </>
         ) : null}
+        <Text style={styles.sectionHint}>UPI (shown on your Payments screen QR)</Text>
+        <TextInput
+          value={upiVpaDraft}
+          onChangeText={setUpiVpaDraft}
+          placeholder="UPI ID (e.g. shopname@paytm)"
+          placeholderTextColor={colors.textSecondary}
+          style={styles.nameInput}
+          editable={!savingName}
+          autoCapitalize="none"
+        />
+        <TextInput
+          value={upiNameDraft}
+          onChangeText={setUpiNameDraft}
+          placeholder="Payee name on UPI apps"
+          placeholderTextColor={colors.textSecondary}
+          style={styles.nameInput}
+          editable={!savingName}
+        />
         <Pressable onPress={onSaveName} disabled={savingName} style={[styles.saveNameBtn, savingName && { opacity: 0.6 }]}>
           {savingName ? (
             <ActivityIndicator color={colors.white} />
           ) : (
-            <Text style={styles.saveNameBtnText}>{companyProfile ? "Save profile" : "Save name"}</Text>
+            <Text style={styles.saveNameBtnText}>Save profile</Text>
           )}
         </Pressable>
         {!companyProfile ? <Row label="Business" value={user?.businessName || "—"} /> : null}
@@ -159,7 +195,7 @@ export function ProfileScreen({ navigation }) {
         <Text style={styles.logoutText}>Logout</Text>
       </Pressable>
       <FooterCredit />
-    </View>
+    </ScrollView>
   );
 }
 
@@ -174,6 +210,7 @@ function Row({ label, value, isLast }) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background, padding: 16 },
+  scrollContent: { paddingBottom: 32 },
   h1: { fontSize: 22, fontWeight: "800", color: colors.header, marginBottom: 12 },
   card: { backgroundColor: colors.card, borderRadius: 16, paddingHorizontal: 4, borderWidth: 1, borderColor: colors.border },
   row: { paddingVertical: 12, paddingHorizontal: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
