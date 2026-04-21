@@ -273,6 +273,19 @@ test("super admin analytics OK; non-owner gets 403 on /api/admin", async () => {
   const forbid = await request(app).get("/api/admin/analytics/summary").set("Authorization", `Bearer ${regularToken}`);
   assert.equal(forbid.status, 403);
   assert.equal(forbid.body.code, "HORNVIN_SUPER_ADMIN_ONLY");
+
+  const dash = await request(app).get("/api/admin/dashboard").set("Authorization", `Bearer ${adminToken}`);
+  assert.equal(dash.status, 200);
+  assert.equal(typeof dash.body.totalGarages, "number");
+  assert.equal(typeof dash.body.totalDistributors, "number");
+  assert.ok(Array.isArray(dash.body.recentOrders));
+
+  const me = await request(app).get("/api/auth/me").set("Authorization", `Bearer ${adminToken}`);
+  const uid = me.body.user.id;
+  const detail = await request(app).get(`/api/admin/users/${uid}`).set("Authorization", `Bearer ${adminToken}`);
+  assert.equal(detail.status, 200);
+  assert.ok(detail.body.user);
+  assert.ok(detail.body.stats);
 });
 
 test("Super Admin with email logs in with password only (no mail OTP step)", async () => {
