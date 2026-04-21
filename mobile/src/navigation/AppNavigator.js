@@ -176,8 +176,8 @@ function MainTabs() {
       screenOptions={{
         ...headerScreenOptions,
         tabBarStyle,
-        tabBarLabelStyle: { fontSize: 11, fontWeight: "600", letterSpacing: 0.2 },
-        tabBarActiveTintColor: colors.header,
+        tabBarLabelStyle: { fontSize: 11, fontWeight: "600", letterSpacing: 0.2, marginTop: 2 },
+        tabBarActiveTintColor: colors.secondaryBlue,
         tabBarInactiveTintColor: colors.textSecondary,
       }}
     >
