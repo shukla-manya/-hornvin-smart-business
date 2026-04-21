@@ -31,7 +31,7 @@ export const productsApi = {
 
 /** AI Part Finder: image + optional text hint → catalog matches + nearby sellers (needs server OPENAI_API_KEY for vision). */
 export const partFinderApi = {
-  identify: (body) => api.post("/part-finder/identify", body),
+  identify: (body) => api.post("/part-finder/identify", body, { timeout: 90000 }),
 };
 
 export const paymentsApi = {

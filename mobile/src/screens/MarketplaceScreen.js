@@ -130,6 +130,9 @@ export function MarketplaceScreen({ navigation }) {
                   <Pressable style={styles.shortcut} onPress={openDealerMap}>
                     <Text style={styles.shortcutTxt}>Dealer map</Text>
                   </Pressable>
+                  <Pressable style={styles.shortcut} onPress={openPartFinder}>
+                    <Text style={styles.shortcutTxt}>Part Finder</Text>
+                  </Pressable>
                 </View>
                 {user?.role === "retail" && user?.companyId ? (
                   <View style={styles.chainRow}>
