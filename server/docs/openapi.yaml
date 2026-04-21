@@ -164,6 +164,12 @@ components:
               type: boolean
             distributorSelfRegisterAllowed:
               type: boolean
+            companyRootExists:
+              type: boolean
+              description: True when a Hornvin `company` (platform root) account already exists
+            hornvinRootSignupOpen:
+              type: boolean
+              description: True when self-serve Hornvin company signup is offered (no root yet + BOOTSTRAP_PLATFORM_OWNER_EMAIL set)
 
     RegisterRequest:
       type: object

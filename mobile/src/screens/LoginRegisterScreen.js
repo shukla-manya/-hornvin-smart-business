@@ -333,8 +333,8 @@ export function LoginRegisterScreen() {
             )}
             {role === "company" ? (
               <Text style={styles.hint}>
-                First deploy: use the same email your API sets as BOOTSTRAP_PLATFORM_OWNER_EMAIL so this account becomes the
-                Super Admin (platform owner). Then use Profile → Super Admin to govern the system.
+                One-time Hornvin root: your email must match BOOTSTRAP_PLATFORM_OWNER_EMAIL on the API exactly. This creates the
+                only company / Super Admin account (distributors and garages sit under it).
               </Text>
             ) : null}
             <Text style={styles.label}>Your name</Text>

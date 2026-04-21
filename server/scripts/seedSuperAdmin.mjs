@@ -20,7 +20,7 @@ async function main() {
 
   const owner = await User.findOne({ isPlatformOwner: true });
   if (owner) {
-    console.log("Super Admin already present:", owner.email || owner.id, "— nothing to do.");
+    console.log("Hornvin company (Super Admin) already present:", owner.email || owner.id, "— nothing to do.");
     await mongoose.disconnect();
     process.exit(0);
   }
@@ -40,7 +40,7 @@ async function main() {
       mustChangePassword: false,
       permissions: { canAddProducts: true, canPlaceOrders: true, canSell: true },
     });
-    console.log("Created Super Admin (platform owner):", email);
+    console.log("Created Hornvin company / Super Admin (platform owner):", email);
     await mongoose.disconnect();
     process.exit(0);
   }
@@ -60,7 +60,7 @@ async function main() {
   existing.passwordHash = passwordHash;
   existing.mustChangePassword = false;
   await existing.save();
-  console.log("Promoted existing company user to Super Admin and reset password:", email);
+  console.log("Promoted existing Hornvin company user to Super Admin and reset password:", email);
   await mongoose.disconnect();
   process.exit(0);
 }

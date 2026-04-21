@@ -23,7 +23,7 @@ export function HomeScreen({ navigation }) {
 
   const headline =
     role === "company"
-      ? "Company control center"
+      ? "Hornvin company control center"
       : role === "distributor"
         ? "Stock & downstream orders"
         : role === "retail"
@@ -76,7 +76,7 @@ export function HomeScreen({ navigation }) {
         <View style={[styles.card, shadows.card, { marginBottom: 12 }]}>
           <Text style={styles.cardTitle}>Approvals</Text>
           <Text style={styles.hint}>
-            Only the Super Admin can approve pending accounts. Use Profile → Super Admin → Users (filter Pending).
+            As the sole Hornvin Super Admin, approve pending garages here: Profile → Super Admin → Users (filter Pending).
           </Text>
         </View>
       ) : null}
@@ -115,8 +115,8 @@ export function HomeScreen({ navigation }) {
           <Text style={styles.rolePillText}>{role?.replace("_", " ")}</Text>
         </View>
         <Text style={styles.hint}>
-          Chain: company → distributor → retail → end user. Distributors are created only by Super Admin; distributors create
-          retailer accounts. Pending self-signups are approved only in the Super Admin panel.
+          Chain: Hornvin company (Super Admin) → distributor → garage (retail) → end customer. Distributors are created only by
+          the Super Admin; distributors create garage accounts. Pending self-signups are approved only in the Super Admin panel.
         </Text>
       </View>
       <FooterCredit />

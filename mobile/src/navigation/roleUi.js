@@ -1,6 +1,6 @@
 /**
  * Role-based UI map for Hornvin Smart Business (single app, multiple personas).
- * Server roles: company | distributor | retail | end_user. Super Admin = `user.isPlatformOwner`.
+ * Server roles: company | distributor | retail | end_user. Super Admin = sole Hornvin `company` + `isPlatformOwner`.
  */
 
 export const MAIN_TAB_KEYS = {
@@ -56,7 +56,7 @@ const SUPER_ADMIN_STACK_ROUTES = new Set([
 export function userCanAccessStackRoute(user, routeName) {
   if (!user) return false;
   if (SUPER_ADMIN_STACK_ROUTES.has(routeName)) {
-    return !!user.isPlatformOwner;
+    return user.role === "company" && !!user.isPlatformOwner;
   }
   if (routeName === "DistributorWorkspace") {
     return user.role === "distributor";
@@ -73,7 +73,7 @@ export function userCanAccessStackRoute(user, routeName) {
 /** Profile → deep links into the root stack. */
 export function profileQuickLinkRoutes(user) {
   const links = [];
-  if (user?.isPlatformOwner) {
+  if (user?.role === "company" && user?.isPlatformOwner) {
     links.push({ route: "AdminHome", label: "Super Admin panel" });
   }
   links.push({ route: "Wishlist", label: "Wishlist" });

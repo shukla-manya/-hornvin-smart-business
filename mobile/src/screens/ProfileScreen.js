@@ -13,7 +13,7 @@ export function ProfileScreen({ navigation }) {
   const [addressDraft, setAddressDraft] = useState(user?.address || "");
   const [savingName, setSavingName] = useState(false);
 
-  const companyProfile = user?.role === "company" || user?.isPlatformOwner;
+  const companyProfile = user?.role === "company";
 
   useEffect(() => {
     setNameDraft(user?.name || "");

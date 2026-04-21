@@ -81,6 +81,7 @@ test("orders + chat API responses (company seller, end_user buyer)", async () =>
     status: "approved",
     isPlatformOwner: true,
     name: "Co Orders",
+    location: { type: "Point", coordinates: [0, 0] },
   });
   const sellerLogin = await request(app).post("/api/auth/login").send({ phone: sellerPhone, password: "secret12" });
   assert.equal(sellerLogin.status, 200, JSON.stringify(sellerLogin.body));
@@ -156,7 +157,10 @@ test("register without SKIP_USER_APPROVAL: company blocked without bootstrap; en
         name: "No bootstrap",
       });
     assert.equal(regCo.status, 403, JSON.stringify(regCo.body));
-    assert.equal(regCo.body.code, "COMPANY_REGISTER_BOOTSTRAP_EMAIL_ONLY");
+    assert.ok(
+      regCo.body.code === "COMPANY_REGISTER_BOOTSTRAP_EMAIL_ONLY" || regCo.body.code === "PLATFORM_ROOT_EXISTS",
+      regCo.body.code
+    );
   } finally {
     if (prev !== undefined) process.env.SKIP_USER_APPROVAL = prev;
     else process.env.SKIP_USER_APPROVAL = "1";
@@ -797,6 +801,7 @@ test("wishlist + in-app notifications feed (seller sees new order)", async () =>
     status: "approved",
     isPlatformOwner: true,
     name: "Wish Co",
+    location: { type: "Point", coordinates: [0, 0] },
   });
   const sellerLogin = await request(app).post("/api/auth/login").send({ phone: sellerPhone, password: "secret12" });
   assert.equal(sellerLogin.status, 200, JSON.stringify(sellerLogin.body));

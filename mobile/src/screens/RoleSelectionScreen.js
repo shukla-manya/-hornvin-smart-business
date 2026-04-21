@@ -22,7 +22,10 @@ export function RoleSelectionScreen() {
       <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
         <AppLogo size={52} />
         <Text style={styles.h1}>How will you use Hornvin?</Text>
-        <Text style={styles.sub}>Pick a role for a new account. You can still sign in if you already have one.</Text>
+        <Text style={styles.sub}>
+          Chain: Hornvin company (Super Admin) → distributor → garage (retail) → end customer. Pick a role for a new account,
+          or sign in if you already have one.
+        </Text>
       </LinearGradient>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.notice}>
@@ -47,11 +50,11 @@ export function RoleSelectionScreen() {
           </Text>
         </View>
         <View style={[styles.notice, { marginTop: 0, marginBottom: 14 }]}>
-          <Text style={styles.noticeTitle}>Super Admin (first-time setup)</Text>
+          <Text style={styles.noticeTitle}>Hornvin company — single Super Admin (first-time only)</Text>
           <Text style={styles.noticeBody}>
-            Choose Company, then register with the email your server sets as BOOTSTRAP_PLATFORM_OWNER_EMAIL (documented in
-            server .env.example). That first company account becomes the platform owner. After sign-in, open Profile → Super
-            Admin panel to approve users and create distributors.
+            There is only one root account: Hornvin company = Super Admin = platform owner. If your server exposes it in sign-up,
+            pick “Hornvin company (Super Admin)” and register with the exact email set as BOOTSTRAP_PLATFORM_OWNER_EMAIL. After
+            sign-in, use Profile → Super Admin to approve shops and create distributors.
           </Text>
         </View>
         {loading ? (

@@ -48,7 +48,7 @@ export const dealerLocatorApi = {
   nearby: (params) => api.get("/dealer-locator/nearby", { params }),
 };
 
-/** Super Admin (platform owner) — requires `user.isPlatformOwner` and company role. */
+/** Super Admin — sole Hornvin `company` user with `isPlatformOwner` (server-enforced). */
 export const usersApi = {
   team: () => api.get("/users/team"),
   myRetail: () => api.get("/users/my-retail"),
