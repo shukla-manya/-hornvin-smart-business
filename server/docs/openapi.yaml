@@ -108,6 +108,24 @@ components:
           type: string
         address:
           type: string
+        addressLandmark:
+          type: string
+          description: Retail — nearby landmark for directions
+        stateRegion:
+          type: string
+          description: Retail — state or region label
+        businessType:
+          type: string
+          description: Retail — independent | authorized_dealer | franchise | multi_brand | other
+        gstNumber:
+          type: string
+          description: Retail — optional GSTIN
+        shopPhotoUrl:
+          type: string
+          description: Retail — shop photo (data URL or https)
+        profilePhotoUrl:
+          type: string
+          description: Retail — owner/contact photo (data URL or https)
         location:
           $ref: "#/components/schemas/GeoJsonPoint"
         companyId:
@@ -130,7 +148,7 @@ components:
           type: boolean
         needsProfileSetup:
           type: boolean
-          description: When true, client should collect display name (and company fields if applicable) before full app access
+          description: When true, client should finish onboarding (retail requires full shop profile + photos before service selection)
         needsGarageServiceSelection:
           type: boolean
           description: When true (retail only), client should run service-selection onboarding after profile

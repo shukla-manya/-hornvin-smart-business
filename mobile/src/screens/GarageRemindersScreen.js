@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -49,6 +49,7 @@ export function GarageRemindersScreen({ navigation }) {
   const [autoTemplate, setAutoTemplate] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [customerQuery, setCustomerQuery] = useState("");
 
   const load = async () => {
     setLoading(true);
@@ -166,6 +167,18 @@ export function GarageRemindersScreen({ navigation }) {
     }
   };
 
+  const filteredCustomers = useMemo(() => {
+    const q = customerQuery.trim().toLowerCase();
+    if (!q) return customers;
+    return customers.filter((c) => {
+      const blob = [c.name, c.phone, c.vehiclePlate, c.vehicleModel, c.notes, c.reminderLabel]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return blob.includes(q);
+    });
+  }, [customers, customerQuery]);
+
   const whatsappAutoMessage = async (customerId) => {
     try {
       const { data } = await garageApi.customerAutomatedMessage(customerId);
@@ -181,14 +194,24 @@ export function GarageRemindersScreen({ navigation }) {
   return (
     <View style={styles.root}>
       <FlatList
-        data={customers}
+        data={filteredCustomers}
         keyExtractor={(c) => c._id}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={load} tintColor={colors.header} />}
         ListHeaderComponent={
-          <Text style={styles.lead}>
-            Customer management: save phone, link vehicles from the row action, set service and payment reminders, and draft automated
-            WhatsApp messages (tokens: {"{{name}}"}, {"{{plate}}"}, {"{{paymentDue}}"}).
-          </Text>
+          <View style={{ marginBottom: 12 }}>
+            <TextInput
+              value={customerQuery}
+              onChangeText={setCustomerQuery}
+              placeholder="Search customers (name, phone, plate, notes…)"
+              placeholderTextColor={colors.textSecondary}
+              style={styles.searchInput}
+              clearButtonMode="while-editing"
+            />
+            <Text style={styles.lead}>
+              Customer management: save phone, link vehicles from the row action, set service and payment reminders, and draft automated
+              WhatsApp messages (tokens: {"{{name}}"}, {"{{plate}}"}, {"{{paymentDue}}"}).
+            </Text>
+          </View>
         }
         ListEmptyComponent={
           loading ? (
@@ -300,6 +323,17 @@ export function GarageRemindersScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
+  searchInput: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.input,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: colors.text,
+    backgroundColor: colors.card,
+    marginBottom: 10,
+  },
   lead: { color: colors.textSecondary, fontSize: 14, lineHeight: 20, marginBottom: 12 },
   empty: { textAlign: "center", color: colors.textSecondary, marginTop: 24 },
   card: {
