@@ -193,16 +193,39 @@ export function GarageRemindersScreen({ navigation }) {
         ListFooterComponent={<View style={{ height: 100 }}><FooterCredit /></View>}
         renderItem={({ item }) => {
           const urgent = item.nextReminderAt && new Date(item.nextReminderAt) < new Date();
+          const payUrgent = item.paymentReminderAt && new Date(item.paymentReminderAt) < new Date();
           return (
-            <Pressable onPress={() => openEdit(item)} style={[styles.card, shadows.card, urgent && styles.cardUrgent]}>
-              <Text style={styles.name}>{item.name}</Text>
-              <Text style={styles.meta}>{[item.phone, item.vehiclePlate, item.vehicleModel].filter(Boolean).join(" · ") || "—"}</Text>
-              {item.reminderLabel ? <Text style={styles.reminder}>{item.reminderLabel}</Text> : null}
-              <Text style={[styles.due, urgent && styles.dueUrgent]}>{reminderLabel(item)}</Text>
-              <Pressable onPress={() => remove(item)} style={styles.delHit}>
-                <Text style={styles.delTxt}>Remove</Text>
+            <View style={[styles.card, shadows.card, urgent && styles.cardUrgent]}>
+              <Pressable onPress={() => openEdit(item)}>
+                <Text style={styles.name}>{item.name}</Text>
+                <Text style={styles.meta}>{[item.phone, item.vehiclePlate, item.vehicleModel].filter(Boolean).join(" · ") || "—"}</Text>
+                {item.reminderLabel ? <Text style={styles.reminder}>{item.reminderLabel}</Text> : null}
+                <Text style={[styles.due, urgent && styles.dueUrgent]}>Service: {reminderLabel(item)}</Text>
+                {item.paymentReminderAt ? (
+                  <Text style={[styles.due, payUrgent && styles.dueUrgent]}>
+                    Payment: {reminderLabel({ nextReminderAt: item.paymentReminderAt })}
+                    {item.paymentReminderLabel ? ` — ${item.paymentReminderLabel}` : ""}
+                  </Text>
+                ) : null}
               </Pressable>
-            </Pressable>
+              <View style={styles.cardActions}>
+                <Pressable onPress={() => navigation.navigate("GarageVehicles", { customerId: item._id, customerName: item.name })} style={styles.linkAct}>
+                  <Text style={styles.linkActTxt}>Vehicles</Text>
+                </Pressable>
+                <Pressable onPress={() => previewAutoMessage(item._id)} style={styles.linkAct}>
+                  <Text style={styles.linkActTxt}>Auto msg</Text>
+                </Pressable>
+                <Pressable onPress={() => whatsappAutoMessage(item._id)} style={styles.linkAct}>
+                  <Text style={styles.linkActTxt}>WA</Text>
+                </Pressable>
+                <Pressable onPress={() => openEdit(item)} style={styles.linkAct}>
+                  <Text style={styles.linkActTxt}>Edit</Text>
+                </Pressable>
+                <Pressable onPress={() => remove(item)} style={styles.delHit}>
+                  <Text style={styles.delTxt}>Remove</Text>
+                </Pressable>
+              </View>
+            </View>
           );
         }}
         contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
@@ -212,17 +235,19 @@ export function GarageRemindersScreen({ navigation }) {
       </Pressable>
       <Modal visible={modal} animationType="slide" transparent>
         <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
+          <ScrollView style={styles.modalScroll} contentContainerStyle={styles.modalCard} keyboardShouldPersistTaps="handled">
             <Text style={styles.modalTitle}>{editId ? "Edit customer" : "New customer"}</Text>
             <Text style={styles.label}>Name *</Text>
             <TextInput value={name} onChangeText={setName} style={styles.input} placeholderTextColor={colors.textSecondary} />
             <Text style={styles.label}>Phone</Text>
             <TextInput value={phone} onChangeText={setPhone} keyboardType="phone-pad" style={styles.input} placeholderTextColor={colors.textSecondary} />
-            <Text style={styles.label}>Vehicle plate</Text>
+            <Text style={styles.label}>Primary vehicle plate (CRM snapshot)</Text>
             <TextInput value={vehiclePlate} onChangeText={setVehiclePlate} style={styles.input} placeholderTextColor={colors.textSecondary} />
-            <Text style={styles.label}>Vehicle model</Text>
+            <Text style={styles.label}>Primary vehicle model</Text>
             <TextInput value={vehicleModel} onChangeText={setVehicleModel} style={styles.input} placeholderTextColor={colors.textSecondary} />
-            <Text style={styles.label}>Reminder label</Text>
+            <Text style={styles.label}>Notes</Text>
+            <TextInput value={notes} onChangeText={setNotes} style={styles.input} placeholderTextColor={colors.textSecondary} />
+            <Text style={styles.label}>Service reminder label</Text>
             <TextInput
               value={reminderLabelText}
               onChangeText={setReminderLabelText}
@@ -230,8 +255,27 @@ export function GarageRemindersScreen({ navigation }) {
               style={styles.input}
               placeholderTextColor={colors.textSecondary}
             />
-            <Text style={styles.label}>Next reminder date (YYYY-MM-DD)</Text>
+            <Text style={styles.label}>Next service reminder (YYYY-MM-DD)</Text>
             <TextInput value={nextDate} onChangeText={setNextDate} placeholder="2026-05-01" style={styles.input} placeholderTextColor={colors.textSecondary} />
+            <Text style={styles.label}>Payment reminder (YYYY-MM-DD)</Text>
+            <TextInput value={paymentDate} onChangeText={setPaymentDate} placeholder="2026-05-15" style={styles.input} placeholderTextColor={colors.textSecondary} />
+            <Text style={styles.label}>Payment reminder label</Text>
+            <TextInput
+              value={paymentLabel}
+              onChangeText={setPaymentLabel}
+              placeholder="e.g. Balance on invoice #12"
+              style={styles.input}
+              placeholderTextColor={colors.textSecondary}
+            />
+            <Text style={styles.label}>Automated message template</Text>
+            <TextInput
+              value={autoTemplate}
+              onChangeText={setAutoTemplate}
+              placeholder={'Hi {{name}}, about {{plate}}. {{paymentDue}}'}
+              style={[styles.input, { minHeight: 72 }]}
+              multiline
+              placeholderTextColor={colors.textSecondary}
+            />
             <View style={styles.modalActions}>
               <Pressable onPress={() => setModal(false)} style={styles.btnGhost}>
                 <Text style={styles.btnGhostTxt}>Cancel</Text>
@@ -240,7 +284,7 @@ export function GarageRemindersScreen({ navigation }) {
                 <Text style={styles.btnPrimaryTxt}>{saving ? "Saving…" : "Save"}</Text>
               </Pressable>
             </View>
-          </View>
+          </ScrollView>
         </View>
       </Modal>
     </View>
@@ -265,7 +309,10 @@ const styles = StyleSheet.create({
   reminder: { marginTop: 8, color: colors.header, fontWeight: "600", fontSize: 14 },
   due: { marginTop: 4, color: colors.textSecondary, fontSize: 13 },
   dueUrgent: { color: colors.error, fontWeight: "700" },
-  delHit: { marginTop: 10, alignSelf: "flex-start" },
+  cardActions: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", marginTop: 12, gap: 10 },
+  linkAct: { paddingVertical: 6, paddingHorizontal: 4 },
+  linkActTxt: { color: colors.secondaryBlue, fontWeight: "700", fontSize: 13 },
+  delHit: { marginLeft: "auto" },
   delTxt: { color: colors.error, fontWeight: "600" },
   fab: {
     position: "absolute",
@@ -279,7 +326,8 @@ const styles = StyleSheet.create({
   },
   fabTxt: { color: colors.white, fontWeight: "700", fontSize: 16 },
   modalBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "flex-end" },
-  modalCard: { backgroundColor: colors.card, padding: 20, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: "90%" },
+  modalScroll: { maxHeight: "92%" },
+  modalCard: { backgroundColor: colors.card, padding: 20, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 32 },
   modalTitle: { fontSize: 18, fontWeight: "700", color: colors.header, marginBottom: 8 },
   label: { marginTop: 10, fontWeight: "600", color: colors.textSecondary, fontSize: 12 },
   input: {
