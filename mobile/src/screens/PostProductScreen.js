@@ -14,19 +14,19 @@ export function PostProductScreen({ navigation }) {
   const [description, setDescription] = useState("");
   const [busy, setBusy] = useState(false);
 
-  if (user?.role !== "company" && user?.role !== "distributor") {
+  if (user?.role !== "company" && user?.role !== "distributor" && user?.role !== "retail") {
     return (
       <View style={styles.center}>
-        <Text style={styles.muted}>Only company or distributor accounts can list products.</Text>
+        <Text style={styles.muted}>Only Hornvin company, distributor, or garage (retail) accounts can list marketplace products.</Text>
         <FooterCredit />
       </View>
     );
   }
 
-  if (user?.role === "distributor" && !user?.companyId) {
+  if ((user?.role === "distributor" || user?.role === "retail") && !user?.companyId) {
     return (
       <View style={styles.center}>
-        <Text style={styles.muted}>Link your account to a company (API: PATCH users) before listing products.</Text>
+        <Text style={styles.muted}>Link your garage to a Hornvin company before selling on the marketplace.</Text>
         <FooterCredit />
       </View>
     );

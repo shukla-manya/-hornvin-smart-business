@@ -47,7 +47,8 @@ export function getInitialMainTabKey(role) {
     case "distributor":
       return MAIN_TAB_KEYS.HOME;
     case "retail":
-      return visible.includes(MAIN_TAB_KEYS.GARAGE) ? MAIN_TAB_KEYS.GARAGE : MAIN_TAB_KEYS.HOME;
+      /** Primary persona: land on Home (command center for internal + external). */
+      return MAIN_TAB_KEYS.HOME;
     case "end_user":
       return MAIN_TAB_KEYS.EXPLORE;
     default:
@@ -82,7 +83,7 @@ export function userCanAccessStackRoute(user, routeName) {
     return user.role === "distributor";
   }
   if (routeName === "PostProduct") {
-    return user.role === "company" || user.role === "distributor";
+    return user.role === "company" || user.role === "distributor" || user.role === "retail";
   }
   if (routeName === "Invoices") {
     return user.role === "company" || user.role === "distributor" || user.role === "retail";
@@ -97,10 +98,11 @@ export function userCanAccessStackRoute(user, routeName) {
 export function profileQuickLinkRoutes(user) {
   const links = [];
   if (user?.role === "retail") {
-    links.push({ nestedTab: "GarageTab", label: "Garage operations" });
+    links.push({ nestedTab: "GarageTab", label: "Internal tools (garage)" });
+    links.push({ route: "PostProduct", label: "Sell on marketplace" });
   }
   if (user?.role === "company" && user?.isPlatformOwner) {
-    links.push({ route: "AdminHome", label: "Super Admin panel" });
+    links.push({ route: "AdminHome", label: "Hornvin Admin (/api/admin)" });
   }
   links.push({ route: "Wishlist", label: "Wishlist" });
   links.push({ route: "DealerMap", label: "Dealer locator" });

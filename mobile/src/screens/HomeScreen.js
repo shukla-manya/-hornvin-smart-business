@@ -25,9 +25,9 @@ export function HomeScreen({ navigation }) {
     role === "company"
       ? "Hornvin company control center"
       : role === "distributor"
-        ? "Stock & downstream orders"
+        ? "Distributor — buy from company, sell to garages"
         : role === "retail"
-          ? "Garage / shop workspace"
+          ? "Your garage — primary workspace"
           : "Discover products & nearby dealers";
 
   return (
@@ -49,11 +49,11 @@ export function HomeScreen({ navigation }) {
 
       {role === "distributor" ? (
         <View style={[styles.card, shadows.card, { marginBottom: 12 }]}>
-          <Text style={styles.cardTitle}>Distributor panel</Text>
+          <Text style={styles.cardTitle}>Distributor — local network</Text>
           <View style={styles.panelBody}>
-            <Text style={styles.panelLine}>Dashboard link below: company catalog, stock orders, retailers, limited reports</Text>
-            <Text style={styles.panelLine}>Post product and Explore — list SKUs and sell downstream</Text>
-            <Text style={styles.panelLine}>Orders tab — confirm and ship buyer orders; buy stock from your company catalog</Text>
+            <Text style={styles.panelLine}>Buy from Hornvin company (stock orders + company catalog); sell to garages you manage.</Text>
+            <Text style={styles.panelLine}>Distributor workspace — linked retailers, downstream snapshot, create garage logins.</Text>
+            <Text style={styles.panelLine}>Marketplace + Chat — list SKUs and talk with shops and buyers.</Text>
           </View>
         </View>
       ) : null}
@@ -70,19 +70,28 @@ export function HomeScreen({ navigation }) {
       ) : null}
 
       {role === "retail" ? (
-        <View style={[styles.card, shadows.card, { marginBottom: 12 }]}>
-          <Text style={styles.cardTitle}>Hornvin Garage (operations)</Text>
-          <View style={styles.panelBody}>
-            <Text style={styles.panelLine}>
-              Garage tab — inventory, service history, customer reminders, AI call scripts, and work estimates (Side 1 of the app).
-            </Text>
-            <Text style={styles.panelLine}>
-              Explore tab — B2B marketplace: buy stock, list parts, message sellers (Side 2).
-            </Text>
-            <Text style={styles.panelLine}>Orders & invoices — tie out to marketplace and upstream catalog</Text>
-            <Text style={styles.panelLine}>Chat — distributor, company, or buyers</Text>
+        <>
+          <View style={[styles.card, shadows.card, styles.primaryCard, { marginBottom: 12 }]}>
+            <Text style={styles.primaryBadge}>MAIN USER · GARAGE</Text>
+            <Text style={styles.cardTitle}>You run both sides in one app</Text>
+            <View style={styles.panelBody}>
+              <Text style={styles.panelStrong}>Internal tools</Text>
+              <Text style={styles.panelLine}>Garage tab — inventory, service history, customer reminders, invoices, estimates, AI call prep.</Text>
+              <Text style={styles.panelStrong}>External marketplace</Text>
+              <Text style={styles.panelLine}>
+                Marketplace tab — buy parts, sell listings, chat with suppliers & buyers, dealer map to find partners.
+              </Text>
+            </View>
           </View>
-        </View>
+          <View style={[styles.card, shadows.card, { marginBottom: 12 }]}>
+            <Text style={styles.cardTitle}>Distributor → you</Text>
+            <View style={styles.panelBody}>
+              <Text style={styles.panelLine}>
+                Your distributor buys from Hornvin company and supplies you; you sell to drivers and workshops on the marketplace.
+              </Text>
+            </View>
+          </View>
+        </>
       ) : null}
 
       {role === "company" && user?.isPlatformOwner ? (
@@ -102,13 +111,25 @@ export function HomeScreen({ navigation }) {
           onPress={() => navigation.navigate("ExploreTab")}
         />
         <Action title="Orders" subtitle="Track pending → completed" onPress={() => navigation.navigate("OrdersTab")} />
-        <Action title="Chat" subtitle="Message threads" onPress={() => navigation.navigate("ChatTab")} />
-        <Action title="Dealer locator" subtitle="Map and nearby dealers" onPress={() => openStack("DealerMap")} />
+        <Action
+          title="Chat"
+          subtitle={role === "retail" ? "Suppliers, distributor, buyers" : "Message threads"}
+          onPress={() => navigation.navigate("ChatTab")}
+        />
+        <Action
+          title="Dealer locator"
+          subtitle={role === "retail" ? "Find suppliers & nearby partners" : "Map and nearby dealers"}
+          onPress={() => openStack("DealerMap")}
+        />
         {(role === "company" || role === "distributor" || role === "retail") && (
           <Action title="Invoices" subtitle="Create from orders, mark paid" onPress={() => openStack("Invoices")} />
         )}
-        {(role === "company" || role === "distributor") && (
-          <Action title="Post product" subtitle="List catalog items" onPress={() => openStack("PostProduct")} />
+        {(role === "company" || role === "distributor" || role === "retail") && (
+          <Action
+            title="Post product"
+            subtitle={role === "retail" ? "Sell parts & labour SKUs on the marketplace" : "List catalog items"}
+            onPress={() => openStack("PostProduct")}
+          />
         )}
         {role === "distributor" && (
           <Action
@@ -161,6 +182,32 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   cardTitle: { color: colors.header, fontWeight: "600", marginBottom: 4, marginHorizontal: 12, marginTop: 12, fontSize: 15, letterSpacing: 0.2 },
+  primaryCard: { borderColor: colors.selectionBorder, backgroundColor: colors.selectionBg },
+  primaryBadge: {
+    marginHorizontal: 12,
+    marginTop: 12,
+    alignSelf: "flex-start",
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+    color: colors.header,
+    backgroundColor: colors.white,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.selectionBorder,
+  },
+  panelStrong: {
+    marginTop: 10,
+    marginBottom: 4,
+    marginHorizontal: 12,
+    fontWeight: "800",
+    fontSize: 13,
+    color: colors.header,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
   action: {
     flexDirection: "row",
     alignItems: "center",

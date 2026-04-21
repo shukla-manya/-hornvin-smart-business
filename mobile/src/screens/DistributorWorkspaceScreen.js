@@ -75,9 +75,9 @@ export function DistributorWorkspaceScreen({ navigation }) {
     >
       <Text style={styles.h1}>Distributor workspace</Text>
       <Text style={styles.sub}>
-        You cannot create other distributors — only the Super Admin can. Pending self-registered shops are approved only by
-        the Super Admin (not here). Use Company catalog to view upstream SKUs and buy stock (orders). Post products to manage
-        inventory and sell downstream. Open Chat to talk with your company and retailers.
+        You buy stock from Hornvin company, sell to garages in your local network, and manage downstream listings. You cannot
+        create other distributors — only Hornvin Super Admin can. Pending shop sign-ups are approved by Super Admin. Company
+        catalog + stock orders for upstream; Marketplace + Chat for downstream; retailers list here.
       </Text>
 
       {summary ? (

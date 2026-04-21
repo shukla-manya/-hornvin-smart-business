@@ -1564,10 +1564,48 @@ paths:
           schema:
             type: string
 
+  /api/admin/platform:
+    get:
+      tags: [Admin]
+      summary: Hornvin Super Admin manifest (single company root)
+      description: Requires `company` role + `isPlatformOwner`. Only one Hornvin account may call `/api/admin/*`.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  identity:
+                    type: string
+                    example: hornvin_company_super_admin
+                  singleRoot:
+                    type: boolean
+                  adminApiPrefix:
+                    type: string
+                    example: /api/admin
+                  controls:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        label: { type: string }
+                        paths:
+                          type: array
+                          items: { type: string }
+        "403":
+          description: Not the Hornvin Super Admin
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /api/admin/users:
     get:
       tags: [Admin]
-      summary: Paginated users (Super Admin)
+      summary: Paginated users (Hornvin Super Admin)
       parameters:
         - in: query
           name: role

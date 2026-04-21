@@ -183,7 +183,7 @@ export function AppNavigator() {
         <Stack.Screen name="Locations" component={LocationsScreen} options={{ title: "Saved locations" }} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: "Notifications" }} />
         <Stack.Screen name="Wishlist" component={WishlistScreen} options={{ title: "Wishlist" }} />
-        <Stack.Screen name="AdminHome" component={GuardedAdminHome} options={{ title: "Super Admin" }} />
+        <Stack.Screen name="AdminHome" component={GuardedAdminHome} options={{ title: "Hornvin Admin" }} />
         <Stack.Screen name="AdminUsers" component={GuardedAdminUsers} options={{ title: "Users" }} />
         <Stack.Screen name="AdminOrders" component={GuardedAdminOrders} options={{ title: "All orders" }} />
         <Stack.Screen name="AdminPayments" component={GuardedAdminPayments} options={{ title: "Transactions" }} />

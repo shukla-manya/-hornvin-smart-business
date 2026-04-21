@@ -129,6 +129,18 @@ export function MarketplaceScreen({ navigation }) {
                 ) : null}
               </View>
             ) : null}
+            {user?.role === "retail" ? (
+              <View style={[styles.garageSellCard, shadows.card]}>
+                <Text style={styles.garageSellTitle}>Garage — sell & supply</Text>
+                <Text style={styles.garageSellBody}>
+                  Buy parts from listings below; post your own SKUs so distributors and buyers can order from you. Chat from any
+                  product to negotiate — Dealer map helps you find suppliers.
+                </Text>
+                <Pressable style={styles.garageSellBtn} onPress={() => navigation.getParent()?.getParent()?.navigate("PostProduct")}>
+                  <Text style={styles.garageSellBtnTxt}>Post marketplace listing</Text>
+                </Pressable>
+              </View>
+            ) : null}
           </>
         }
         ListEmptyComponent={
@@ -201,6 +213,18 @@ const styles = StyleSheet.create({
   chainChipOn: { borderColor: colors.secondaryBlue, backgroundColor: colors.selectionBg },
   chainChipTxt: { fontSize: 12, fontWeight: "700", color: colors.textSecondary },
   chainChipTxtOn: { color: colors.header },
+  garageSellCard: {
+    backgroundColor: "#F5F0EB",
+    borderRadius: radii.card,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: colors.cta,
+    marginBottom: 12,
+  },
+  garageSellTitle: { fontSize: 16, fontWeight: "800", color: colors.header, marginBottom: 6 },
+  garageSellBody: { color: colors.textSecondary, fontSize: 13, lineHeight: 19, marginBottom: 12 },
+  garageSellBtn: { alignSelf: "flex-start", backgroundColor: colors.cta, paddingVertical: 11, paddingHorizontal: 16, borderRadius: 12 },
+  garageSellBtnTxt: { color: colors.white, fontWeight: "800", fontSize: 14 },
   filters: { padding: 12, gap: 8, borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.white },
   input: {
     borderWidth: 1,

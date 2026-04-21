@@ -483,6 +483,41 @@ test("Super Admin creates distributor with mustChangePassword until password cha
   assert.equal(ok.status, 200);
 });
 
+test("retail with companyId can create marketplace listing (POST /api/products)", async () => {
+  const company = await User.create({
+    phone: `+1930${String(Date.now()).slice(-8)}`,
+    passwordHash: await bcrypt.hash("secret12", 10),
+    role: "company",
+    status: "approved",
+    isPlatformOwner: true,
+    location: { type: "Point", coordinates: [0, 0] },
+  });
+  const retailPhone = `+1931${String(Date.now()).slice(-8)}`;
+  await User.create({
+    phone: retailPhone,
+    passwordHash: await bcrypt.hash("secret12", 10),
+    role: "retail",
+    status: "approved",
+    companyId: company._id,
+    location: { type: "Point", coordinates: [0, 0] },
+  });
+  const login = await request(app).post("/api/auth/login").send({ phone: retailPhone, password: "secret12" });
+  assert.equal(login.status, 200);
+  const token = login.body.token;
+  const prod = await request(app)
+    .post("/api/products")
+    .set("Authorization", `Bearer ${token}`)
+    .send({
+      name: "Garage-listed wiper",
+      category: "Wipers",
+      price: 120,
+      quantity: 5,
+      description: "From retail seller",
+    });
+  assert.equal(prod.status, 201, JSON.stringify(prod.body));
+  assert.equal(prod.body.product.sellerId?._id || prod.body.product.sellerId, login.body.user.id);
+});
+
 test("GET /api/admin/platform describes Hornvin super-admin controls", async () => {
   const ownerPhone = `+1914${String(Date.now()).slice(-8)}`;
   await User.create({

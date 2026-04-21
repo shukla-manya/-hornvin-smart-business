@@ -36,10 +36,11 @@ export function RoleSelectionScreen() {
           </Text>
         </View>
         <View style={[styles.notice, { marginTop: 0, marginBottom: 14 }]}>
-          <Text style={styles.noticeTitle}>Retail / garage</Text>
+          <Text style={styles.noticeTitle}>Garage (retail) — main Hornvin user</Text>
           <Text style={styles.noticeBody}>
-            You can sign up here as retail — your account stays pending until a Super Admin approves it. If your distributor
-            created your shop for you, use Sign in and change your password when prompted.
+            Garages use internal tools (inventory, service log, reminders, invoices) and the external marketplace (buy parts,
+            sell listings, chat, find suppliers). Self-sign-up stays pending until Hornvin Super Admin approves; if your
+            distributor created your account, sign in and change the temp password when prompted.
           </Text>
         </View>
         <View style={[styles.notice, { marginTop: 0, marginBottom: 14 }]}>

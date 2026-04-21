@@ -79,7 +79,7 @@ productsRouter.use(requireAuth(true));
 
 productsRouter.post(
   "/",
-  allowRoles("company", "distributor"),
+  allowRoles("company", "distributor", "retail"),
   [
     body("name").isString().notEmpty(),
     body("category").isString().notEmpty(),
@@ -95,7 +95,7 @@ productsRouter.post(
     if (!canAddProducts(req.user)) {
       return res.status(403).json({ error: "You are not allowed to add products" });
     }
-    if ((req.user.role === "company" || req.user.role === "distributor") && !canSell(req.user)) {
+    if ((req.user.role === "company" || req.user.role === "distributor" || req.user.role === "retail") && !canSell(req.user)) {
       return res.status(403).json({ error: "You are not allowed to sell listings" });
     }
 
@@ -106,7 +106,9 @@ productsRouter.post(
       companyId = req.user._id;
     } else {
       if (!req.user.companyId) {
-        return res.status(400).json({ error: "Link your distributor account to a company before listing products" });
+        return res.status(400).json({
+          error: "Link your garage or distributor account to a Hornvin company before listing products on the marketplace.",
+        });
       }
       companyId = req.user.companyId;
     }
@@ -129,7 +131,7 @@ productsRouter.post(
   }
 );
 
-productsRouter.patch("/:id", allowRoles("company", "distributor"), async (req, res) => {
+productsRouter.patch("/:id", allowRoles("company", "distributor", "retail"), async (req, res) => {
   const product = await Product.findById(req.params.id);
   if (!product) return res.status(404).json({ error: "Not found" });
   if (!canAddProducts(req.user)) {
@@ -156,7 +158,7 @@ productsRouter.patch("/:id", allowRoles("company", "distributor"), async (req, r
   return res.json({ product: populated });
 });
 
-productsRouter.delete("/:id", allowRoles("company", "distributor"), async (req, res) => {
+productsRouter.delete("/:id", allowRoles("company", "distributor", "retail"), async (req, res) => {
   const product = await Product.findById(req.params.id);
   if (!product) return res.status(404).json({ error: "Not found" });
   if (!canAddProducts(req.user)) {

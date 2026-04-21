@@ -43,10 +43,10 @@ export function GarageHubScreen({ navigation }) {
       contentContainerStyle={styles.scroll}
       refreshControl={<RefreshControl refreshing={loading && !summary} onRefresh={load} tintColor={colors.header} />}
     >
-      <Text style={styles.h1}>Garage operations</Text>
+      <Text style={styles.h1}>Internal tools</Text>
       <Text style={styles.sub}>
-        Side 1 — run your shop: stock, jobs on the ramp, follow-ups, call scripts, and quick estimates. Marketplace stays in
-        Explore.
+        Bay-side work: invoices, inventory, service history, customer reminders, estimates, and call scripts. This is the green
+        half of your day — the blue half (buy / sell / chat / suppliers) lives under Marketplace.
       </Text>
 
       {loading && !summary ? (
@@ -80,8 +80,16 @@ export function GarageHubScreen({ navigation }) {
         </View>
       )}
 
+      <View style={[styles.card, shadows.card, styles.externalCard]}>
+        <Text style={styles.cardTitle}>External marketplace</Text>
+        <Text style={styles.externalHint}>Buy parts, sell listings, chat, find suppliers — switch to the Marketplace tab.</Text>
+        <Pressable style={styles.externalBtn} onPress={() => navigation.navigate("ExploreTab")}>
+          <Text style={styles.externalBtnTxt}>Open Marketplace tab</Text>
+        </Pressable>
+      </View>
+
       <View style={[styles.card, shadows.card]}>
-        <Text style={styles.cardTitle}>Tools</Text>
+        <Text style={styles.cardTitle}>More tools</Text>
         <Pressable style={styles.row} onPress={() => navigation.getParent()?.navigate("GarageAiCalling")}>
           <Text style={styles.rowTitle}>AI call assistant</Text>
           <Text style={styles.rowSub}>Polished script + checklist (templates; add your LLM later)</Text>
@@ -142,4 +150,16 @@ const styles = StyleSheet.create({
   rowTitle: { fontWeight: "600", color: colors.text, fontSize: 15 },
   rowSub: { marginTop: 4, color: colors.textSecondary, fontSize: 13, lineHeight: 18, paddingRight: 8 },
   chev: { position: "absolute", right: 14, top: 22, fontSize: 20, color: colors.secondaryBlue },
+  externalCard: { marginBottom: 12, borderColor: colors.secondaryBlue, backgroundColor: "#F0F5FA" },
+  externalHint: { paddingHorizontal: 14, paddingBottom: 8, color: colors.textSecondary, fontSize: 13, lineHeight: 19 },
+  externalBtn: {
+    marginHorizontal: 14,
+    marginBottom: 14,
+    alignSelf: "flex-start",
+    backgroundColor: colors.secondaryBlue,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  externalBtnTxt: { color: colors.white, fontWeight: "800", fontSize: 14 },
 });

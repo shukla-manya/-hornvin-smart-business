@@ -6,7 +6,11 @@ export const APP_ROLES = [
     blurb: "Single platform root — only when server allows first-time Hornvin signup",
   },
   { id: "distributor", label: "Distributor", blurb: "Regional stock & downstream" },
-  { id: "retail", label: "Retail / garage", blurb: "Shop or service point" },
+  {
+    id: "retail",
+    label: "Garage (retail)",
+    blurb: "Primary user — internal tools + marketplace (buy, sell, chat, suppliers)",
+  },
   { id: "end_user", label: "End user", blurb: "Self-signup · email code to verify, then sign-in mail OTP" },
 ];
 
