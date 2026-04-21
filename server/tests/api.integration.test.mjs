@@ -1077,6 +1077,61 @@ test("retail garage API: inventory summary and work estimate", async () => {
   await GarageInventoryItem.deleteMany({ garageUserId: u._id });
 });
 
+test("POST /api/part-finder/identify manual query returns products and nearby seller", async () => {
+  const company = await User.create({
+    phone: `+1700${String(Date.now()).slice(-8)}`,
+    passwordHash: await bcrypt.hash("secret12", 10),
+    role: "company",
+    status: "approved",
+    isPlatformOwner: true,
+    location: { type: "Point", coordinates: [77.209, 28.6139] },
+  });
+  const retailPhone = `+1701${String(Date.now()).slice(-8)}`;
+  const retail = await User.create({
+    phone: retailPhone,
+    passwordHash: await bcrypt.hash("secret12", 10),
+    role: "retail",
+    status: "approved",
+    companyId: company._id,
+    location: { type: "Point", coordinates: [77.21, 28.614] },
+  });
+  const login = await request(app).post("/api/auth/login").send({ phone: retailPhone, password: "secret12" });
+  assert.equal(login.status, 200, JSON.stringify(login.body));
+  const token = login.body.token;
+
+  const createProd = await request(app)
+    .post("/api/products")
+    .set("Authorization", `Bearer ${token}`)
+    .send({
+      name: "Deluxe oil filter synthetic spin-on",
+      category: "Filters",
+      price: 450,
+      quantity: 5,
+      description: "For diesel engines",
+    });
+  assert.equal(createProd.status, 201, JSON.stringify(createProd.body));
+
+  const id = await request(app)
+    .post("/api/part-finder/identify")
+    .set("Authorization", `Bearer ${token}`)
+    .send({
+      manualQuery: "oil filter synthetic",
+      lat: 28.6139,
+      lng: 77.209,
+    });
+  assert.equal(id.status, 200, JSON.stringify(id.body));
+  assert.equal(id.body.ai, false);
+  assert.ok(String(id.body.searchQuery || "").length > 0);
+  assert.ok(Array.isArray(id.body.products));
+  assert.ok(id.body.products.length >= 1, "expected at least one product match");
+  assert.ok(id.body.products.some((p) => String(p.name).toLowerCase().includes("oil")));
+  assert.ok(Array.isArray(id.body.nearbySellers));
+  assert.ok(id.body.nearbySellers.some((s) => String(s._id) === String(retail._id)), "expected listing seller in nearby results");
+
+  await Product.deleteMany({ sellerId: retail._id });
+  await User.deleteMany({ _id: { $in: [retail._id, company._id] } });
+});
+
 test("garage API forbidden for non-retail roles", async () => {
   const phone = `+1902${String(Date.now()).slice(-8)}`;
   await User.create({
