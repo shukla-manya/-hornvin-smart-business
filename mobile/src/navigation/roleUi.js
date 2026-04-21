@@ -32,10 +32,11 @@ const RETAIL_TABS = [
   MAIN_TAB_KEYS.PROFILE,
 ];
 
-/** End customer: light shell — service (orders), pay, reminders; optional marketplace from Home / Profile. */
+/** End customer: light shell — service, chat with garage/seller, reminders, profile; invoices & pay from Profile / Home. */
 const END_USER_TABS = [
   MAIN_TAB_KEYS.HOME,
   MAIN_TAB_KEYS.ORDERS,
+  MAIN_TAB_KEYS.CHAT,
   MAIN_TAB_KEYS.NOTIFICATIONS,
   MAIN_TAB_KEYS.PROFILE,
 ];
@@ -103,7 +104,9 @@ export function userCanAccessStackRoute(user, routeName) {
     return user.role === "company" || user.role === "distributor" || user.role === "retail";
   }
   if (routeName === "Invoices") {
-    return user.role === "company" || user.role === "distributor" || user.role === "retail";
+    return (
+      user.role === "company" || user.role === "distributor" || user.role === "retail" || user.role === "end_user"
+    );
   }
   if (GARAGE_STACK_ROUTES.has(routeName)) {
     return user.role === "retail";
@@ -115,7 +118,10 @@ export function userCanAccessStackRoute(user, routeName) {
 export function profileQuickLinkRoutes(user) {
   const links = [];
   if (user?.role === "end_user") {
-    links.push({ nestedTab: "NotificationsTab", label: "Reminders" });
+    links.push({ nestedTab: "OrdersTab", label: "Service & orders" });
+    links.push({ nestedTab: "ChatTab", label: "Chat with garage" });
+    links.push({ nestedTab: "NotificationsTab", label: "Reminders & alerts" });
+    links.push({ route: "Invoices", label: "Invoices" });
     links.push({ route: "Payments", label: "Payments" });
     links.push({ route: "MarketplaceBrowse", label: "Browse parts (optional)" });
     links.push({ route: "Rewards", label: "Coupons & rewards" });
