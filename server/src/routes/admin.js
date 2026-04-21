@@ -9,8 +9,7 @@ import { Category } from "../models/Category.js";
 import { Coupon } from "../models/Coupon.js";
 import { requireAuth } from "../middleware/auth.js";
 import { requirePlatformOwner } from "../middleware/platformOwner.js";
-import { maybeNotifyStockLowAfterDecrease } from "../services/pushNotify.js";
-import { sendPushToUsers } from "../services/pushNotify.js";
+import { maybeNotifyStockLowAfterDecrease, sendPushToUsers } from "../services/pushNotify.js";
 import { emailTemporaryCredentials } from "../services/onboardingMail.js";
 
 /**
@@ -477,3 +476,94 @@ adminRouter.get("/analytics/summary", async (_req, res) => {
     productCount,
   });
 });
+
+/** --- Coupons (points + optional discount label for promos) --- */
+
+adminRouter.get("/coupons", async (_req, res) => {
+  const coupons = await Coupon.find().sort({ createdAt: -1 }).limit(200).lean();
+  return res.json({ coupons });
+});
+
+adminRouter.post(
+  "/coupons",
+  [
+    body("code").isString().trim().notEmpty(),
+    body("title").optional().isString().trim(),
+    body("pointsValue").optional().isFloat({ min: 0 }),
+    body("discountPercent").optional().isFloat({ min: 0, max: 100 }),
+    body("maxUses").optional().isInt({ min: 1 }),
+    body("validUntil").optional().isISO8601(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    const code = String(req.body.code).toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 32);
+    if (!code) return res.status(400).json({ error: "Invalid code" });
+    try {
+      const c = await Coupon.create({
+        code,
+        title: req.body.title?.trim() || "",
+        pointsValue: req.body.pointsValue != null ? Number(req.body.pointsValue) : 100,
+        discountPercent: req.body.discountPercent != null ? Number(req.body.discountPercent) : 0,
+        maxUses: req.body.maxUses != null ? Number(req.body.maxUses) : 1000,
+        validUntil: req.body.validUntil ? new Date(req.body.validUntil) : undefined,
+        active: true,
+        createdBy: req.user._id,
+      });
+      return res.status(201).json({ coupon: c });
+    } catch (e) {
+      if (e.code === 11000) return res.status(409).json({ error: "Coupon code already exists" });
+      throw e;
+    }
+  }
+);
+
+adminRouter.patch(
+  "/coupons/:id",
+  [
+    param("id").isMongoId(),
+    body("active").optional().isBoolean(),
+    body("maxUses").optional().isInt({ min: 1 }),
+    body("validUntil").optional().isISO8601(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    const c = await Coupon.findById(req.params.id);
+    if (!c) return res.status(404).json({ error: "Not found" });
+    if (req.body.active !== undefined) c.active = req.body.active;
+    if (req.body.maxUses !== undefined) c.maxUses = req.body.maxUses;
+    if (req.body.validUntil !== undefined) {
+      c.validUntil = req.body.validUntil ? new Date(req.body.validUntil) : undefined;
+    }
+    await c.save();
+    return res.json({ coupon: c });
+  }
+);
+
+/** --- Push broadcast (Expo) --- */
+
+adminRouter.post(
+  "/push/broadcast",
+  [
+    body("title").isString().trim().notEmpty(),
+    body("body").isString().trim().notEmpty(),
+    body("role").optional().isIn(USER_ROLES),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    const filter = {
+      $or: [{ status: "approved" }, { status: { $exists: false } }, { status: null }, { status: "" }],
+    };
+    if (req.body.role) filter.role = req.body.role;
+    const users = await User.find(filter).select("_id").lean();
+    const ids = users.map((u) => u._id);
+    const pushResult = await sendPushToUsers(ids, {
+      title: req.body.title.trim(),
+      body: req.body.body.trim(),
+      data: { type: "admin_broadcast" },
+    });
+    return res.json({ ok: true, audienceCount: ids.length, pushResult });
+  }
+);

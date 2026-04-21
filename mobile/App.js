@@ -1,4 +1,5 @@
 import "react-native-gesture-handler";
+import "@expo/metro-runtime";
 import React from "react";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
