@@ -286,17 +286,12 @@ export function LoginRegisterScreen() {
           style={styles.input}
         />
 
-        {mode === "login" && loginChannel === "password" && (
+        {mode === "login" && (
           <>
-            <Text style={styles.label}>Phone (optional; password only — no SMS OTP)</Text>
-            <TextInput
-              value={phone}
-              onChangeText={setPhone}
-              keyboardType="phone-pad"
-              placeholder="+91..."
-              placeholderTextColor={colors.textSecondary}
-              style={styles.input}
-            />
+            <Text style={styles.hint}>
+              Sign in with email + password: you will get two codes — one by email and one for the phone on your account (for
+              now the phone code is printed in the Hornvin API terminal). Phone-only accounts use password only.
+            </Text>
             <Text style={styles.label}>Password</Text>
             <TextInput
               value={password}
@@ -308,26 +303,33 @@ export function LoginRegisterScreen() {
             />
             {email.trim() && awaitingLoginOtp ? (
               <>
-                <Text style={styles.hint}>We emailed a one-time code (never sent to SMS). Enter it below, then Continue.</Text>
-                <Text style={styles.label}>Email code</Text>
-                <TextInput value={loginOtp} onChangeText={setLoginOtp} keyboardType="number-pad" placeholder="6-digit code" placeholderTextColor={colors.textSecondary} style={styles.input} />
+                <Text style={styles.label}>Code from email</Text>
+                <TextInput
+                  value={loginEmailOtp}
+                  onChangeText={setLoginEmailOtp}
+                  keyboardType="number-pad"
+                  placeholder="6-digit email code"
+                  placeholderTextColor={colors.textSecondary}
+                  style={styles.input}
+                />
+                <Text style={styles.label}>Code for phone (see API server log)</Text>
+                <TextInput
+                  value={loginPhoneOtp}
+                  onChangeText={setLoginPhoneOtp}
+                  keyboardType="number-pad"
+                  placeholder="6-digit phone code"
+                  placeholderTextColor={colors.textSecondary}
+                  style={styles.input}
+                />
               </>
             ) : null}
           </>
         )}
 
-        {mode === "login" && loginChannel === "emailOtp" && (
-          <>
-            <Text style={styles.hint}>We email a 6-digit code only (no phone OTP). Tap Continue to request, enter code, tap Continue again.</Text>
-            <Text style={styles.label}>Code from email</Text>
-            <TextInput value={loginOtp} onChangeText={setLoginOtp} keyboardType="number-pad" placeholder="6-digit code" placeholderTextColor={colors.textSecondary} style={styles.input} />
-          </>
-        )}
-
         {mode === "register" && (
           <>
-            <Text style={styles.label}>Phone (if no email)</Text>
-            <TextInput value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="+91..." placeholderTextColor={colors.textSecondary} style={styles.input} />
+            <Text style={styles.label}>{email.trim() ? "Mobile (required with email)" : "Phone (if no email)"}</Text>
+            <TextInput value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="+91…" placeholderTextColor={colors.textSecondary} style={styles.input} />
             <Text style={styles.label}>Password</Text>
             <TextInput
               value={password}
@@ -377,21 +379,15 @@ export function LoginRegisterScreen() {
               ? awaitingRegisterVerify
                 ? "Verify email & continue"
                 : "Create account"
-              : loginChannel === "emailOtp"
-                ? loginOtp.trim()
-                  ? "Sign in with code"
-                  : "Send email code"
-                : awaitingLoginOtp
-                  ? "Continue with code"
-                  : "Continue"}
+              : awaitingLoginOtp
+                ? "Sign in with codes"
+                : "Continue"}
           </Text>
         </Pressable>
 
         {mode === "login" ? (
           <Pressable onPress={() => setForgotOpen(true)} style={styles.linkBtn}>
-            <Text style={styles.linkTxt}>
-              Forgot password?{loginChannel === "emailOtp" ? " (uses your account email)" : " (email OTP)"}
-            </Text>
+            <Text style={styles.linkTxt}>Forgot password?</Text>
           </Pressable>
         ) : null}
 
