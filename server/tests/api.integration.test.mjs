@@ -203,6 +203,7 @@ test("end_user email: verify registration OTP then login mail OTP (no admin appr
     assert.equal(step1.status, 200, JSON.stringify(step1.body));
     assert.equal(step1.body.needsOtp, true);
     assert.ok(step1.body._testOnlyEmailCode);
+    assert.ok(step1.body._testOnlyPhoneCode);
 
     const step2 = await request(app)
       .post("/api/auth/login")

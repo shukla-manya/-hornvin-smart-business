@@ -128,6 +128,9 @@ components:
           type: boolean
         emailVerified:
           type: boolean
+        needsProfileSetup:
+          type: boolean
+          description: When true, client should collect display name (and company fields if applicable) before full app access
         createdBy:
           $ref: "#/components/schemas/ObjectId"
         createdAt:
@@ -209,6 +212,13 @@ components:
           type: string
         otpCode:
           type: string
+          description: Deprecated alias for emailOtp (tests)
+        emailOtp:
+          type: string
+          description: After needsOtp, 6-digit code sent to email
+        phoneOtp:
+          type: string
+          description: After needsOtp, 6-digit code for phone (logged on API server until SMS is integrated)
 
     AuthTokenResponse:
       type: object
@@ -221,11 +231,15 @@ components:
 
     LoginOtpChallenge:
       type: object
-      description: Email login may require a second mail OTP step
+      description: Email + password login may require email + phone OTP (phone code echoed in API terminal for now)
       properties:
-        pendingOtp:
+        needsOtp:
           type: boolean
-        email:
+        needsEmailOtp:
+          type: boolean
+        needsPhoneOtp:
+          type: boolean
+        message:
           type: string
 
     Product:
@@ -643,7 +657,7 @@ paths:
   /api/auth/login:
     post:
       tags: [Auth]
-      summary: Login (email or phone + password; email may require OTP follow-up)
+      summary: Login (email or phone + password; email accounts with phone require dual OTP)
       security: []
       requestBody:
         required: true

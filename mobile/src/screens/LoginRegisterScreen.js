@@ -87,7 +87,7 @@ export function LoginRegisterScreen() {
           const vData = await verifyRegisterEmail(email, registerEmailOtp);
           setAwaitingRegisterVerify(false);
           setRegisterEmailOtp("");
-          resetAfterOnboarding(vData.user);
+          if (vData?.user) resetAfterOnboarding(vData.user);
         } catch (e) {
           Alert.alert("Auth", e.response?.data?.error || e.message);
         } finally {
