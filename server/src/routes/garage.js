@@ -178,7 +178,7 @@ garageRouter.post(
       if (!gv) return res.status(400).json({ error: "Vehicle not found" });
       vehiclePlate = vehiclePlate || gv.plateNumber || "";
       vehicleModel = vehicleModel || gv.model || "";
-      if (!garageCustomerId) garageCustomerId = String(gv.garageCustomerId);
+      if (!garageCustomerId) garageCustomerId = gv.garageCustomerId;
     }
 
     const doc = await GarageServiceRecord.create({
@@ -307,8 +307,11 @@ garageRouter.patch(
 garageRouter.delete("/customers/:id", [param("id").isMongoId()], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  const r = await GarageCustomer.deleteOne({ _id: req.params.id, garageUserId: req.user._id });
-  if (!r.deletedCount) return res.status(404).json({ error: "Not found" });
+  const cid = req.params.id;
+  const cust = await GarageCustomer.findOne({ _id: cid, garageUserId: req.user._id });
+  if (!cust) return res.status(404).json({ error: "Not found" });
+  await GarageVehicle.deleteMany({ garageCustomerId: cust._id, garageUserId: req.user._id });
+  await cust.deleteOne();
   return res.json({ ok: true });
 });
 
