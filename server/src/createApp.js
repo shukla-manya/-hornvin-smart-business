@@ -70,7 +70,22 @@ export function createApp() {
   try {
     const openApiDocument = loadOpenApiSpec();
     app.get("/openapi.json", (_req, res) => res.json(openApiDocument));
-    app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiDocument, { explorer: true }));
+    app.use(
+      "/api-docs",
+      swaggerUi.serve,
+      swaggerUi.setup(openApiDocument, {
+        explorer: true,
+        swaggerOptions: {
+          persistAuthorization: true,
+          docExpansion: "list",
+          filter: true,
+          displayRequestDuration: true,
+          defaultModelsExpandDepth: 4,
+          defaultModelExpandDepth: 4,
+          showCommonExtensions: true,
+        },
+      })
+    );
   } catch (e) {
     console.warn("OpenAPI / Swagger UI not mounted:", e.message);
   }
