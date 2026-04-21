@@ -54,6 +54,7 @@ export function MarketplaceScreen({ navigation }) {
     else rootNav?.navigate("Main", { screen: tabName });
   };
   const openDealerMap = () => rootNav?.navigate("DealerMap");
+  const openPartFinder = () => rootNav?.navigate("PartFinder");
   const goOrders = () => goMainTab("OrdersTab");
   const goChat = () => goMainTab("ChatTab");
   const goReminders = () => goMainTab("NotificationsTab");
@@ -104,6 +105,9 @@ export function MarketplaceScreen({ navigation }) {
                   </Pressable>
                   <Pressable style={styles.shortcut} onPress={goReminders}>
                     <Text style={styles.shortcutTxt}>Reminders</Text>
+                  </Pressable>
+                  <Pressable style={styles.shortcut} onPress={openPartFinder}>
+                    <Text style={styles.shortcutTxt}>Part Finder</Text>
                   </Pressable>
                 </View>
               </View>
