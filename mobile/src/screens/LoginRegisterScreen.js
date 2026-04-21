@@ -15,6 +15,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { CommonActions, useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import { AppLogo } from "../components/AppLogo";
+import { PasswordInput } from "../components/PasswordInput";
 import { colors, radii } from "../theme";
 import { APP_ROLES, roleLabel } from "../constants/roles";
 import { resetAfterOnboarding } from "../navigation/navigationRoot";
