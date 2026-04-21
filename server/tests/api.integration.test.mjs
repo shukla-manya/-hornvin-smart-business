@@ -54,6 +54,7 @@ test("login flow: register + login + me (phone — no email OTP)", async () => {
     password: "secret12",
     role: "end_user",
     name: "Flow User",
+    businessName: "Flow User Motors",
   });
   assert.equal(reg.status, 201, JSON.stringify(reg.body));
   assert.ok(reg.body.token);
@@ -94,6 +95,7 @@ test("orders + chat API responses (company seller, end_user buyer)", async () =>
     password: "secret12",
     role: "end_user",
     name: "Buyer Orders",
+    businessName: "Buyer Orders LLC",
   });
   assert.equal(buyer.status, 201);
   const tokenB = buyer.body.token;
@@ -144,6 +146,7 @@ test("register without SKIP_USER_APPROVAL: company blocked without bootstrap; en
       password: "secret12",
       role: "end_user",
       name: "Buyer no skip",
+      businessName: "Buyer no skip Garage",
     });
     assert.equal(regEnd.status, 201, JSON.stringify(regEnd.body));
     assert.ok(regEnd.body.token);
@@ -157,6 +160,7 @@ test("register without SKIP_USER_APPROVAL: company blocked without bootstrap; en
         password: "secret12",
         role: "company",
         name: "No bootstrap",
+        businessName: "No Bootstrap Co",
       });
     assert.equal(regCo.status, 403, JSON.stringify(regCo.body));
     assert.ok(
@@ -181,6 +185,7 @@ test("end_user email: verify registration OTP then login mail OTP (no admin appr
       password: "secret12",
       role: "end_user",
       name: "Email Buyer",
+      businessName: "Email Buyer Inc",
     });
     assert.equal(reg.status, 201, JSON.stringify(reg.body));
     assert.ok(!reg.body.token);
@@ -295,6 +300,7 @@ test("cannot self-register as distributor without ALLOW_DOWNSTREAM_SELF_REGISTER
       password: "secret12",
       role: "distributor",
       name: "Bad",
+      businessName: "Bad Distributor LLC",
     });
     assert.equal(reg.status, 403);
     assert.equal(reg.body.code, "ROLE_NOT_SELF_SIGNUP");
