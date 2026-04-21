@@ -99,6 +99,7 @@ userSchema.methods.toSafeJSON = function toSafeJSON() {
         },
     mustChangePassword: !!this.mustChangePassword,
     emailVerified: this.emailVerified !== false,
+    needsProfileSetup: computeNeedsProfileSetup(this),
     createdBy: this.createdBy ? String(this.createdBy) : undefined,
     createdAt: this.createdAt,
   };
@@ -112,4 +113,10 @@ export function isUserApproved(userDoc) {
   const s = userDoc?.status;
   if (s == null || s === "") return true;
   return s === "approved";
+}
+
+/** First-login / empty-name accounts must finish profile in the app before full access. */
+export function computeNeedsProfileSetup(userDoc) {
+  const n = userDoc?.name;
+  return !(n && String(n).trim());
 }

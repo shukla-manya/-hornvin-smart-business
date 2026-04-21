@@ -3,7 +3,13 @@ import bcrypt from "bcryptjs";
 import { body, validationResult } from "express-validator";
 import { User, USER_ROLES, isUserApproved, getAccountAccessDenial } from "../models/User.js";
 import { signToken, requireAuth } from "../middleware/auth.js";
-import { createAndEmailOtp, verifyOtpCode, allowOtpRequest } from "../services/otpEmail.js";
+import {
+  createAndEmailOtp,
+  createPhoneLoginOtp,
+  phoneOtpStorageKey,
+  verifyOtpCode,
+  allowOtpRequest,
+} from "../services/otpEmail.js";
 
 export const authRouter = Router();
 
@@ -92,6 +98,16 @@ authRouter.post(
       return res.status(400).json({ error: "email or phone required" });
     }
 
+    const emailNorm = email ? email.trim().toLowerCase() : "";
+    const phoneTrim = phone ? String(phone).trim() : "";
+    const phoneDigits = phoneTrim.replace(/\D/g, "");
+    if (emailNorm && phoneDigits.length < 8) {
+      return res.status(400).json({
+        code: "PHONE_REQUIRED_WITH_EMAIL",
+        error: "When signing up with email, add a valid mobile number (used for sign-in codes).",
+      });
+    }
+
     const allowedCsv = (process.env.REGISTER_ALLOWED_ROLES || "").trim();
     if (allowedCsv) {
       const allowed = allowedCsv.split(",").map((s) => s.trim()).filter(Boolean);
@@ -110,7 +126,6 @@ authRouter.post(
       });
     }
 
-    const emailNorm = email ? email.trim().toLowerCase() : "";
     if (role === "company") {
       if (!emailNorm) {
         return res.status(400).json({
@@ -154,7 +169,7 @@ authRouter.post(
     try {
       const user = await User.create({
         email: emailNorm || undefined,
-        phone: phone || undefined,
+        phone: phoneTrim || undefined,
         passwordHash,
         role,
         name,
@@ -203,12 +218,16 @@ authRouter.post(
     body("email").optional().isEmail(),
     body("phone").optional().isString(),
     body("otpCode").optional().isString(),
+    body("emailOtp").optional().isString(),
+    body("phoneOtp").optional().isString(),
   ],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { email, phone, password, otpCode } = req.body;
+    const { email, phone, password, otpCode, emailOtp: emailOtpRaw, phoneOtp: phoneOtpRaw } = req.body;
+    const emailOtp = emailOtpRaw ?? otpCode;
+    const phoneOtp = phoneOtpRaw;
     if (!email && !phone) return res.status(400).json({ error: "email or phone required" });
 
     const query = email ? { email } : { phone };
@@ -230,29 +249,48 @@ authRouter.post(
     }
 
     /**
-     * Email + password: second factor via email OTP (never SMS / phone OTP).
-     * Platform Super Admin (`isPlatformOwner`) uses password only so a DB-seeded owner can sign in without mail OTP.
-     * Accounts created by Super Admin / distributor (`mustChangePassword`) skip this step so first sign-in goes
-     * straight to the client "set new password" gate after the temporary password from onboarding email.
+     * Email + password: second factor via **email OTP + phone OTP** (phone codes are logged on the API terminal until SMS is wired).
+     * Platform Super Admin (`isPlatformOwner`) uses password only.
+     * Accounts with `mustChangePassword` skip OTP so first sign-in goes to the forced password change screen.
      */
     if (email && user.email && !user.isPlatformOwner && !user.mustChangePassword) {
-      if (!otpCode) {
+      const phoneOk = user.phone && String(user.phone).trim();
+      const phoneKey = phoneOk ? phoneOtpStorageKey(user.phone) : null;
+      if (!phoneKey) {
+        return res.status(400).json({
+          code: "PHONE_REQUIRED_FOR_EMAIL_LOGIN",
+          error:
+            "This account signs in with email but has no mobile on file. Ask your administrator to add a phone number, or register with email and mobile together.",
+        });
+      }
+
+      if (!emailOtp || !phoneOtp) {
         if (!allowOtpRequest(`login-pw:${email}`)) {
           return res.status(429).json({ error: "Please wait before requesting another code" });
         }
         try {
-          const sent = await createAndEmailOtp(email, "login_email_step");
-          const out = { needsOtp: true, message: "Enter the code sent to your email." };
-          if (process.env.NODE_ENV === "test" && sent.devCode) {
-            out._testOnlyEmailCode = sent.devCode;
+          const sentEmail = await createAndEmailOtp(email, "login_email_step");
+          const sentPhone = await createPhoneLoginOtp(user.phone, "login_phone_step");
+          const out = {
+            needsOtp: true,
+            needsEmailOtp: true,
+            needsPhoneOtp: true,
+            message: "Enter the 6-digit codes sent to your email and to your phone (phone code is also printed in the API server terminal for now).",
+          };
+          if (process.env.NODE_ENV === "test") {
+            if (sentEmail.devCode) out._testOnlyEmailCode = sentEmail.devCode;
+            if (sentPhone.devCode) out._testOnlyPhoneCode = sentPhone.devCode;
           }
           return res.json(out);
         } catch (e) {
-          return res.status(503).json({ error: e.message || "Could not send email" });
+          return res.status(503).json({ error: e.message || "Could not send verification codes" });
         }
       }
-      const v = await verifyOtpCode(email, "login_email_step", otpCode);
-      if (!v.ok) return res.status(401).json({ error: v.error || "Invalid code" });
+
+      const ve = await verifyOtpCode(email, "login_email_step", emailOtp);
+      if (!ve.ok) return res.status(401).json({ error: ve.error || "Invalid email code" });
+      const vp = await verifyOtpCode(phoneKey, "login_phone_step", phoneOtp);
+      if (!vp.ok) return res.status(401).json({ error: vp.error || "Invalid phone code" });
     }
 
     const token = signToken(user);
