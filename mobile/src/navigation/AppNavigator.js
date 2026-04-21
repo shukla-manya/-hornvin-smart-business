@@ -132,10 +132,6 @@ function MainTabs() {
     wasAuthenticated.current = isAuthenticated;
   }, [isAuthenticated]);
 
-  if (!isAuthenticated) {
-    return <View style={{ flex: 1, backgroundColor: colors.background }} />;
-  }
-
   const insets = useSafeAreaInsets();
   const tabKeys = useMemo(() => getVisibleMainTabKeys(user?.role), [user?.role]);
   const initialRouteName = useMemo(() => {
@@ -157,6 +153,10 @@ function MainTabs() {
     }),
     [tabBarBottomPad]
   );
+
+  if (!isAuthenticated) {
+    return <View style={{ flex: 1, backgroundColor: colors.background }} />;
+  }
 
   return (
     <Tabs.Navigator

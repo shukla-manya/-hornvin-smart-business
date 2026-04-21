@@ -53,3 +53,6 @@ export function resetAfterAuth(user) {
   else if (user?.needsProfileSetup) resetToProfileSetup();
   else resetToMain();
 }
+
+/** Alias used after registration / email verification flows. */
+export const resetAfterOnboarding = resetAfterAuth;
