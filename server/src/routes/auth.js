@@ -94,6 +94,17 @@ authRouter.post(
     const { email, phone, password, role, name, businessName, address, companyId, distributorId } =
       req.body;
 
+    const businessTrim = typeof businessName === "string" ? businessName.trim() : "";
+    if (!businessTrim) {
+      return res.status(400).json({
+        code: "BUSINESS_NAME_REQUIRED",
+        error: "Business name is required.",
+      });
+    }
+    if (businessTrim.length > 200) {
+      return res.status(400).json({ error: "Business name must be at most 200 characters." });
+    }
+
     if (!email && !phone) {
       return res.status(400).json({ error: "email or phone required" });
     }
@@ -173,7 +184,7 @@ authRouter.post(
         passwordHash,
         role,
         name,
-        businessName,
+        businessName: businessTrim,
         address,
         companyId: companyId || undefined,
         distributorId: distributorId || undefined,
