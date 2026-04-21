@@ -106,6 +106,7 @@ garageRouter.patch(
     body("reorderAt").optional().isFloat({ min: 0 }),
     body("unit").optional().isString().trim(),
     body("notes").optional().isString().trim(),
+    body("linkedProductId").optional().isMongoId(),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -119,6 +120,7 @@ garageRouter.patch(
     if (b.reorderAt !== undefined) item.reorderAt = b.reorderAt;
     if (b.unit !== undefined) item.unit = b.unit;
     if (b.notes !== undefined) item.notes = b.notes;
+    if (b.linkedProductId !== undefined) item.linkedProductId = b.linkedProductId || undefined;
     await item.save();
     return res.json({ item });
   }
