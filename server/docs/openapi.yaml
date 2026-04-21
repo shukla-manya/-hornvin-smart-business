@@ -545,6 +545,21 @@ components:
         isPrimary:
           type: boolean
 
+    LocationPatchRequest:
+      type: object
+      description: Partial update; if both lat and lng are sent, geo is replaced
+      properties:
+        label:
+          type: string
+        address:
+          type: string
+        lat:
+          type: number
+        lng:
+          type: number
+        roleContext:
+          type: string
+
     LocationDocument:
       type: object
       additionalProperties: true
@@ -558,6 +573,13 @@ components:
         platform:
           type: string
           enum: [ios, android, expo, web, unknown]
+
+    DeviceTokenRemoveBody:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
 
     WishlistAddRequest:
       type: object
@@ -1482,11 +1504,14 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [companyId]
-              properties:
-                companyId:
-                  type: string
+              $ref: "#/components/schemas/LinkDistributorBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
 
   /api/users/link-retail:
     patch:
@@ -1496,16 +1521,31 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [distributorId]
-              properties:
-                distributorId:
-                  type: string
+              $ref: "#/components/schemas/LinkRetailBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
 
   /api/payments:
     get:
       tags: [Payments]
       summary: My payments
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  payments:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PaymentDocument"
     post:
       tags: [Payments]
       summary: Create payment record
@@ -1514,23 +1554,17 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [payeeId, amount]
-              properties:
-                payeeId:
-                  type: string
-                amount:
-                  type: number
-                method:
-                  type: string
-                currency:
-                  type: string
-                orderId:
-                  type: string
-                invoiceId:
-                  type: string
-                notes:
-                  type: string
+              $ref: "#/components/schemas/PaymentCreateRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  payment:
+                    $ref: "#/components/schemas/PaymentDocument"
 
   /api/payments/{id}/status:
     patch:
@@ -1547,17 +1581,34 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [status]
-              properties:
-                status:
-                  type: string
-                  enum: [pending, completed, failed, refunded]
+              $ref: "#/components/schemas/PaymentStatusBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  payment:
+                    $ref: "#/components/schemas/PaymentDocument"
 
   /api/locations:
     get:
       tags: [Locations]
       summary: My saved pins
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  locations:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/LocationDocument"
     post:
       tags: [Locations]
       summary: Add location
@@ -1566,21 +1617,17 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [label, lat, lng]
-              properties:
-                label:
-                  type: string
-                lat:
-                  type: number
-                lng:
-                  type: number
-                address:
-                  type: string
-                roleContext:
-                  type: string
-                isPrimary:
-                  type: boolean
+              $ref: "#/components/schemas/LocationCreateRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  location:
+                    $ref: "#/components/schemas/LocationDocument"
 
   /api/locations/{id}:
     patch:
@@ -1592,6 +1639,21 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocationPatchRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  location:
+                    $ref: "#/components/schemas/LocationDocument"
     delete:
       tags: [Locations]
       summary: Delete location
@@ -1601,6 +1663,13 @@ paths:
           required: true
           schema:
             type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
 
   /api/locations/{id}/primary:
     patch:
@@ -1612,14 +1681,52 @@ paths:
           required: true
           schema:
             type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  location:
+                    $ref: "#/components/schemas/LocationDocument"
 
   /api/dealer-locator/locations:
     get:
       tags: [Dealer locator]
       summary: Same as GET /api/locations
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  locations:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/LocationDocument"
     post:
       tags: [Dealer locator]
       summary: Same as POST /api/locations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocationCreateRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  location:
+                    $ref: "#/components/schemas/LocationDocument"
 
   /api/dealer-locator/locations/{id}:
     patch:
@@ -1631,6 +1738,21 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocationPatchRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  location:
+                    $ref: "#/components/schemas/LocationDocument"
     delete:
       tags: [Locations]
       summary: Same as DELETE /api/locations/{id}
@@ -1640,6 +1762,13 @@ paths:
           required: true
           schema:
             type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
 
   /api/dealer-locator/locations/{id}/primary:
     patch:
@@ -1651,6 +1780,16 @@ paths:
           required: true
           schema:
             type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  location:
+                    $ref: "#/components/schemas/LocationDocument"
 
   /api/dealer-locator/nearby:
     get:
@@ -1672,11 +1811,25 @@ paths:
           name: role
           schema:
             type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
 
   /api/notifications/push-status:
     get:
       tags: [Notifications]
       summary: Push configuration
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
 
   /api/notifications/device-token:
     post:
@@ -1687,14 +1840,14 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [token]
-              properties:
-                token:
-                  type: string
-                platform:
-                  type: string
-                  enum: [ios, android, expo, web, unknown]
+              $ref: "#/components/schemas/DeviceTokenBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
 
   /api/notifications/device-token/remove:
     post:
@@ -1705,16 +1858,26 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [token]
-              properties:
-                token:
-                  type: string
+              $ref: "#/components/schemas/DeviceTokenRemoveBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
 
   /api/notifications/devices:
     get:
       tags: [Notifications]
       summary: Device metadata list
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
 
   /api/notifications:
     get:
@@ -1725,6 +1888,13 @@ paths:
           name: limit
           schema:
             type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
 
   /api/notifications/{id}/read:
     patch:
@@ -1736,16 +1906,37 @@ paths:
           required: true
           schema:
             type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
 
   /api/notifications/read-all:
     post:
       tags: [Notifications]
       summary: Mark all read
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
 
   /api/wishlist:
     get:
       tags: [Wishlist]
       summary: Wishlist items
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
     post:
       tags: [Wishlist]
       summary: Add to wishlist
@@ -1754,11 +1945,14 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [productId]
-              properties:
-                productId:
-                  type: string
+              $ref: "#/components/schemas/WishlistAddRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
 
   /api/wishlist/status/{productId}:
     get:
@@ -1770,6 +1964,13 @@ paths:
           required: true
           schema:
             type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
 
   /api/wishlist/{productId}:
     delete:
@@ -1781,21 +1982,84 @@ paths:
           required: true
           schema:
             type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonObject"
 
   /api/admin/users:
     get:
       tags: [Admin]
       summary: Paginated users (Super Admin)
+      parameters:
+        - in: query
+          name: role
+          schema:
+            type: string
+        - in: query
+          name: status
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: skip
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedUsers"
 
   /api/admin/users/distributor:
     post:
       tags: [Admin]
       summary: Create distributor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCreateDistributorBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/UserPublic"
 
   /api/admin/users/retail:
     post:
       tags: [Admin]
       summary: Create retail for company + distributor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCreateRetailBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/UserPublic"
 
   /api/admin/users/{id}:
     patch:
@@ -1807,14 +2071,52 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminPatchUserBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/UserPublic"
 
   /api/admin/catalog/products:
     get:
       tags: [Admin]
       summary: Global catalog
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductsListResponse"
     post:
       tags: [Admin]
       summary: Add global SKU
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCatalogProductBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  product:
+                    $ref: "#/components/schemas/ProductDocument"
 
   /api/admin/catalog/products/{id}:
     patch:
@@ -1826,6 +2128,21 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductPatchRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  product:
+                    $ref: "#/components/schemas/ProductDocument"
     delete:
       tags: [Admin]
       summary: Delete global SKU
@@ -1835,14 +2152,44 @@ paths:
           required: true
           schema:
             type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
 
   /api/admin/categories:
     get:
       tags: [Admin]
       summary: Categories
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoriesListResponse"
     post:
       tags: [Admin]
       summary: Create category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCategoryCreateBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  category:
+                    $ref: "#/components/schemas/CategoryDocument"
 
   /api/admin/categories/{id}:
     patch:
@@ -1854,6 +2201,21 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCategoryPatchBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  category:
+                    $ref: "#/components/schemas/CategoryDocument"
     delete:
       tags: [Admin]
       summary: Delete category
@@ -1863,18 +2225,64 @@ paths:
           required: true
           schema:
             type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
 
   /api/admin/orders:
     get:
       tags: [Admin]
       summary: All orders
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: skip
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedOrders"
 
   /api/admin/payments:
     get:
       tags: [Admin]
       summary: All payments
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: skip
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedPayments"
 
   /api/admin/analytics/summary:
     get:
       tags: [Admin]
       summary: Dashboard aggregates
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsSummary"
