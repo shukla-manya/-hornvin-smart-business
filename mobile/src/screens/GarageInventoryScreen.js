@@ -10,13 +10,15 @@ import {
   Modal,
   Alert,
   ActivityIndicator,
+  Share,
+  Linking,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { colors, shadows, radii } from "../theme";
 import { garageApi } from "../api/resources";
 import { FooterCredit } from "../components/FooterCredit";
 
-export function GarageInventoryScreen() {
+export function GarageInventoryScreen({ navigation }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
@@ -109,6 +111,34 @@ export function GarageInventoryScreen() {
   };
 
   const low = (it) => (it.reorderAt || 0) > 0 && (it.quantity || 0) <= (it.reorderAt || 0);
+
+  const orderFromDistributor = async () => {
+    try {
+      const { data } = await garageApi.inventoryReorderMessage();
+      const msg = data.message || "";
+      Alert.alert("Reorder", msg.slice(0, 600) + (msg.length > 600 ? "…" : ""), [
+        { text: "Close", style: "cancel" },
+        {
+          text: "Share",
+          onPress: () => Share.share({ message: msg }),
+        },
+        {
+          text: "WhatsApp",
+          onPress: async () => {
+            const url = `whatsapp://send?text=${encodeURIComponent(msg)}`;
+            if (await Linking.canOpenURL(url)) await Linking.openURL(url);
+            else await Share.share({ message: msg });
+          },
+        },
+        {
+          text: "Marketplace",
+          onPress: () => navigation.navigate("ExploreTab"),
+        },
+      ]);
+    } catch (e) {
+      Alert.alert("Reorder", e.response?.data?.error || e.message);
+    }
+  };
 
   return (
     <View style={styles.root}>

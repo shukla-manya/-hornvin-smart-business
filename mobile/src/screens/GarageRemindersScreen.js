@@ -115,11 +115,16 @@ export function GarageRemindersScreen({ navigation }) {
         vehicleModel: vehicleModel.trim(),
         notes: notes.trim(),
         reminderLabel: reminderLabelText.trim(),
-        nextReminderAt: nextDate.trim() ? `${nextDate.trim()}T09:00:00.000Z` : undefined,
-        paymentReminderAt: paymentDate.trim() ? `${paymentDate.trim()}T09:00:00.000Z` : undefined,
         paymentReminderLabel: paymentLabel.trim(),
         automatedMessageTemplate: autoTemplate.trim(),
       };
+      if (editId) {
+        payload.nextReminderAt = nextDate.trim() ? `${nextDate.trim()}T09:00:00.000Z` : "";
+        payload.paymentReminderAt = paymentDate.trim() ? `${paymentDate.trim()}T09:00:00.000Z` : "";
+      } else {
+        if (nextDate.trim()) payload.nextReminderAt = `${nextDate.trim()}T09:00:00.000Z`;
+        if (paymentDate.trim()) payload.paymentReminderAt = `${paymentDate.trim()}T09:00:00.000Z`;
+      }
       if (editId) await garageApi.customerPatch(editId, payload);
       else await garageApi.customerCreate(payload);
       setModal(false);

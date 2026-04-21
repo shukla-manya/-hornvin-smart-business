@@ -37,6 +37,8 @@ export function GarageHubScreen({ navigation }) {
     }, [])
   );
 
+  const go = (route) => navigation.getParent()?.navigate(route);
+
   return (
     <ScrollView
       style={styles.root}
@@ -45,8 +47,8 @@ export function GarageHubScreen({ navigation }) {
     >
       <Text style={styles.h1}>Internal tools</Text>
       <Text style={styles.sub}>
-        Bay-side work: invoices, inventory, service history, customer reminders, estimates, and call scripts. This is the green
-        half of your day — the blue half (buy / sell / chat / suppliers) lives under Marketplace.
+        Bay-side work: customers, vehicles, estimates, shop invoices, inventory with low-stock alerts, reminders, and call scripts. The
+        blue half of your day (buy / sell / suppliers) lives under Marketplace.
       </Text>
 
       {loading && !summary ? (
@@ -54,29 +56,43 @@ export function GarageHubScreen({ navigation }) {
       ) : (
         <View style={styles.grid}>
           <Tile
+            title="Customers"
+            value={summary?.customerCount ?? "—"}
+            subtitle="Phone, reminders, auto messages"
+            onPress={() => go("GarageReminders")}
+          />
+          <Tile
+            title="Vehicles"
+            value={summary?.vehicleCount ?? "—"}
+            subtitle="Plates, models, link to jobs"
+            onPress={() => go("GarageVehicles")}
+          />
+          <Tile
+            title="Work estimate"
+            value={summary?.estimateOpenCount ?? "—"}
+            subtitle="Lines + WhatsApp"
+            onPress={() => go("GarageWorkEstimate")}
+          />
+          <Tile
+            title="Shop invoices"
+            value={summary?.shopInvoiceOpenCount ?? "—"}
+            subtitle="Payment + share"
+            onPress={() => go("GarageShopInvoices")}
+          />
+          <Tile
             title="Inventory"
             value={summary?.inventoryCount ?? "—"}
-            subtitle={summary?.lowStockCount ? `${summary.lowStockCount} at/below reorder` : "Parts & consumables"}
-            onPress={() => navigation.getParent()?.navigate("GarageInventory")}
+            subtitle={summary?.lowStockCount ? `${summary.lowStockCount} low stock` : "Stock & reorder"}
+            onPress={() => go("GarageInventory")}
           />
           <Tile
             title="Service history"
             value={summary?.serviceHistoryCount ?? "—"}
-            subtitle="Bay log & vehicles"
-            onPress={() => navigation.getParent()?.navigate("GarageServiceHistory")}
+            subtitle="Bay log"
+            onPress={() => go("GarageServiceHistory")}
           />
-          <Tile
-            title="Reminders"
-            value={summary?.remindersDueSoon ?? "—"}
-            subtitle="Next 14 days"
-            onPress={() => navigation.getParent()?.navigate("GarageReminders")}
-          />
-          <Tile
-            title="Customers"
-            value={summary?.customerCount ?? "—"}
-            subtitle="CRM-lite"
-            onPress={() => navigation.getParent()?.navigate("GarageReminders")}
-          />
+          <Tile title="Due soon" value={summary?.remindersDueSoon ?? "—"} subtitle="Next 14 days" onPress={() => go("GarageReminders")} />
+          <Tile title="AI calling" value="⌁" subtitle="Batch scripts" onPress={() => go("GarageAiCalling")} />
         </View>
       )}
 
@@ -89,20 +105,10 @@ export function GarageHubScreen({ navigation }) {
       </View>
 
       <View style={[styles.card, shadows.card]}>
-        <Text style={styles.cardTitle}>More tools</Text>
-        <Pressable style={styles.row} onPress={() => navigation.getParent()?.navigate("GarageAiCalling")}>
-          <Text style={styles.rowTitle}>AI call assistant</Text>
-          <Text style={styles.rowSub}>Polished script + checklist (templates; add your LLM later)</Text>
-          <Text style={styles.chev}>›</Text>
-        </Pressable>
-        <Pressable style={styles.row} onPress={() => navigation.getParent()?.navigate("GarageWorkEstimate")}>
-          <Text style={styles.rowTitle}>Work estimation</Text>
-          <Text style={styles.rowSub}>Labor + parts + tax → total</Text>
-          <Text style={styles.chev}>›</Text>
-        </Pressable>
-        <Pressable style={styles.row} onPress={() => navigation.getParent()?.navigate("Invoices")}>
-          <Text style={styles.rowTitle}>Invoices</Text>
-          <Text style={styles.rowSub}>From B2B orders — same ledger as before</Text>
+        <Text style={styles.cardTitle}>Ledger & admin</Text>
+        <Pressable style={styles.row} onPress={() => go("Invoices")}>
+          <Text style={styles.rowTitle}>B2B invoices</Text>
+          <Text style={styles.rowSub}>From Hornvin orders — same ledger as before</Text>
           <Text style={styles.chev}>›</Text>
         </Pressable>
       </View>
