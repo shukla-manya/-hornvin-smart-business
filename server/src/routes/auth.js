@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { body, validationResult } from "express-validator";
 import { User, USER_ROLES, isUserApproved, getAccountAccessDenial } from "../models/User.js";
 import { normalizeGarageServices } from "../constants/garageServiceIds.js";
+import { RETAIL_BUSINESS_TYPES_SET, RETAIL_PHOTO_MAX_LEN } from "../constants/retailProfile.js";
 import { signToken, requireAuth } from "../middleware/auth.js";
 import {
   createAndEmailOtp,
@@ -13,6 +14,16 @@ import {
 } from "../services/otpEmail.js";
 
 export const authRouter = Router();
+
+function validateProfilePhotoValue(label, raw) {
+  const s = typeof raw === "string" ? raw.trim() : "";
+  if (!s) return { error: `${label} cannot be empty when provided.` };
+  if (s.length > RETAIL_PHOTO_MAX_LEN) return { error: `${label} is too large (max ${RETAIL_PHOTO_MAX_LEN} chars).` };
+  if (!s.startsWith("data:image/") && !s.startsWith("https://") && !s.startsWith("http://")) {
+    return { error: `${label} must be an image data URL or http(s) link.` };
+  }
+  return null;
+}
 
 export function rolePublicLabel(id) {
   if (id === "company") return "Hornvin company (Super Admin)";
@@ -507,6 +518,12 @@ authRouter.patch(
     body("upiVpa").optional().isString().trim().isLength({ max: 80 }),
     body("upiMerchantName").optional().isString().trim().isLength({ max: 80 }),
     body("garageServices").optional(),
+    body("addressLandmark").optional().isString().trim().isLength({ max: 300 }),
+    body("stateRegion").optional().isString().trim().isLength({ max: 80 }),
+    body("businessType").optional().isString().trim().isLength({ max: 40 }),
+    body("gstNumber").optional().isString().trim().isLength({ max: 20 }),
+    body("shopPhotoUrl").optional().isString(),
+    body("profilePhotoUrl").optional().isString(),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -565,6 +582,52 @@ authRouter.patch(
     if (req.body.upiMerchantName !== undefined) {
       const v = typeof req.body.upiMerchantName === "string" ? req.body.upiMerchantName.trim() : "";
       req.user.upiMerchantName = v.slice(0, 80);
+    }
+    if (retailLike) {
+      if (req.body.addressLandmark !== undefined) {
+        const v = typeof req.body.addressLandmark === "string" ? req.body.addressLandmark.trim() : "";
+        req.user.addressLandmark = v.slice(0, 300);
+      }
+      if (req.body.stateRegion !== undefined) {
+        const v = typeof req.body.stateRegion === "string" ? req.body.stateRegion.trim() : "";
+        req.user.stateRegion = v.slice(0, 80);
+      }
+      if (req.body.businessType !== undefined) {
+        const v = typeof req.body.businessType === "string" ? req.body.businessType.trim() : "";
+        if (v && !RETAIL_BUSINESS_TYPES_SET.has(v)) {
+          return res.status(400).json({
+            code: "INVALID_RETAIL_BUSINESS_TYPE",
+            error: `businessType must be one of: ${[...RETAIL_BUSINESS_TYPES_SET].join(", ")}`,
+          });
+        }
+        req.user.businessType = v.slice(0, 40);
+      }
+      if (req.body.gstNumber !== undefined) {
+        const v = typeof req.body.gstNumber === "string" ? req.body.gstNumber.trim().toUpperCase() : "";
+        req.user.gstNumber = v.slice(0, 20);
+      }
+      if (req.body.shopPhotoUrl !== undefined) {
+        const err = validateProfilePhotoValue("Shop photo", req.body.shopPhotoUrl);
+        if (err) return res.status(400).json({ error: err.error, code: "PROFILE_SHOP_PHOTO" });
+        req.user.shopPhotoUrl = String(req.body.shopPhotoUrl).trim().slice(0, RETAIL_PHOTO_MAX_LEN);
+      }
+      if (req.body.profilePhotoUrl !== undefined) {
+        const err = validateProfilePhotoValue("Profile photo", req.body.profilePhotoUrl);
+        if (err) return res.status(400).json({ error: err.error, code: "PROFILE_SELF_PHOTO" });
+        req.user.profilePhotoUrl = String(req.body.profilePhotoUrl).trim().slice(0, RETAIL_PHOTO_MAX_LEN);
+      }
+    } else if (
+      req.body.addressLandmark !== undefined ||
+      req.body.stateRegion !== undefined ||
+      req.body.businessType !== undefined ||
+      req.body.gstNumber !== undefined ||
+      req.body.shopPhotoUrl !== undefined ||
+      req.body.profilePhotoUrl !== undefined
+    ) {
+      return res.status(400).json({
+        code: "PROFILE_RETAIL_FIELDS_ONLY",
+        error: "Landmark, state, business type, GST, and shop photos apply only to garage (retail) accounts.",
+      });
     }
     await req.user.save();
     return res.json({ user: req.user.toSafeJSON() });

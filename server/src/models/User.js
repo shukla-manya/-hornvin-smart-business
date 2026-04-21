@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+import { RETAIL_BUSINESS_TYPES_SET } from "../constants/retailProfile.js";
 
 const ROLES = ["company", "distributor", "retail", "end_user"];
 export const USER_STATUS = ["pending", "approved", "rejected", "suspended", "blocked"];
@@ -13,6 +14,17 @@ const userSchema = new mongoose.Schema(
     name: { type: String, trim: true },
     businessName: { type: String, trim: true },
     address: { type: String, trim: true },
+    /** Retail: landmark near shop (mandatory onboarding). */
+    addressLandmark: { type: String, trim: true, default: "" },
+    /** Retail: state / region label (mandatory onboarding). */
+    stateRegion: { type: String, trim: true, default: "" },
+    /** Retail: shop model — see `server/src/constants/retailProfile.js`. */
+    businessType: { type: String, trim: true, default: "" },
+    gstNumber: { type: String, trim: true, default: "" },
+    /** Data URL or https — shop front / bay photo. */
+    shopPhotoUrl: { type: String, default: "" },
+    /** Data URL or https — owner / contact face photo. */
+    profilePhotoUrl: { type: String, default: "" },
     /** UPI VPA for receiving payments (shown as QR in app). */
     upiVpa: { type: String, trim: true, default: "" },
     /** Shown in UPI intent / QR payee name. */
@@ -118,6 +130,12 @@ userSchema.methods.toSafeJSON = function toSafeJSON() {
     upiMerchantName: this.upiMerchantName || "",
     rewardPoints: this.rewardPoints ?? 0,
     distributorRegion: this.distributorRegion || "",
+    addressLandmark: this.addressLandmark || "",
+    stateRegion: this.stateRegion || "",
+    businessType: this.businessType || "",
+    gstNumber: this.gstNumber || "",
+    shopPhotoUrl: this.shopPhotoUrl || "",
+    profilePhotoUrl: this.profilePhotoUrl || "",
   };
 };
 
@@ -131,6 +149,12 @@ export function isUserApproved(userDoc) {
   return s === "approved";
 }
 
+function retailPhotoOk(s) {
+  const t = typeof s === "string" ? s.trim() : "";
+  if (t.length < 24) return false;
+  return t.startsWith("data:image/") || t.startsWith("https://") || t.startsWith("http://");
+}
+
 /** First-login / empty-name accounts must finish profile in the app before full access. */
 export function computeNeedsProfileSetup(userDoc) {
   const n = userDoc?.name;
@@ -138,6 +162,15 @@ export function computeNeedsProfileSetup(userDoc) {
   if (userDoc?.role === "retail") {
     const b = userDoc?.businessName;
     if (!(b && String(b).trim())) return true;
+    const addr = userDoc?.address;
+    if (!(addr && String(addr).trim())) return true;
+    const lm = userDoc?.addressLandmark;
+    if (!(lm && String(lm).trim())) return true;
+    const st = userDoc?.stateRegion;
+    if (!(st && String(st).trim())) return true;
+    const bt = userDoc?.businessType;
+    if (!bt || !RETAIL_BUSINESS_TYPES_SET.has(String(bt))) return true;
+    if (!retailPhotoOk(userDoc?.shopPhotoUrl) || !retailPhotoOk(userDoc?.profilePhotoUrl)) return true;
   }
   return false;
 }
