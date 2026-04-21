@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Pressable, Alert, Platform, FlatList, Dimensions } from "react-native";
+import { useRoute } from "@react-navigation/native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import * as Location from "expo-location";
 import { dealerLocatorApi, authApi } from "../api/resources";
@@ -17,8 +18,10 @@ const ROLE_OPTIONS = [
 ];
 
 export function DealerMapScreen() {
+  const route = useRoute();
   const { user } = useAuth();
-  const [dealerRole, setDealerRole] = useState("distributor");
+  const initialRole = route.params?.initialRole === "retail" ? "retail" : "distributor";
+  const [dealerRole, setDealerRole] = useState(initialRole);
   const [region, setRegion] = useState({
     latitude: 28.6139,
     longitude: 77.209,
@@ -58,8 +61,10 @@ export function DealerMapScreen() {
   };
 
   useEffect(() => {
-    locate("distributor");
-  }, []);
+    const r = route.params?.initialRole === "retail" ? "retail" : "distributor";
+    setDealerRole(r);
+    locate(r);
+  }, [route.params?.initialRole]);
 
   const directionsTo = (dealer) => {
     const coords = dealer.location?.coordinates;

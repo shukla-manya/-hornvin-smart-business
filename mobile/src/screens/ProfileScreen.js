@@ -49,6 +49,15 @@ export function ProfileScreen({ navigation }) {
           upiMerchantName: upiNameDraft.trim(),
         });
         Alert.alert("Saved", "Your profile was updated.");
+      } else if (user?.role === "retail" || user?.role === "distributor") {
+        await updateProfile({
+          name: nameDraft.trim(),
+          businessName: businessDraft.trim(),
+          address: addressDraft.trim(),
+          upiVpa: upiVpaDraft.trim(),
+          upiMerchantName: upiNameDraft.trim(),
+        });
+        Alert.alert("Saved", "Your profile was updated.");
       } else {
         await updateProfile({
           name: nameDraft.trim(),
@@ -62,7 +71,7 @@ export function ProfileScreen({ navigation }) {
     } finally {
       setSavingName(false);
     }
-  }, [companyProfile, nameDraft, businessDraft, addressDraft, upiVpaDraft, upiNameDraft, updateProfile]);
+  }, [companyProfile, user?.role, nameDraft, businessDraft, addressDraft, upiVpaDraft, upiNameDraft, updateProfile]);
 
   const onLogout = () => {
     Alert.alert("Logout", "End this session?", [
@@ -125,7 +134,9 @@ export function ProfileScreen({ navigation }) {
         <Text style={styles.sectionHint}>
           {companyProfile
             ? "Name, business, address, and UPI details (email and phone stay read-only)."
-            : "Display name and UPI for payment QR (email and phone are read-only)."}
+            : showBusinessForm
+              ? "Name, business, address, and UPI (email and phone stay read-only)."
+              : "Display name and UPI for payment QR (email and phone are read-only)."}
         </Text>
         <TextInput
           value={nameDraft}
@@ -135,12 +146,12 @@ export function ProfileScreen({ navigation }) {
           style={styles.nameInput}
           editable={!savingName}
         />
-        {companyProfile ? (
+        {showBusinessForm ? (
           <>
             <TextInput
               value={businessDraft}
               onChangeText={setBusinessDraft}
-              placeholder="Business name"
+              placeholder={user?.role === "distributor" ? "Branch / business name" : "Business or shop name"}
               placeholderTextColor={colors.textSecondary}
               style={styles.nameInput}
               editable={!savingName}
@@ -181,10 +192,10 @@ export function ProfileScreen({ navigation }) {
             <Text style={styles.saveNameBtnText}>Save profile</Text>
           )}
         </Pressable>
-        {!companyProfile ? <Row label="Business" value={user?.businessName || "—"} /> : null}
+        {!showBusinessForm ? <Row label="Business" value={user?.businessName || "—"} /> : null}
         <Row label="Email" value={user?.email || "—"} />
-        <Row label="Phone" value={user?.phone || "—"} isLast={companyProfile} />
-        {!companyProfile ? <Row label="Address" value={user?.address || "—"} isLast /> : null}
+        <Row label="Phone" value={user?.phone || "—"} isLast={companyProfile || showBusinessForm} />
+        {!showBusinessForm ? <Row label="Address" value={user?.address || "—"} isLast /> : null}
       </View>
       <Pressable
         onPress={() => navigation.getParent()?.getParent()?.navigate("ChangePassword")}
