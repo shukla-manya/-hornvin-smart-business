@@ -72,8 +72,8 @@ paymentsRouter.post(
     });
 
     const populated = await Payment.findById(payment._id)
-      .populate("payerId", "name businessName phone email role")
-      .populate("payeeId", "name businessName phone email role")
+      .populate("payerId", "name businessName phone email role upiVpa upiMerchantName")
+      .populate("payeeId", "name businessName phone email role upiVpa upiMerchantName")
       .populate("orderId")
       .populate("invoiceId");
 
@@ -118,8 +118,8 @@ paymentsRouter.patch(
     }
 
     const populated = await Payment.findById(payment._id)
-      .populate("payerId", "name businessName phone email role")
-      .populate("payeeId", "name businessName phone email role")
+      .populate("payerId", "name businessName phone email role upiVpa upiMerchantName")
+      .populate("payeeId", "name businessName phone email role upiVpa upiMerchantName")
       .populate("orderId")
       .populate("invoiceId");
 
