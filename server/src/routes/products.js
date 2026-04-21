@@ -13,6 +13,7 @@ export function buildProductListFilter(query) {
   const category = query.category;
   const companyId = query.companyId;
   const sellerId = query.sellerId;
+  const listingType = query.listingType;
   const q = query.q;
 
   const scoped = Boolean(sellerId || companyId);
@@ -20,6 +21,7 @@ export function buildProductListFilter(query) {
   if (category) parts.push({ category });
   if (companyId) parts.push({ companyId });
   if (sellerId) parts.push({ sellerId });
+  if (listingType) parts.push({ listingType });
   if (q) parts.push({ $text: { $search: String(q) } });
 
   if (scoped) {
@@ -29,11 +31,13 @@ export function buildProductListFilter(query) {
 
   const globalParts = [{ isGlobalCatalog: true }];
   if (category) globalParts.push({ category });
+  if (listingType) globalParts.push({ listingType });
   if (q) globalParts.push({ $text: { $search: String(q) } });
   const globalFilter = globalParts.length === 1 ? globalParts[0] : { $and: globalParts };
 
   const restParts = [{ isGlobalCatalog: { $ne: true } }];
   if (category) restParts.push({ category });
+  if (listingType) restParts.push({ listingType });
   if (q) restParts.push({ $text: { $search: String(q) } });
   const restFilter = restParts.length === 1 ? restParts[0] : { $and: restParts };
 
@@ -52,6 +56,7 @@ productsRouter.get(
     query("category").optional().isString(),
     query("companyId").optional().isMongoId(),
     query("sellerId").optional().isMongoId(),
+    query("listingType").optional().isIn(["spare_part", "vehicle", "other"]),
   ],
   async (req, res) => {
     const errors = validationResult(req);
