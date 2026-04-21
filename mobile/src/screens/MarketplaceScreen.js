@@ -45,9 +45,18 @@ export function MarketplaceScreen({ navigation }) {
     }, [load])
   );
 
-  const openDealerMap = () => navigation.getParent()?.getParent()?.navigate("DealerMap");
-  const goOrders = () => navigation.navigate("OrdersTab");
-  const goChat = () => navigation.navigate("ChatTab");
+  const rootNav = navigation.getParent()?.getParent();
+  const goMainTab = (tabName) => {
+    const parent = navigation.getParent();
+    if (!parent) return;
+    const names = parent.getState?.()?.routeNames;
+    if (names?.includes(tabName)) parent.navigate(tabName);
+    else rootNav?.navigate("Main", { screen: tabName });
+  };
+  const openDealerMap = () => rootNav?.navigate("DealerMap");
+  const goOrders = () => goMainTab("OrdersTab");
+  const goChat = () => goMainTab("ChatTab");
+  const goReminders = () => goMainTab("NotificationsTab");
 
   return (
     <View style={styles.root}>
@@ -81,9 +90,22 @@ export function MarketplaceScreen({ navigation }) {
           <>
             {user?.role === "end_user" ? (
               <View style={[styles.endUserCard, shadows.card]}>
-                <Text style={styles.endUserTitle}>Welcome{user?.name ? `, ${user.name}` : ""}</Text>
-                <Text style={styles.endUserLine}>Browse the marketplace here; use Orders for purchases and Chat for seller threads.</Text>
-                <Text style={styles.endUserLine}>Open Profile → Dealer locator for the map view.</Text>
+                <Text style={styles.endUserTitle}>Optional shopping</Text>
+                <Text style={styles.endUserLine}>
+                  Your main app is Service (orders), Pay, and Reminders on the bottom tabs. Use this screen only when you need to
+                  find parts or message a seller from a product.
+                </Text>
+                <View style={styles.shortcutRow}>
+                  <Pressable style={styles.shortcut} onPress={goOrders}>
+                    <Text style={styles.shortcutTxt}>Service</Text>
+                  </Pressable>
+                  <Pressable style={styles.shortcut} onPress={() => rootNav?.navigate("Payments")}>
+                    <Text style={styles.shortcutTxt}>Pay</Text>
+                  </Pressable>
+                  <Pressable style={styles.shortcut} onPress={goReminders}>
+                    <Text style={styles.shortcutTxt}>Reminders</Text>
+                  </Pressable>
+                </View>
               </View>
             ) : null}
             {user?.role && SUPPLY_ROLES.has(user.role) ? (

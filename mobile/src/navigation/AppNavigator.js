@@ -106,6 +106,10 @@ const TAB_REGISTRY = {
     component: OrdersScreen,
     options: { title: "Orders", tabBarIcon: () => <Text style={{ color: colors.header, fontSize: 16 }}>▣</Text> },
   },
+  NotificationsTab: {
+    component: NotificationsScreen,
+    options: { title: "Reminders", tabBarIcon: () => <Text style={{ color: colors.header, fontSize: 15 }}>⏰</Text> },
+  },
   ProfileTab: {
     component: ProfileScreen,
     options: { title: "Profile", tabBarIcon: () => <Text style={{ color: colors.header, fontSize: 16 }}>◎</Text> },
@@ -144,9 +148,13 @@ function MainTabs() {
         const merged =
           name === "ExploreTab"
             ? { ...base, title: marketplaceTitle, tabBarLabel: marketplaceTitle }
-            : name === "OrdersTab" && user?.role && user.role !== "end_user"
-              ? { ...base, tabBarLabel: "Orders" }
-              : base;
+            : name === "OrdersTab" && user?.role === "end_user"
+              ? { ...base, title: "Service", tabBarLabel: "Service" }
+              : name === "OrdersTab" && user?.role && user.role !== "end_user"
+                ? { ...base, tabBarLabel: "Orders" }
+                : name === "NotificationsTab"
+                  ? { ...base, title: "Reminders", tabBarLabel: "Reminders" }
+                  : base;
         return <Tabs.Screen key={name} name={name} component={TAB_REGISTRY[name].component} options={merged} />;
       })}
     </Tabs.Navigator>
@@ -169,6 +177,7 @@ export function AppNavigator() {
         <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} options={{ headerShown: false }} />
         <Stack.Screen name="LoginRegister" component={LoginRegisterScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
+        <Stack.Screen name="MarketplaceBrowse" component={MarketplaceScreen} options={{ title: "Browse parts" }} />
         <Stack.Screen name="ProductDetail" component={ProductDetailScreen} options={{ title: "Product" }} />
         <Stack.Screen name="PostProduct" component={GuardedPostProduct} options={{ title: "New product" }} />
         <Stack.Screen name="ChatRoom" component={ChatRoomScreen} options={{ title: "Chat" }} />

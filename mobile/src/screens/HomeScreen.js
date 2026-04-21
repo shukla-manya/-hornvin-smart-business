@@ -28,7 +28,9 @@ export function HomeScreen({ navigation }) {
         ? "Distributor — buy from company, sell to garages"
         : role === "retail"
           ? "Your garage — primary workspace"
-          : "Discover products & nearby dealers";
+          : role === "end_user"
+            ? "Your service, payments, and reminders"
+            : "Discover products & nearby dealers";
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={{ paddingBottom: 32 }}>
@@ -36,14 +38,17 @@ export function HomeScreen({ navigation }) {
       <Text style={styles.sub}>{headline}</Text>
 
       {role === "end_user" ? (
-        <View style={[styles.card, shadows.card, { marginBottom: 12 }]}>
-          <Text style={styles.cardTitle}>End user panel</Text>
+        <View style={[styles.card, shadows.card, styles.primaryCard, { marginBottom: 12 }]}>
+          <Text style={styles.primaryBadge}>END CUSTOMER · LIGHT ROLE</Text>
+          <Text style={styles.cardTitle}>What you use here</Text>
           <View style={styles.panelBody}>
-          <Text style={styles.panelLine}>Browse the marketplace (Explore)</Text>
-          <Text style={styles.panelLine}>Find dealers nearby (Dealer locator)</Text>
-          <Text style={styles.panelLine}>Chat with sellers or shops</Text>
-          <Text style={styles.panelLine}>Send an inquiry from any product — “Message seller (inquiry)”</Text>
-        </View>
+            <Text style={styles.panelStrong}>Receive service</Text>
+            <Text style={styles.panelLine}>Completed work and purchases show under the Service tab (your orders).</Text>
+            <Text style={styles.panelStrong}>Pay</Text>
+            <Text style={styles.panelLine}>Record or review what you owe from Profile → Payments, linked to orders when your shop uses them.</Text>
+            <Text style={styles.panelStrong}>Get reminders</Text>
+            <Text style={styles.panelLine}>Turn on push in Reminders; in-app feed lists service and payment alerts from Hornvin.</Text>
+          </View>
         </View>
       ) : null}
 
@@ -103,56 +108,74 @@ export function HomeScreen({ navigation }) {
         </View>
       ) : null}
 
-      <View style={[styles.card, shadows.card]}>
-        <Text style={styles.cardTitle}>Dashboard</Text>
-        <Action
-          title={role === "end_user" ? "Explore products" : "Marketplace listings"}
-          subtitle={role === "end_user" ? "Search, categories, seller info" : "Supply chain catalog + distributor & garage SKUs"}
-          onPress={() => navigation.navigate("ExploreTab")}
-        />
-        <Action title="Orders" subtitle="Track pending → completed" onPress={() => navigation.navigate("OrdersTab")} />
-        <Action
-          title="Chat"
-          subtitle={role === "retail" ? "Suppliers, distributor, buyers" : "Message threads"}
-          onPress={() => navigation.navigate("ChatTab")}
-        />
-        <Action
-          title="Dealer locator"
-          subtitle={role === "retail" ? "Find suppliers & nearby partners" : "Map and nearby dealers"}
-          onPress={() => openStack("DealerMap")}
-        />
-        {(role === "company" || role === "distributor" || role === "retail") && (
-          <Action title="Invoices" subtitle="Create from orders, mark paid" onPress={() => openStack("Invoices")} />
-        )}
-        {(role === "company" || role === "distributor" || role === "retail") && (
+      {role === "end_user" ? (
+        <View style={[styles.card, shadows.card]}>
+          <Text style={styles.cardTitle}>Shortcuts</Text>
           <Action
-            title="Post product"
-            subtitle={role === "retail" ? "Sell parts & labour SKUs on the marketplace" : "List catalog items"}
-            onPress={() => openStack("PostProduct")}
+            title="Service"
+            subtitle="Orders and completed service from your shop or marketplace"
+            onPress={() => navigation.navigate("OrdersTab")}
           />
-        )}
-        {role === "distributor" && (
+          <Action title="Pay" subtitle="Payments you make or track" onPress={() => openStack("Payments")} />
+          <Action title="Reminders" subtitle="Push setup and alert feed" onPress={() => navigation.navigate("NotificationsTab")} />
           <Action
-            title="Distributor panel"
-            subtitle="Company catalog, retailers, stock orders"
-            onPress={() => openStack("DistributorWorkspace")}
+            title="Browse parts (optional)"
+            subtitle="Only when you need to shop — not the main focus"
+            onPress={() => openStack("MarketplaceBrowse")}
           />
-        )}
-        {role === "retail" ? (
+        </View>
+      ) : (
+        <View style={[styles.card, shadows.card]}>
+          <Text style={styles.cardTitle}>Dashboard</Text>
           <Action
-            title="Garage operations"
-            subtitle="Inventory · service log · reminders · AI calls · estimates"
-            onPress={() => navigation.navigate("GarageTab")}
+            title="Marketplace listings"
+            subtitle="Supply chain catalog + distributor & garage SKUs"
+            onPress={() => navigation.navigate("ExploreTab")}
           />
-        ) : null}
-        {role === "retail" && user?.companyId ? (
+          <Action title="Orders" subtitle="Track pending → completed" onPress={() => navigation.navigate("OrdersTab")} />
           <Action
-            title="Company catalog"
-            subtitle="Buy stock from your linked company (upstream)"
-            onPress={() => openStack("CompanyCatalog")}
+            title="Chat"
+            subtitle={role === "retail" ? "Suppliers, distributor, buyers" : "Message threads"}
+            onPress={() => navigation.navigate("ChatTab")}
           />
-        ) : null}
-      </View>
+          <Action
+            title="Dealer locator"
+            subtitle={role === "retail" ? "Find suppliers & nearby partners" : "Map and nearby dealers"}
+            onPress={() => openStack("DealerMap")}
+          />
+          {(role === "company" || role === "distributor" || role === "retail") && (
+            <Action title="Invoices" subtitle="Create from orders, mark paid" onPress={() => openStack("Invoices")} />
+          )}
+          {(role === "company" || role === "distributor" || role === "retail") && (
+            <Action
+              title="Post product"
+              subtitle={role === "retail" ? "Sell parts & labour SKUs on the marketplace" : "List catalog items"}
+              onPress={() => openStack("PostProduct")}
+            />
+          )}
+          {role === "distributor" && (
+            <Action
+              title="Distributor panel"
+              subtitle="Company catalog, retailers, stock orders"
+              onPress={() => openStack("DistributorWorkspace")}
+            />
+          )}
+          {role === "retail" ? (
+            <Action
+              title="Garage operations"
+              subtitle="Inventory · service log · reminders · AI calls · estimates"
+              onPress={() => navigation.navigate("GarageTab")}
+            />
+          ) : null}
+          {role === "retail" && user?.companyId ? (
+            <Action
+              title="Company catalog"
+              subtitle="Buy stock from your linked company (upstream)"
+              onPress={() => openStack("CompanyCatalog")}
+            />
+          ) : null}
+        </View>
+      )}
 
       <View style={[styles.card, shadows.card]}>
         <Text style={styles.cardTitle}>Role</Text>
@@ -160,8 +183,9 @@ export function HomeScreen({ navigation }) {
           <Text style={styles.rolePillText}>{role?.replace("_", " ")}</Text>
         </View>
         <Text style={styles.hint}>
-          Chain: Hornvin company (Super Admin) → distributor → garage (retail) → end customer. Distributors are created only by
-          the Super Admin; distributors create garage accounts. Pending self-signups are approved only in the Super Admin panel.
+          {role === "end_user"
+            ? "End customer accounts stay light: service history in orders, payments, and reminders. Your garage or marketplace seller may invite you to chat from a product page when needed."
+            : "Chain: Hornvin company (Super Admin) → distributor → garage (retail) → end customer. Distributors are created only by the Super Admin; distributors create garage accounts. Pending self-signups are approved only in the Super Admin panel."}
         </Text>
       </View>
       <FooterCredit />
