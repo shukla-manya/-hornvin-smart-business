@@ -8,7 +8,7 @@ import { createAndEmailOtp, verifyOtpCode, allowOtpRequest } from "../services/o
 export const authRouter = Router();
 
 export function rolePublicLabel(id) {
-  if (id === "company") return "Company";
+  if (id === "company") return "Hornvin company (Super Admin)";
   if (id === "distributor") return "Distributor";
   if (id === "retail") return "Retail / Garage";
   if (id === "end_user") return "End user";
@@ -25,6 +25,8 @@ export function computeRegisterableRoleIds() {
   const allowedList = csv ? csv.split(",").map((s) => s.trim()).filter(Boolean) : null;
 
   return USER_ROLES.filter((role) => {
+    /** Sole root: `company` is never generic self-serve; `/roles` may inject it when bootstrap + no root yet. */
+    if (role === "company") return false;
     if (role === "distributor" && !downstream) return false;
     if (allowedList && allowedList.length > 0 && !allowedList.includes(role)) return false;
     return true;

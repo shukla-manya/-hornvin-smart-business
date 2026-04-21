@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema(
     },
     companyId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     distributorId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    /** Exactly one logical platform owner; set via bootstrap env or future admin API. */
+    /** True only for the single Hornvin `company` root (same account as Super Admin). */
     isPlatformOwner: { type: Boolean, default: false },
     /** Controlled onboarding + Super Admin moderation. */
     status: { type: String, enum: USER_STATUS, default: "pending" },
@@ -44,6 +44,11 @@ const userSchema = new mongoose.Schema(
 
 userSchema.index({ location: "2dsphere" });
 userSchema.index({ createdBy: 1 });
+/** At most one platform owner document (company = Super Admin). */
+userSchema.index(
+  { isPlatformOwner: 1 },
+  { unique: true, partialFilterExpression: { isPlatformOwner: true } }
+);
 
 userSchema.methods.comparePassword = function comparePassword(plain) {
   return bcrypt.compare(plain, this.passwordHash);
