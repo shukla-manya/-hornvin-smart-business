@@ -6,9 +6,11 @@ import { Product } from "../models/Product.js";
 import { Order } from "../models/Order.js";
 import { Payment } from "../models/Payment.js";
 import { Category } from "../models/Category.js";
+import { Coupon } from "../models/Coupon.js";
 import { requireAuth } from "../middleware/auth.js";
 import { requirePlatformOwner } from "../middleware/platformOwner.js";
 import { maybeNotifyStockLowAfterDecrease } from "../services/pushNotify.js";
+import { sendPushToUsers } from "../services/pushNotify.js";
 import { emailTemporaryCredentials } from "../services/onboardingMail.js";
 
 /**
@@ -35,6 +37,8 @@ adminRouter.get("/platform", (_req, res) => {
       { id: "garages", label: "All garages (retail) & user moderation", paths: ["/admin/users", "/admin/users/retail"] },
       { id: "commerce", label: "All orders & payments", paths: ["/admin/orders", "/admin/payments"] },
       { id: "analytics", label: "Platform analytics", paths: ["/admin/analytics/summary"] },
+      { id: "coupons", label: "Coupons & rewards", paths: ["/admin/coupons"] },
+      { id: "push", label: "Push broadcasts", paths: ["/admin/push/broadcast"] },
     ],
   });
 });
