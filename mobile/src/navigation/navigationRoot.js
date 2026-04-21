@@ -27,6 +27,14 @@ export function resetToRoleSelection() {
   });
 }
 
+export function resetToLoginRegister(params) {
+  dispatchWhenReady(() => {
+    navigationRef.dispatch(
+      CommonActions.reset({ index: 0, routes: [{ name: "LoginRegister", params: params || undefined }] })
+    );
+  });
+}
+
 export function resetToForcePasswordChange() {
   dispatchWhenReady(() => {
     navigationRef.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "ForcePasswordChange" }] }));

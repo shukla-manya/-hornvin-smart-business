@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, StyleSheet, Pressable, Alert, TextInput, ActivityIndicator } from "react-native";
 import { useAuth } from "../context/AuthContext";
-import { resetToRoleSelection } from "../navigation/navigationRoot";
+import { resetToLoginRegister } from "../navigation/navigationRoot";
 import { profileQuickLinkRoutes } from "../navigation/roleUi";
 import { FooterCredit } from "../components/FooterCredit";
 import { colors, shadows } from "../theme";
@@ -54,7 +54,7 @@ export function ProfileScreen({ navigation }) {
         style: "destructive",
         onPress: async () => {
           await logout();
-          resetToRoleSelection();
+          resetToLoginRegister();
         },
       },
     ]);

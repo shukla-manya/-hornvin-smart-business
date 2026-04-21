@@ -48,9 +48,16 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = useCallback(
-    async ({ email, phone, password, otpCode }) => {
-      const { data } = await authApi.login({ email, phone, password, otpCode });
-      if (data.needsOtp) return { needsOtp: true, message: data.message };
+    async ({ email, phone, password, otpCode, emailOtp, phoneOtp }) => {
+      const { data } = await authApi.login({
+        email,
+        phone,
+        password,
+        otpCode,
+        emailOtp: emailOtp ?? otpCode,
+        phoneOtp,
+      });
+      if (data.needsOtp) return { needsOtp: true, message: data.message, needsPhoneOtp: !!data.needsPhoneOtp };
       await persist(data.token, data.user);
       return {
         needsOtp: false,

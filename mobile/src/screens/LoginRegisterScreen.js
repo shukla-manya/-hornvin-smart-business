@@ -18,29 +18,21 @@ import { AppLogo } from "../components/AppLogo";
 import { FooterCredit } from "../components/FooterCredit";
 import { colors, radii } from "../theme";
 import { APP_ROLES, roleLabel } from "../constants/roles";
-import { resetToMain, resetToForcePasswordChange } from "../navigation/navigationRoot";
+import { resetAfterOnboarding } from "../navigation/navigationRoot";
 import { useRegisterableRoles } from "../hooks/useRegisterableRoles";
 
 export function LoginRegisterScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { registerableRoles } = useRegisterableRoles();
-  const {
-    login,
-    register,
-    verifyRegisterEmail,
-    resendRegisterEmailCode,
-    requestLoginOtpEmail,
-    verifyLoginOtpEmail,
-    forgotPasswordRequest,
-    forgotPasswordReset,
-  } = useAuth();
+  const { login, register, verifyRegisterEmail, resendRegisterEmailCode, forgotPasswordRequest, forgotPasswordReset } =
+    useAuth();
   const [mode, setMode] = useState("login");
-  const [loginChannel, setLoginChannel] = useState("password");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [loginOtp, setLoginOtp] = useState("");
+  const [loginEmailOtp, setLoginEmailOtp] = useState("");
+  const [loginPhoneOtp, setLoginPhoneOtp] = useState("");
   const [awaitingLoginOtp, setAwaitingLoginOtp] = useState(false);
   const [awaitingRegisterVerify, setAwaitingRegisterVerify] = useState(false);
   const [registerEmailOtp, setRegisterEmailOtp] = useState("");
@@ -92,10 +84,10 @@ export function LoginRegisterScreen() {
         }
         setBusy(true);
         try {
-          await verifyRegisterEmail(email, registerEmailOtp);
+          const vData = await verifyRegisterEmail(email, registerEmailOtp);
           setAwaitingRegisterVerify(false);
           setRegisterEmailOtp("");
-          resetToMain();
+          resetAfterOnboarding(vData.user);
         } catch (e) {
           Alert.alert("Auth", e.response?.data?.error || e.message);
         } finally {
@@ -135,7 +127,7 @@ export function LoginRegisterScreen() {
           );
           return;
         }
-        resetToMain();
+        if (data?.token && data?.user) resetAfterOnboarding(data.user);
       } catch (e) {
         const code = e.response?.data?.code;
         const msg = e.response?.data?.error || e.message;
@@ -153,48 +145,6 @@ export function LoginRegisterScreen() {
       return;
     }
 
-    if (loginChannel === "emailOtp") {
-      if (!email.trim()) {
-        Alert.alert("Email", "Enter your email.");
-        return;
-      }
-      if (!loginOtp.trim()) {
-        setBusy(true);
-        try {
-          await requestLoginOtpEmail(email);
-          Alert.alert("Check email", "We sent a 6-digit code to your inbox.");
-        } catch (e) {
-          Alert.alert("Auth", e.response?.data?.error || e.message);
-        } finally {
-          setBusy(false);
-        }
-        return;
-      }
-      setBusy(true);
-      try {
-        const otpRes = await verifyLoginOtpEmail(email, loginOtp);
-        if (otpRes?.mustChangePassword) resetToForcePasswordChange();
-        else resetToMain();
-      } catch (e) {
-        const code = e.response?.data?.code;
-        Alert.alert(
-          code === "ACCOUNT_PENDING"
-            ? "Pending approval"
-            : code === "EMAIL_NOT_VERIFIED"
-              ? "Verify email"
-              : code === "ACCOUNT_SUSPENDED"
-                ? "Account suspended"
-                : code === "ACCOUNT_BLOCKED"
-                  ? "Account blocked"
-                  : "Auth",
-          e.response?.data?.error || e.message
-        );
-      } finally {
-        setBusy(false);
-      }
-      return;
-    }
-
     if (!password || password.length < 6) {
       Alert.alert("Password", "Use at least 6 characters.");
       return;
@@ -203,8 +153,8 @@ export function LoginRegisterScreen() {
       Alert.alert("Contact", "Enter email or phone.");
       return;
     }
-    if (email.trim() && awaitingLoginOtp && !loginOtp.trim()) {
-      Alert.alert("Code", "Enter the code from your email.");
+    if (email.trim() && awaitingLoginOtp && (!loginEmailOtp.trim() || !loginPhoneOtp.trim())) {
+      Alert.alert("Codes", "Enter both the email code and the phone code (phone code is also printed in the API server terminal).");
       return;
     }
     setBusy(true);
@@ -213,15 +163,19 @@ export function LoginRegisterScreen() {
         email: email.trim() || undefined,
         phone: phone || undefined,
         password,
-        otpCode: email.trim() && awaitingLoginOtp ? loginOtp.trim() : undefined,
+        emailOtp: email.trim() && awaitingLoginOtp ? loginEmailOtp.trim() : undefined,
+        phoneOtp: email.trim() && awaitingLoginOtp ? loginPhoneOtp.trim() : undefined,
       });
       if (r?.needsOtp) {
         setAwaitingLoginOtp(true);
-        Alert.alert("Check email", r.message || "Enter the code we sent, then tap Continue again.");
-      } else if (r?.mustChangePassword) {
-        resetToForcePasswordChange();
-      } else {
-        resetToMain();
+        setLoginEmailOtp("");
+        setLoginPhoneOtp("");
+        Alert.alert(
+          "Check email & phone",
+          r.message || "Two codes were sent: one to your email and one for your phone (see API terminal for the phone code)."
+        );
+      } else if (r?.user) {
+        resetAfterOnboarding(r.user);
       }
     } catch (e) {
       const code = e.response?.data?.code;
@@ -252,11 +206,8 @@ export function LoginRegisterScreen() {
         <Text style={styles.tag}>Home · Explore · Chat · Orders · Dealers</Text>
       </LinearGradient>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" style={styles.scrollView}>
-        <Pressable
-          onPress={() => navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "RoleSelection" }] }))}
-          style={styles.backLink}
-        >
-          <Text style={styles.backLinkText}>← Role selection</Text>
+        <Pressable onPress={() => navigation.navigate("RoleSelection")} style={styles.backLink}>
+          <Text style={styles.backLinkText}>Choosing an account type? See role options</Text>
         </Pressable>
 
         <View style={styles.toggleRow}>
@@ -264,7 +215,8 @@ export function LoginRegisterScreen() {
             onPress={() => {
               setMode("login");
               setAwaitingLoginOtp(false);
-              setLoginOtp("");
+              setLoginEmailOtp("");
+              setLoginPhoneOtp("");
               setAwaitingRegisterVerify(false);
               setRegisterEmailOtp("");
             }}
@@ -284,33 +236,6 @@ export function LoginRegisterScreen() {
             <Text style={[styles.toggleText, mode === "register" && styles.toggleTextOn]}>Register</Text>
           </Pressable>
         </View>
-
-        {mode === "login" && (
-          <View style={styles.channelRow}>
-            <Pressable
-              onPress={() => {
-                setLoginChannel("password");
-                setAwaitingLoginOtp(false);
-                setLoginOtp("");
-              }}
-              style={[styles.chip, loginChannel === "password" && styles.chipOn]}
-            >
-              <Text style={[styles.chipTxt, loginChannel === "password" && styles.chipTxtOn]}>
-                Password + email OTP
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                setLoginChannel("emailOtp");
-                setAwaitingLoginOtp(false);
-                setLoginOtp("");
-              }}
-              style={[styles.chip, loginChannel === "emailOtp" && styles.chipOn]}
-            >
-              <Text style={[styles.chipTxt, loginChannel === "emailOtp" && styles.chipTxtOn]}>Email OTP only</Text>
-            </Pressable>
-          </View>
-        )}
 
         {mode === "register" && (
           <>
