@@ -316,6 +316,7 @@ test("retail self-register is always pending without token", async () => {
     password: "secret12",
     role: "retail",
     name: "Self Retail",
+    businessName: "Self Retail Garage",
   });
   assert.equal(reg.status, 201, JSON.stringify(reg.body));
   assert.ok(!reg.body.token);
@@ -642,6 +643,7 @@ test("Super Admin approves self-registered retail linked to distributor; retail 
     password: "secret12",
     role: "retail",
     name: "Pending Shop",
+    businessName: "Pending Shop Ltd",
     companyId: String(owner._id),
     distributorId: String(distributor._id),
   });
@@ -831,6 +833,7 @@ test("RBAC: end_user cannot place stock-channel orders", async () => {
     password: "secret12",
     role: "end_user",
     name: "Buyer",
+    businessName: "Buyer Co",
   });
   assert.equal(buyer.status, 201);
   const token = buyer.body.token;
