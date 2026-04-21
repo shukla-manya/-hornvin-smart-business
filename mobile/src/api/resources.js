@@ -29,6 +29,10 @@ export const productsApi = {
   delete: (productId) => api.delete(`/products/${productId}`),
 };
 
+export const paymentsApi = {
+  list: () => api.get("/payments"),
+};
+
 export const ordersApi = {
   list: () => api.get("/orders"),
   history: () => api.get("/orders/history"),
