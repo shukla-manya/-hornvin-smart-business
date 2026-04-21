@@ -119,9 +119,7 @@ export function profileQuickLinkRoutes(user) {
   }
   links.push({ route: "Wishlist", label: "Wishlist" });
   links.push({ route: "DealerMap", label: "Dealer locator" });
-  if (user?.role !== "end_user") {
-    links.push({ route: "Payments", label: "Payments" });
-  }
+  links.push({ route: "Payments", label: "Payments" });
   links.push({ route: "Locations", label: "Saved locations" });
   links.push({ route: "Notifications", label: "Notifications" });
   return links;
