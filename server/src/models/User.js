@@ -14,8 +14,8 @@ const userSchema = new mongoose.Schema(
     businessName: { type: String, trim: true },
     address: { type: String, trim: true },
     location: {
-      type: { type: String, enum: ["Point"], default: "Point" },
-      coordinates: { type: [Number], default: undefined },
+      type: { type: String, enum: ["Point"] },
+      coordinates: { type: [Number] },
     },
     companyId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     distributorId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
