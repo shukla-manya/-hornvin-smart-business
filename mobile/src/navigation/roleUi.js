@@ -119,6 +119,7 @@ export function profileQuickLinkRoutes(user) {
     links.push({ nestedTab: "GarageTab", label: "Internal tools (garage)" });
     links.push({ route: "PostProduct", label: "Sell on marketplace" });
     links.push({ route: "MarketplaceBrowse", label: "Marketplace (buy from distributors)" });
+    links.push({ route: "GarageServiceSelection", label: "Service focus (edit)", params: { edit: true } });
   }
   if (user?.role === "company" && user?.isPlatformOwner) {
     links.push({ route: "AdminHome", label: "Hornvin Admin (/api/admin)" });

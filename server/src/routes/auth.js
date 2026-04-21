@@ -2,6 +2,7 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { body, validationResult } from "express-validator";
 import { User, USER_ROLES, isUserApproved, getAccountAccessDenial } from "../models/User.js";
+import { normalizeGarageServices } from "../constants/garageServiceIds.js";
 import { signToken, requireAuth } from "../middleware/auth.js";
 import {
   createAndEmailOtp,
@@ -505,6 +506,7 @@ authRouter.patch(
     body("address").optional().isString().trim().isLength({ min: 0, max: 500 }),
     body("upiVpa").optional().isString().trim().isLength({ max: 80 }),
     body("upiMerchantName").optional().isString().trim().isLength({ max: 80 }),
+    body("garageServices").optional(),
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -517,7 +519,8 @@ authRouter.patch(
     }
 
     const companyLike = req.user.role === "company" || req.user.isPlatformOwner;
-    if (!companyLike && ("businessName" in req.body || "address" in req.body)) {
+    const retailLike = req.user.role === "retail";
+    if (!companyLike && !retailLike && ("businessName" in req.body || "address" in req.body)) {
       return res.status(400).json({
         error: "Only your name can be updated from the profile screen.",
         code: "PROFILE_NAME_ONLY",
@@ -528,7 +531,7 @@ authRouter.patch(
       const name = typeof req.body.name === "string" ? req.body.name.trim() : "";
       req.user.name = name || undefined;
     }
-    if (companyLike) {
+    if (companyLike || retailLike) {
       if (req.body.businessName !== undefined) {
         const b = typeof req.body.businessName === "string" ? req.body.businessName.trim() : "";
         req.user.businessName = b || undefined;
@@ -537,6 +540,22 @@ authRouter.patch(
         const a = typeof req.body.address === "string" ? req.body.address.trim() : "";
         req.user.address = a || undefined;
       }
+    }
+    if (req.body.garageServices !== undefined) {
+      if (!retailLike) {
+        return res.status(400).json({
+          code: "PROFILE_GARAGE_SERVICES_RETAIL_ONLY",
+          error: "Service selection applies only to garage (retail) accounts.",
+        });
+      }
+      const norm = normalizeGarageServices(req.body.garageServices);
+      if (!norm.length) {
+        return res.status(400).json({
+          code: "GARAGE_SERVICES_REQUIRED",
+          error: "Pick at least one valid service category.",
+        });
+      }
+      req.user.garageServices = norm;
     }
     if (req.body.upiVpa !== undefined) {
       const v = typeof req.body.upiVpa === "string" ? req.body.upiVpa.trim() : "";

@@ -131,6 +131,14 @@ components:
         needsProfileSetup:
           type: boolean
           description: When true, client should collect display name (and company fields if applicable) before full app access
+        needsGarageServiceSelection:
+          type: boolean
+          description: When true (retail only), client should run service-selection onboarding after profile
+        garageServices:
+          type: array
+          items:
+            type: string
+          description: Retail garage service tags from allowed list
         createdBy:
           $ref: "#/components/schemas/ObjectId"
         createdAt:

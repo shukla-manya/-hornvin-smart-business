@@ -100,6 +100,8 @@ export function AdminHomeScreen({ navigation }) {
       <NavCard title="Transactions" desc="Payments across the platform" onPress={() => navigation.navigate("AdminPayments")} />
       <NavCard title="Global products" desc="Platform catalog" onPress={() => navigation.navigate("AdminCatalog")} />
       <NavCard title="Categories" desc="Manage category list" onPress={() => navigation.navigate("AdminCategories")} />
+      <NavCard title="Coupons" desc="Points, discount codes, campaign caps" onPress={() => navigation.navigate("AdminCoupons")} />
+      <NavCard title="Push broadcast" desc="Notify selected roles or everyone" onPress={() => navigation.navigate("AdminPush")} />
     </ScrollView>
   );
 }

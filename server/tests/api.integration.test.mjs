@@ -542,6 +542,44 @@ test("retail with companyId can create marketplace listing (POST /api/products)"
   assert.equal(prod.body.product.sellerId?._id || prod.body.product.sellerId, login.body.user.id);
 });
 
+test("retail: needsGarageServiceSelection until PATCH profile garageServices", async () => {
+  const company = await User.create({
+    phone: `+1940${String(Date.now()).slice(-8)}`,
+    passwordHash: await bcrypt.hash("secret12", 10),
+    role: "company",
+    status: "approved",
+    isPlatformOwner: true,
+    location: { type: "Point", coordinates: [0, 0] },
+  });
+  const retailPhone = `+1941${String(Date.now()).slice(-8)}`;
+  await User.create({
+    phone: retailPhone,
+    passwordHash: await bcrypt.hash("secret12", 10),
+    role: "retail",
+    status: "approved",
+    name: "Owner",
+    businessName: "Bay One",
+    companyId: company._id,
+    location: { type: "Point", coordinates: [0, 0] },
+  });
+  const login = await request(app).post("/api/auth/login").send({ phone: retailPhone, password: "secret12" });
+  assert.equal(login.status, 200);
+  assert.equal(login.body.user.needsGarageServiceSelection, true);
+  const token = login.body.token;
+  const bad = await request(app)
+    .patch("/api/auth/profile")
+    .set("Authorization", `Bearer ${token}`)
+    .send({ garageServices: ["not_a_real_tag"] });
+  assert.equal(bad.status, 400);
+  const ok = await request(app)
+    .patch("/api/auth/profile")
+    .set("Authorization", `Bearer ${token}`)
+    .send({ garageServices: ["tyres", "ac"] });
+  assert.equal(ok.status, 200);
+  assert.equal(ok.body.user.needsGarageServiceSelection, false);
+  assert.deepEqual(ok.body.user.garageServices, ["tyres", "ac"]);
+});
+
 test("GET /api/admin/platform describes Hornvin super-admin controls", async () => {
   const ownerPhone = `+1914${String(Date.now()).slice(-8)}`;
   await User.create({

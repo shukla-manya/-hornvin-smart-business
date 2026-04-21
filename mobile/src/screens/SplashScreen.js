@@ -13,6 +13,7 @@ export function SplashScreen() {
   const { booting, isAuthenticated, user } = useAuth();
   const mustChangePassword = Boolean(isAuthenticated && user?.mustChangePassword);
   const needsProfileSetup = Boolean(isAuthenticated && user?.needsProfileSetup);
+  const needsGarageServiceSelection = Boolean(isAuthenticated && user?.needsGarageServiceSelection);
 
   useEffect(() => {
     if (booting) return;
@@ -22,9 +23,11 @@ export function SplashScreen() {
         ? "ForcePasswordChange"
         : needsProfileSetup
           ? "ProfileSetup"
-          : isAuthenticated
-            ? "Main"
-            : "LoginRegister";
+          : needsGarageServiceSelection
+            ? "GarageServiceSelection"
+            : isAuthenticated
+              ? "Main"
+              : "LoginRegister";
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
@@ -35,7 +38,7 @@ export function SplashScreen() {
 
     const t = setTimeout(go, MIN_MS);
     return () => clearTimeout(t);
-  }, [booting, isAuthenticated, mustChangePassword, needsProfileSetup, navigation]);
+  }, [booting, isAuthenticated, mustChangePassword, needsProfileSetup, needsGarageServiceSelection, navigation]);
 
   return (
     <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.root}>

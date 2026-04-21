@@ -47,10 +47,17 @@ export function resetToProfileSetup() {
   });
 }
 
+export function resetToGarageServiceSelection() {
+  dispatchWhenReady(() => {
+    navigationRef.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "GarageServiceSelection" }] }));
+  });
+}
+
 /** After sign-in or password change: choose Main vs forced flows. */
 export function resetAfterAuth(user) {
   if (user?.mustChangePassword) resetToForcePasswordChange();
   else if (user?.needsProfileSetup) resetToProfileSetup();
+  else if (user?.needsGarageServiceSelection) resetToGarageServiceSelection();
   else resetToMain();
 }
 

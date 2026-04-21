@@ -219,11 +219,14 @@ export function HomeScreen({ navigation }) {
 
       {role === "distributor" ? (
         <View style={[styles.card, shadows.card, { marginBottom: 12 }]}>
-          <Text style={styles.cardTitle}>Distributor — local network</Text>
+          <Text style={styles.cardTitle}>Distributor — supplier in the chain</Text>
           <View style={styles.panelBody}>
-            <Text style={styles.panelLine}>Buy from Hornvin company (stock orders + company catalog); sell to garages you manage.</Text>
-            <Text style={styles.panelLine}>Distributor workspace — linked retailers, downstream snapshot, create garage logins.</Text>
-            <Text style={styles.panelLine}>Marketplace + Chat — list SKUs and talk with shops and buyers.</Text>
+            <Text style={styles.panelLine}>
+              Stock flow: Hornvin company (Super Admin) → you → garage inventory. Use company catalog & stock orders upstream;
+              push fulfilment and marketplace listings downstream.
+            </Text>
+            <Text style={styles.panelLine}>Distributor workspace — linked garages, approvals, create retail logins.</Text>
+            <Text style={styles.panelLine}>Marketplace + Chat — orders from garages, delivery coordination, messaging.</Text>
           </View>
         </View>
       ) : null}
@@ -232,20 +235,49 @@ export function HomeScreen({ navigation }) {
         <View style={[styles.card, shadows.card, { marginBottom: 12 }]}>
           <Text style={styles.cardTitle}>Marketplace — supply chain (Side 2)</Text>
           <View style={styles.panelBody}>
-            <Text style={styles.panelLine}>Flow: Hornvin company → distributor → garage (retail) → end customer.</Text>
+            <Text style={styles.panelLine}>
+              Stock: your global catalog and fulfilment → distributors → garage stock. Service & marketplace sit alongside for
+              the full picture.
+            </Text>
             <Text style={styles.panelLine}>Marketplace tab — listings, search, and product pages for ordering.</Text>
-            <Text style={styles.panelLine}>Chat — negotiate with downstream garages and buyers; Dealer map for geography.</Text>
+            <Text style={styles.panelLine}>Super Admin approves garages, manages distributors, coupons, push, analytics.</Text>
           </View>
         </View>
       ) : null}
 
       {role === "retail" ? (
         <View style={[styles.card, shadows.card, { marginBottom: 12 }]}>
-          <Text style={styles.cardTitle}>Distributor → you</Text>
+          <Text style={styles.cardTitle}>Garage — how Hornvin fits together</Text>
+          <Text style={styles.flowLead}>
+            You are the main user: internal bay tools plus marketplace. Company = Super Admin, distributor = supplier, end
+            customer = light role (service & pay).
+          </Text>
+          {Array.isArray(user?.garageServices) && user.garageServices.length > 0 ? (
+            <Text style={styles.flowTags}>Your focus: {user.garageServices.map((s) => s.replace(/_/g, " ")).join(" · ")}</Text>
+          ) : null}
           <View style={styles.panelBody}>
-            <Text style={styles.panelLine}>
-              Your distributor buys from Hornvin company and supplies you; you sell to drivers and workshops on the marketplace.
-            </Text>
+            <FlowLink
+              title="Stock flow"
+              body="Company catalog / distributor supply → log parts in Garage inventory (reorder alerts)."
+              onPress={() => openStack("GarageInventory")}
+            />
+            {user?.companyId ? (
+              <FlowLink
+                title="Buy stock upstream"
+                body="Linked Hornvin company catalog — order into your shop."
+                onPress={() => openStack("CompanyCatalog")}
+              />
+            ) : null}
+            <FlowLink
+              title="Service flow"
+              body="Customer → estimates → shop invoice → Payments (UPI & tracking)."
+              onPress={() => navigation.navigate("GarageTab")}
+            />
+            <FlowLink
+              title="Marketplace flow"
+              body="Browse distributor listings → place order → track in Orders & chat supplier."
+              onPress={() => navigation.navigate("ExploreTab")}
+            />
           </View>
         </View>
       ) : null}
@@ -341,6 +373,16 @@ export function HomeScreen({ navigation }) {
       </View>
       <FooterCredit />
     </ScrollView>
+  );
+}
+
+function FlowLink({ title, body, onPress }) {
+  return (
+    <Pressable onPress={onPress} style={styles.flowLink}>
+      <Text style={styles.flowLinkTitle}>{title}</Text>
+      <Text style={styles.flowLinkBody}>{body}</Text>
+      <Text style={styles.flowLinkChev}>›</Text>
+    </Pressable>
   );
 }
 
@@ -443,4 +485,31 @@ const styles = StyleSheet.create({
     borderLeftWidth: 3,
     borderLeftColor: colors.selectionBorder,
   },
+  flowLead: {
+    marginHorizontal: 12,
+    marginTop: 4,
+    marginBottom: 6,
+    color: colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 20,
+  },
+  flowTags: {
+    marginHorizontal: 12,
+    marginBottom: 8,
+    fontSize: 12,
+    fontWeight: "700",
+    color: colors.header,
+    textTransform: "capitalize",
+  },
+  flowLink: {
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingRight: 28,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    position: "relative",
+  },
+  flowLinkTitle: { fontWeight: "800", color: colors.header, fontSize: 14 },
+  flowLinkBody: { marginTop: 4, color: colors.textSecondary, fontSize: 13, lineHeight: 18, paddingRight: 8 },
+  flowLinkChev: { position: "absolute", right: 12, top: 20, fontSize: 20, color: colors.secondaryBlue },
 });

@@ -5,7 +5,7 @@ import { colors } from "../theme";
 export function FooterCredit({ compact }) {
   return (
     <View style={[styles.wrap, compact && styles.wrapCompact]} accessibilityRole="text">
-      <Text style={[styles.text, compact && styles.textCompact]}>made with love by Manya Shukla · 2026</Text>
+      <Text style={[styles.text, compact && styles.textCompact]}>Made with ♥ love by MANYA SHUKLA · 2026</Text>
     </View>
   );
 }

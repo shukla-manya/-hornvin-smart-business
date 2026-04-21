@@ -19,6 +19,8 @@ const userSchema = new mongoose.Schema(
     upiMerchantName: { type: String, trim: true, default: "" },
     /** Hornvin rewards balance (coupons, promos). */
     rewardPoints: { type: Number, default: 0, min: 0 },
+    /** Retail garages: selected service lines (onboarding + discovery). */
+    garageServices: [{ type: String, trim: true }],
     location: {
       type: { type: String, enum: ["Point"] },
       coordinates: { type: [Number] },
@@ -106,6 +108,8 @@ userSchema.methods.toSafeJSON = function toSafeJSON() {
     mustChangePassword: !!this.mustChangePassword,
     emailVerified: this.emailVerified !== false,
     needsProfileSetup: computeNeedsProfileSetup(this),
+    needsGarageServiceSelection: computeNeedsGarageServiceSelection(this),
+    garageServices: Array.isArray(this.garageServices) ? [...this.garageServices] : [],
     createdBy: this.createdBy ? String(this.createdBy) : undefined,
     createdAt: this.createdAt,
     upiVpa: this.upiVpa || "",
@@ -127,5 +131,20 @@ export function isUserApproved(userDoc) {
 /** First-login / empty-name accounts must finish profile in the app before full access. */
 export function computeNeedsProfileSetup(userDoc) {
   const n = userDoc?.name;
-  return !(n && String(n).trim());
+  if (!(n && String(n).trim())) return true;
+  if (userDoc?.role === "retail") {
+    const b = userDoc?.businessName;
+    if (!(b && String(b).trim())) return true;
+  }
+  return false;
+}
+
+/** Approved retail garages pick at least one service after profile (`GarageServiceSelection` screen). */
+export function computeNeedsGarageServiceSelection(userDoc) {
+  if (userDoc?.role !== "retail") return false;
+  if (computeNeedsProfileSetup(userDoc)) return false;
+  const st = userDoc?.status;
+  if (st != null && st !== "" && st !== "approved") return false;
+  const arr = userDoc.garageServices;
+  return !Array.isArray(arr) || arr.length === 0;
 }

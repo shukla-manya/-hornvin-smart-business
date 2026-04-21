@@ -152,6 +152,9 @@ export function AuthProvider({ children }) {
       if (patch.address !== undefined) body.address = patch.address;
       if (patch.upiVpa !== undefined) body.upiVpa = patch.upiVpa;
       if (patch.upiMerchantName !== undefined) body.upiMerchantName = patch.upiMerchantName;
+      if (patch.garageServices !== undefined) {
+        body.garageServices = Array.isArray(patch.garageServices) ? [...patch.garageServices] : [];
+      }
       if (Object.keys(body).length === 0) return user;
       const { data } = await authApi.profile(body);
       await persist(token, data.user);

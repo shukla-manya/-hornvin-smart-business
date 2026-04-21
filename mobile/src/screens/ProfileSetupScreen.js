@@ -1,37 +1,55 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, Pressable, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import { colors, radii } from "../theme";
-import { resetToMain } from "../navigation/navigationRoot";
+import { resetAfterAuth } from "../navigation/navigationRoot";
 
 /**
- * Mandatory first step after sign-in when the account has no display name yet (`needsProfileSetup` from API).
+ * After OTP login: profile details, then (for retail) service selection, then dashboard (`resetAfterAuth`).
  */
 export function ProfileSetupScreen() {
-  const { user, updateProfile, updateProfileName } = useAuth();
+  const { user, updateProfile } = useAuth();
   const companyLike = user?.role === "company" || user?.isPlatformOwner;
+  const retailLike = user?.role === "retail";
   const [name, setName] = useState(user?.name || "");
   const [businessName, setBusinessName] = useState(user?.businessName || "");
   const [address, setAddress] = useState(user?.address || "");
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setName(user?.name || "");
+    setBusinessName(user?.businessName || "");
+    setAddress(user?.address || "");
+  }, [user?.name, user?.businessName, user?.address]);
 
   const submit = async () => {
     if (!name.trim()) {
       Alert.alert("Name", "Enter your name to continue.");
       return;
     }
+    if (retailLike && !businessName.trim()) {
+      Alert.alert("Shop name", "Enter your garage or shop name as it appears to customers.");
+      return;
+    }
     setBusy(true);
     try {
+      let nextUser;
       if (companyLike) {
-        await updateProfile({
+        nextUser = await updateProfile({
+          name: name.trim(),
+          businessName: businessName.trim(),
+          address: address.trim(),
+        });
+      } else if (retailLike) {
+        nextUser = await updateProfile({
           name: name.trim(),
           businessName: businessName.trim(),
           address: address.trim(),
         });
       } else {
-        await updateProfileName(name.trim());
+        nextUser = await updateProfile({ name: name.trim() });
       }
-      resetToMain();
+      resetAfterAuth(nextUser);
     } catch (e) {
       Alert.alert("Profile", e.response?.data?.error || e.message);
     } finally {
@@ -43,7 +61,11 @@ export function ProfileSetupScreen() {
     <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <Text style={styles.h1}>Complete your profile</Text>
-        <Text style={styles.sub}>We need a few details before you can use the app. You can update some of these later in Profile.</Text>
+        <Text style={styles.sub}>
+          {retailLike
+            ? "Garage onboarding: your name and shop, then you will pick services you offer before the dashboard."
+            : "We need a few details before you can use the app. You can update some of these later in Profile."}
+        </Text>
 
         <Text style={styles.label}>Your name</Text>
         <TextInput
@@ -54,14 +76,14 @@ export function ProfileSetupScreen() {
           placeholderTextColor={colors.textSecondary}
         />
 
-        {companyLike ? (
+        {companyLike || retailLike ? (
           <>
-            <Text style={styles.label}>Business name</Text>
+            <Text style={styles.label}>{retailLike ? "Garage / shop name" : "Business name"}</Text>
             <TextInput
               style={styles.input}
               value={businessName}
               onChangeText={setBusinessName}
-              placeholder="Company or shop name"
+              placeholder={retailLike ? "e.g. City Motors Garage" : "Company or shop name"}
               placeholderTextColor={colors.textSecondary}
             />
             <Text style={styles.label}>Address (optional)</Text>

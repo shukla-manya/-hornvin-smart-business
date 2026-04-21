@@ -33,7 +33,7 @@ export function ProfileScreen({ navigation }) {
   );
 
   const rootNav = navigation.getParent()?.getParent();
-  const open = (name) => rootNav?.navigate(name);
+  const open = (name, params) => rootNav?.navigate(name, params);
   const openNestedTab = (tabName) => rootNav?.navigate("Main", { screen: tabName });
 
   const onSaveName = useCallback(async () => {
@@ -84,7 +84,7 @@ export function ProfileScreen({ navigation }) {
         {profileQuickLinkRoutes(user).map((link) => (
           <Pressable
             key={link.route || link.nestedTab || link.label}
-            onPress={() => (link.nestedTab ? openNestedTab(link.nestedTab) : open(link.route))}
+            onPress={() => (link.nestedTab ? openNestedTab(link.nestedTab) : open(link.route, link.params))}
             style={styles.linkRow}
           >
             <Text style={styles.linkText}>{link.label}</Text>

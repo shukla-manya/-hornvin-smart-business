@@ -204,18 +204,32 @@ export function LoginRegisterScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
-        <View style={styles.brandRow}>
-          <AppLogo size={58} />
-          <Text style={styles.wordmark}>Hornvin</Text>
-        </View>
-      </LinearGradient>
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" style={styles.scrollView}>
-        <Pressable onPress={() => navigation.navigate("RoleSelection")} style={styles.backLink}>
-          <Text style={styles.backLinkText}>Choosing an account type? See role options</Text>
-        </Pressable>
+      {/* Full-screen gradient backdrop */}
+      <LinearGradient
+        colors={[colors.gradientStart, colors.gradientEnd]}
+        start={{ x: 0.3, y: 0 }}
+        end={{ x: 0.7, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
 
-        <View style={styles.toggleRow}>
+      {/* Brand hero */}
+      <View style={styles.hero}>
+        <View style={styles.logoRing}>
+          <AppLogo size={52} />
+        </View>
+        <Text style={styles.wordmark}>Hornvin</Text>
+        <Text style={styles.tagline}>Your auto business, simplified</Text>
+      </View>
+
+      {/* Floating form sheet */}
+      <ScrollView
+        style={styles.sheet}
+        contentContainerStyle={styles.sheetContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Mode toggle pill */}
+        <View style={styles.togglePill}>
           <Pressable
             onPress={() => {
               setMode("login");
@@ -225,9 +239,9 @@ export function LoginRegisterScreen() {
               setAwaitingRegisterVerify(false);
               setRegisterEmailOtp("");
             }}
-            style={[styles.toggle, mode === "login" && styles.toggleOn]}
+            style={[styles.pillBtn, mode === "login" && styles.pillBtnOn]}
           >
-            <Text style={[styles.toggleText, mode === "login" && styles.toggleTextOn]}>Login</Text>
+            <Text style={[styles.pillText, mode === "login" && styles.pillTextOn]}>Sign in</Text>
           </Pressable>
           <Pressable
             onPress={() => {
@@ -236,20 +250,21 @@ export function LoginRegisterScreen() {
               setAwaitingRegisterVerify(false);
               setRegisterEmailOtp("");
             }}
-            style={[styles.toggle, mode === "register" && styles.toggleOn]}
+            style={[styles.pillBtn, mode === "register" && styles.pillBtnOn]}
           >
-            <Text style={[styles.toggleText, mode === "register" && styles.toggleTextOn]}>Register</Text>
+            <Text style={[styles.pillText, mode === "register" && styles.pillTextOn]}>Register</Text>
           </Pressable>
         </View>
 
+        {/* Register-only fields */}
         {mode === "register" && (
           <>
-            <Text style={styles.label}>Role</Text>
+            <Text style={styles.label}>Account type</Text>
             {roleLocked ? (
               <View style={styles.lockedBox}>
                 <Text style={styles.lockedText}>{roleLabel(role)}</Text>
                 <Pressable onPress={() => navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "RoleSelection" }] }))}>
-                  <Text style={styles.changeRole}>Change account type</Text>
+                  <Text style={styles.changeRole}>Change</Text>
                 </Pressable>
               </View>
             ) : (
@@ -264,7 +279,7 @@ export function LoginRegisterScreen() {
             {role === "company" ? (
               <Text style={styles.hint}>
                 One-time Hornvin root: your email must match BOOTSTRAP_PLATFORM_OWNER_EMAIL on the API exactly. This creates the
-                only company / Super Admin account (distributors and garages sit under it).
+                only company / Super Admin account.
               </Text>
             ) : null}
             <Text style={styles.label}>Your name</Text>
@@ -273,7 +288,7 @@ export function LoginRegisterScreen() {
             <TextInput
               value={businessName}
               onChangeText={setBusinessName}
-              placeholder="Shop or company name (required)"
+              placeholder="Shop or company name"
               placeholderTextColor={colors.textSecondary}
               style={styles.input}
             />
@@ -293,7 +308,7 @@ export function LoginRegisterScreen() {
 
         {mode === "login" ? (
           <>
-            <Text style={styles.label}>Phone (only if you sign in with phone, not email)</Text>
+            <Text style={styles.label}>Phone (only if signing in with phone)</Text>
             <TextInput
               value={phone}
               onChangeText={setPhone}
@@ -308,8 +323,7 @@ export function LoginRegisterScreen() {
         {mode === "login" && (
           <>
             <Text style={styles.hint}>
-              Sign in with email + password: you will get two codes — one by email and one for the phone on your account (for
-              now the phone code is printed in the Hornvin API terminal). Phone-only accounts use password only.
+              Email + password sign-in sends two verification codes — one to your email, one to your phone.
             </Text>
             <Text style={styles.label}>Password</Text>
             <TextInput
@@ -360,7 +374,7 @@ export function LoginRegisterScreen() {
             />
             {awaitingRegisterVerify ? (
               <>
-                <Text style={styles.hint}>End-user accounts with email must enter the verification code we sent (then you sign in with password + email OTP as usual).</Text>
+                <Text style={styles.hint}>Enter the verification code we sent to your email.</Text>
                 <Text style={styles.label}>Email verification code</Text>
                 <TextInput
                   value={registerEmailOtp}
@@ -385,7 +399,7 @@ export function LoginRegisterScreen() {
                   }}
                   style={styles.linkBtn}
                 >
-                  <Text style={styles.linkTxt}>Resend verification code</Text>
+                  <Text style={styles.linkTxt}>Resend code</Text>
                 </Pressable>
               </>
             ) : null}
@@ -396,7 +410,7 @@ export function LoginRegisterScreen() {
           <Text style={styles.ctaText}>
             {mode === "register"
               ? awaitingRegisterVerify
-                ? "Verify email & continue"
+                ? "Verify & continue"
                 : "Create account"
               : awaitingLoginOtp
                 ? "Sign in with codes"
@@ -410,9 +424,10 @@ export function LoginRegisterScreen() {
           </Pressable>
         ) : null}
 
-        <FooterCredit />
+        <FooterCredit compact />
       </ScrollView>
 
+      {/* Forgot password modal */}
       <Modal visible={forgotOpen} transparent animationType="slide">
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
@@ -420,8 +435,7 @@ export function LoginRegisterScreen() {
             {forgotStep === 1 ? (
               <>
                 <Text style={styles.modalHint}>
-                  Enter the email on your account (all roles: company, distributor, retail, end user). We email a reset code
-                  — phone-only accounts need an admin to add or change email first.
+                  Enter the email on your account. We'll send a reset code — phone-only accounts need an admin to add email first.
                 </Text>
                 <TextInput
                   value={forgotEmail}
@@ -472,7 +486,7 @@ export function LoginRegisterScreen() {
                   secureTextEntry
                   placeholder="New password (min 6)"
                   placeholderTextColor={colors.textSecondary}
-                  style={styles.input}
+                  style={[styles.input, { marginTop: 10 }]}
                 />
                 <View style={styles.modalActions}>
                   <Pressable onPress={() => setForgotStep(1)} style={styles.modalSecondary}>
@@ -524,79 +538,180 @@ export function LoginRegisterScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  hero: { paddingTop: 48, paddingBottom: 24, paddingHorizontal: 24 },
-  scrollView: { flex: 1 },
-  scroll: { padding: 20, paddingBottom: 40 },
-  brandRow: { flexDirection: "row", alignItems: "center", gap: 14 },
-  wordmark: { fontSize: 32, fontWeight: "600", color: colors.white, letterSpacing: 1 },
-  backLink: { marginBottom: 8, alignSelf: "flex-start" },
-  backLinkText: { color: colors.secondaryBlue, fontWeight: "700", fontSize: 14 },
-  toggleRow: { flexDirection: "row", gap: 10, marginBottom: 12 },
-  toggle: {
+  root: { flex: 1 },
+
+  // ── Hero ────────────────────────────────────────────────
+  hero: {
+    alignItems: "center",
+    paddingTop: 72,
+    paddingBottom: 32,
+    paddingHorizontal: 24,
+  },
+  logoRing: {
+    width: 88,
+    height: 88,
+    borderRadius: 26,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
+  },
+  wordmark: {
+    marginTop: 16,
+    fontSize: 34,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    letterSpacing: 1.2,
+  },
+  tagline: {
+    marginTop: 6,
+    fontSize: 13,
+    fontWeight: "500",
+    color: "rgba(255,255,255,0.65)",
+    letterSpacing: 0.5,
+  },
+
+  // ── Form sheet ──────────────────────────────────────────
+  sheet: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.card,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+  },
+  sheetContent: {
+    padding: 24,
+    paddingBottom: 48,
+  },
+
+  // ── Toggle pill ─────────────────────────────────────────
+  togglePill: {
+    flexDirection: "row",
+    backgroundColor: colors.background,
+    borderRadius: 14,
+    padding: 4,
+    marginBottom: 22,
+  },
+  pillBtn: {
+    flex: 1,
+    paddingVertical: 11,
+    borderRadius: 10,
     alignItems: "center",
-    backgroundColor: colors.card,
   },
-  toggleOn: { borderColor: colors.selectionBorder, backgroundColor: colors.selectionBg },
-  toggleText: { color: colors.textSecondary, fontWeight: "600" },
-  toggleTextOn: { color: colors.secondaryBlue },
-  label: { color: colors.textSecondary, marginBottom: 6, marginTop: 10, fontSize: 13, fontWeight: "600" },
-  hint: { color: colors.textSecondary, fontSize: 12, marginTop: 4, marginBottom: 4 },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.input,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    color: colors.text,
+  pillBtnOn: {
     backgroundColor: colors.card,
-  },
-  roleWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  roleChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.card,
-  },
-  roleChipOn: { borderColor: colors.selectionBorder, backgroundColor: colors.selectionBg },
-  roleChipText: { color: colors.textSecondary, fontSize: 13 },
-  roleChipTextOn: { color: colors.header, fontWeight: "700" },
-  lockedBox: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.input,
-    padding: 12,
-    backgroundColor: colors.card,
-  },
-  lockedText: { fontSize: 16, fontWeight: "600", color: colors.header },
-  changeRole: { marginTop: 8, color: colors.secondaryBlue, fontWeight: "700", fontSize: 14 },
-  cta: {
-    marginTop: 20,
-    backgroundColor: colors.cta,
-    paddingVertical: 15,
-    borderRadius: radii.button,
-    alignItems: "center",
     shadowColor: "#2F2A26",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     elevation: 3,
   },
-  ctaText: { color: colors.white, fontWeight: "600", fontSize: 16, letterSpacing: 0.35 },
-  linkBtn: { marginTop: 14, alignItems: "center" },
+  pillText: { fontSize: 14, fontWeight: "600", color: colors.textSecondary },
+  pillTextOn: { color: colors.header, fontWeight: "700" },
+
+  // ── Form fields ─────────────────────────────────────────
+  label: {
+    color: colors.textSecondary,
+    marginBottom: 6,
+    marginTop: 14,
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.9,
+  },
+  hint: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    marginTop: 6,
+    marginBottom: 2,
+    lineHeight: 18,
+  },
+  input: {
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: radii.input,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    color: colors.text,
+    backgroundColor: colors.background,
+    fontSize: 15,
+  },
+
+  // ── Role chips ──────────────────────────────────────────
+  roleWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 4 },
+  roleChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+  },
+  roleChipOn: { borderColor: colors.secondaryBlue, backgroundColor: colors.selectionBg },
+  roleChipText: { color: colors.textSecondary, fontSize: 13, fontWeight: "500" },
+  roleChipTextOn: { color: colors.secondaryBlue, fontWeight: "700" },
+  lockedBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: radii.input,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    backgroundColor: colors.background,
+    marginTop: 4,
+  },
+  lockedText: { fontSize: 15, fontWeight: "600", color: colors.header },
+  changeRole: { color: colors.secondaryBlue, fontWeight: "700", fontSize: 13 },
+
+  // ── CTA button ──────────────────────────────────────────
+  cta: {
+    marginTop: 26,
+    backgroundColor: colors.cta,
+    paddingVertical: 16,
+    borderRadius: radii.button,
+    alignItems: "center",
+    shadowColor: colors.cta,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    elevation: 6,
+  },
+  ctaText: { color: "#FFFFFF", fontWeight: "700", fontSize: 16, letterSpacing: 0.5 },
+
+  // ── Text links ──────────────────────────────────────────
+  linkBtn: { marginTop: 16, alignItems: "center" },
   linkTxt: { color: colors.secondaryBlue, fontWeight: "600", fontSize: 14 },
-  modalBackdrop: { flex: 1, backgroundColor: "rgba(26,23,21,0.45)", justifyContent: "center", padding: 20 },
-  modalCard: { backgroundColor: colors.card, borderRadius: radii.card, padding: 18, borderWidth: 1, borderColor: colors.border },
-  modalTitle: { fontSize: 18, fontWeight: "600", color: colors.text, marginBottom: 8, letterSpacing: 0.2 },
-  modalHint: { color: colors.textSecondary, marginBottom: 12, fontSize: 13 },
-  modalActions: { flexDirection: "row", justifyContent: "flex-end", gap: 10, marginTop: 8 },
-  modalSecondary: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: colors.border },
-  modalSecondaryText: { color: colors.text, fontWeight: "700" },
+
+  // ── Forgot password modal ───────────────────────────────
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(20,18,16,0.55)",
+    justifyContent: "center",
+    padding: 24,
+  },
+  modalCard: {
+    backgroundColor: colors.card,
+    borderRadius: radii.card,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 28,
+    elevation: 14,
+  },
+  modalTitle: { fontSize: 20, fontWeight: "700", color: colors.text, marginBottom: 8, letterSpacing: 0.2 },
+  modalHint: { color: colors.textSecondary, marginBottom: 16, fontSize: 13, lineHeight: 19 },
+  modalActions: { flexDirection: "row", justifyContent: "flex-end", gap: 10, marginTop: 18 },
+  modalSecondary: {
+    paddingHorizontal: 16,
+    paddingVertical: 11,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  modalSecondaryText: { color: colors.text, fontWeight: "600" },
 });

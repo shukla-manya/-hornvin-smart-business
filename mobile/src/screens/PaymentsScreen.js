@@ -1,10 +1,12 @@
 import React, { useCallback, useState } from "react";
-import { View, Text, FlatList, StyleSheet, Pressable, RefreshControl, TextInput, Alert, ScrollView } from "react-native";
+import { View, Text, FlatList, StyleSheet, Pressable, RefreshControl, TextInput, Alert, ScrollView, Linking } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import QRCode from "react-native-qrcode-svg";
 import { api } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { FooterCredit } from "../components/FooterCredit";
 import { colors, shadows } from "../theme";
+import { buildUpiPayUri } from "../utils/upi";
 
 const METHODS = ["cash", "upi", "bank", "card", "unknown"];
 
@@ -18,6 +20,17 @@ export function PaymentsScreen() {
   const [method, setMethod] = useState("upi");
   const [orderId, setOrderId] = useState("");
   const [busy, setBusy] = useState(false);
+  const [qrAmount, setQrAmount] = useState("");
+
+  const openUpiUri = (uri) => {
+    if (!uri) return;
+    Linking.canOpenURL(uri)
+      .then((ok) => {
+        if (ok) return Linking.openURL(uri);
+        Alert.alert("UPI", "No app on this device can open UPI links.");
+      })
+      .catch(() => Alert.alert("UPI", "Could not open a UPI app."));
+  };
 
   const load = async () => {
     setLoading(true);
@@ -71,8 +84,41 @@ export function PaymentsScreen() {
     }
   };
 
+  const collectUri = buildUpiPayUri({
+    vpa: user?.upiVpa,
+    payeeName: user?.upiMerchantName || user?.businessName || user?.name,
+    amount: (() => {
+      const n = Number(qrAmount);
+      return Number.isFinite(n) && n > 0 ? n : undefined;
+    })(),
+    transactionNote: "Hornvin",
+  });
+
   const header = (
     <View style={{ marginBottom: 12 }}>
+      {user?.upiVpa ? (
+        <View style={[styles.form, shadows.card, { marginBottom: 14 }]}>
+          <Text style={styles.hint}>Your UPI collection QR (same VPA as Profile)</Text>
+          <TextInput
+            value={qrAmount}
+            onChangeText={setQrAmount}
+            placeholder="Optional fixed amount (₹)"
+            keyboardType="decimal-pad"
+            placeholderTextColor={colors.textSecondary}
+            style={styles.input}
+          />
+          <View style={styles.qrWrap}>
+            <QRCode value={collectUri} size={176} />
+          </View>
+          <Pressable onPress={() => openUpiUri(collectUri)} style={styles.upiOpen}>
+            <Text style={styles.upiOpenText}>Open in UPI app</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <Text style={[styles.empty, { marginBottom: 12, textAlign: "left" }]}>
+          Add your UPI ID under Profile to generate a collection QR here.
+        </Text>
+      )}
       <Pressable onPress={() => setShowForm((s) => !s)} style={styles.toggleBtn}>
         <Text style={styles.toggleBtnText}>{showForm ? "Hide form" : "Record payment"}</Text>
       </Pressable>
@@ -114,6 +160,17 @@ export function PaymentsScreen() {
           const peerName = peer?.businessName || peer?.name || "Party";
           const payeeId = item.payeeId?._id || item.payeeId;
           const canComplete = item.status === "pending" && payeeId === user?.id;
+          const payPeerUri =
+            minePay && item.status === "pending" && peer?.upiVpa
+              ? buildUpiPayUri({
+                  vpa: peer.upiVpa,
+                  payeeName: peer.upiMerchantName || peerName,
+                  amount: item.amount,
+                  transactionNote: item.orderId
+                    ? `Order ${typeof item.orderId === "object" && item.orderId !== null ? item.orderId._id || "" : item.orderId}`
+                    : "Hornvin",
+                })
+              : "";
           return (
             <View style={[styles.card, shadows.card]}>
               <Text style={styles.amt}>
@@ -121,6 +178,11 @@ export function PaymentsScreen() {
               </Text>
               <Text style={styles.meta}>Method: {item.method}</Text>
               <Text style={styles.meta}>{minePay ? `You paid → ${peerName}` : `${peerName} paid → you`}</Text>
+              {payPeerUri ? (
+                <Pressable onPress={() => openUpiUri(payPeerUri)} style={styles.upiRow}>
+                  <Text style={styles.upiRowText}>Pay ₹{item.amount} in UPI app</Text>
+                </Pressable>
+              ) : null}
               {canComplete ? (
                 <Pressable onPress={() => markCompleted(item._id)} style={styles.recv}>
                   <Text style={styles.recvText}>Mark received (completed)</Text>
@@ -163,4 +225,33 @@ const styles = StyleSheet.create({
   empty: { color: colors.textSecondary, textAlign: "center", marginTop: 24 },
   recv: { marginTop: 10, alignSelf: "flex-start", backgroundColor: colors.success, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
   recvText: { color: colors.white, fontWeight: "800", fontSize: 12 },
+  qrWrap: {
+    alignSelf: "center",
+    padding: 10,
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginVertical: 8,
+  },
+  upiOpen: {
+    alignSelf: "center",
+    marginTop: 4,
+    backgroundColor: colors.secondaryBlue,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+  upiOpenText: { color: colors.white, fontWeight: "800" },
+  upiRow: {
+    marginTop: 10,
+    alignSelf: "flex-start",
+    backgroundColor: colors.selectionBg,
+    borderWidth: 1,
+    borderColor: colors.selectionBorder,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+  upiRowText: { color: colors.secondaryBlue, fontWeight: "800", fontSize: 13 },
 });
