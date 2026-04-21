@@ -29,6 +29,9 @@ import { AdminOrdersScreen } from "../screens/AdminOrdersScreen";
 import { AdminPaymentsScreen } from "../screens/AdminPaymentsScreen";
 import { AdminCatalogScreen } from "../screens/AdminCatalogScreen";
 import { AdminCategoriesScreen } from "../screens/AdminCategoriesScreen";
+import { AdminCouponsScreen } from "../screens/AdminCouponsScreen";
+import { AdminPushScreen } from "../screens/AdminPushScreen";
+import { RewardsScreen } from "../screens/RewardsScreen";
 import { DistributorWorkspaceScreen } from "../screens/DistributorWorkspaceScreen";
 import { CompanyCatalogScreen } from "../screens/CompanyCatalogScreen";
 import { GarageHubScreen } from "../screens/GarageHubScreen";
@@ -56,6 +59,8 @@ const GuardedAdminOrders = withStackRouteGuard(AdminOrdersScreen, "AdminOrders")
 const GuardedAdminPayments = withStackRouteGuard(AdminPaymentsScreen, "AdminPayments");
 const GuardedAdminCatalog = withStackRouteGuard(AdminCatalogScreen, "AdminCatalog");
 const GuardedAdminCategories = withStackRouteGuard(AdminCategoriesScreen, "AdminCategories");
+const GuardedAdminCoupons = withStackRouteGuard(AdminCouponsScreen, "AdminCoupons");
+const GuardedAdminPush = withStackRouteGuard(AdminPushScreen, "AdminPush");
 const GuardedDistributorWorkspace = withStackRouteGuard(DistributorWorkspaceScreen, "DistributorWorkspace");
 const GuardedPostProduct = withStackRouteGuard(PostProductScreen, "PostProduct");
 const GuardedInvoices = withStackRouteGuard(InvoicesScreen, "Invoices");
@@ -241,6 +246,9 @@ export function AppNavigator() {
         <Stack.Screen name="AdminPayments" component={GuardedAdminPayments} options={{ title: "Transactions" }} />
         <Stack.Screen name="AdminCatalog" component={GuardedAdminCatalog} options={{ title: "Global products" }} />
         <Stack.Screen name="AdminCategories" component={GuardedAdminCategories} options={{ title: "Categories" }} />
+        <Stack.Screen name="AdminCoupons" component={GuardedAdminCoupons} options={{ title: "Coupons & rewards" }} />
+        <Stack.Screen name="AdminPush" component={GuardedAdminPush} options={{ title: "Push broadcast" }} />
+        <Stack.Screen name="Rewards" component={RewardsScreen} options={{ title: "Coupons & rewards" }} />
         <Stack.Screen name="DistributorWorkspace" component={GuardedDistributorWorkspace} options={{ title: "Distributor" }} />
         <Stack.Screen name="CompanyCatalog" component={CompanyCatalogScreen} options={{ title: "Company catalog" }} />
       </Stack.Navigator>
